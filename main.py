@@ -360,13 +360,13 @@ class ConnectionWindow:
 
 
 class DashboardApp:
-    """Main dashboard application"""
+    """Main dashboard app with simple host card integration"""
 
     def __init__(self, root, port):
         self.root = root
         self.port = port
 
-        # *** DETECT AND HANDLE DEMO MODE ***
+        # Existing demo mode detection
         self.is_demo_mode = (port == "DEMO")
 
         # Use appropriate CLI class based on mode
@@ -374,6 +374,10 @@ class DashboardApp:
             self.cli = DemoSerialCLI(port)
         else:
             self.cli = SerialCLI(port)
+
+        # *** NEW: Initialize Host Card Info components ***
+        self.host_card_manager = HostCardInfoManager(self.cli)
+        self.host_card_ui = HostCardDashboardUI(self)
 
         self.log_data = []
         self.current_dashboard = "host"
@@ -383,7 +387,6 @@ class DashboardApp:
         self.connect_device()
         self.start_background_threads()
 
-        # Handle window closing
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def setup_window(self):
@@ -659,29 +662,9 @@ class DashboardApp:
         return card_frame
 
     def create_host_dashboard(self):
-        """Create host card information dashboard"""
-
-        def host_content(frame):
-            info_data = [
-                ("Device Type", "USB 3.0 Host Controller"),
-                ("Vendor ID", "0x1234"),
-                ("Product ID", "0x5678"),
-                ("Serial Number", "HC-2024-001"),
-                ("Firmware Version", "v2.1.3"),
-                ("Hardware Revision", "Rev C"),
-                ("Max Power", "900mA"),
-                ("Operating Temperature", "0°C to 70°C")
-            ]
-
-            for label, value in info_data:
-                row_frame = ttk.Frame(frame, style='Content.TFrame')
-                row_frame.pack(fill='x', pady=2)
-                ttk.Label(row_frame, text=f"{label}:", style='Info.TLabel',
-                          font=('Arial', 10, 'bold')).pack(side='left')
-                ttk.Label(row_frame, text=value, style='Info.TLabel').pack(side='right')
-
-        self.create_info_card(self.scrollable_frame, "Device Information", host_content)
-
+        """Create host card information dashboard - SIMPLIFIED VERSION"""
+        # Simply delegate to the UI component
+        self.host_card_ui.create_host_dashboard()
         def status_content(frame):
             status_items = [
                 ("Connection Status", "✅ Connected", "#00ff00"),

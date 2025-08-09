@@ -4,11 +4,6 @@ demo_mode_integration.py
 This file contains the demo mode classes for the Serial Dashboard Application.
 Save this as a separate Python file in the same directory as your main application.
 
-File Structure:
-your_project_folder/
-├── serial_dashboard_app.py     (your main application file)
-├── demo_mode_integration.py    (this file)
-└── requirements.txt            (optional)
 """
 
 import random
@@ -21,7 +16,7 @@ from datetime import datetime
 class DemoSerialCLI:
     """
     Demo version of SerialCLI that simulates device responses
-    This class provides the same interface as SerialCLI but simulates all responses
+    This class provides the same interface as CalypsoPy but simulates all responses
     """
 
     def __init__(self, port="DEMO"):
@@ -34,6 +29,8 @@ class DemoSerialCLI:
         self.log_queue = queue.Queue()
 
         # Demo device state - simulates a real device's internal state
+
+
         self.device_state = {
             'connected': True,
             'temperature': 45.0,
@@ -58,7 +55,7 @@ class DemoSerialCLI:
                 '0x18': '0xFFFF',  # Capability Register
                 '0x1C': '0x2024'  # Version Register
             },
-            'firmware_version': 'v2.1.3',
+            'firmware_version': 'RC28',
             'hardware_revision': 'Rev C',
             'serial_number': 'DEMO-2024-001',
             'packets_tx': random.randint(1000000, 9999999),
