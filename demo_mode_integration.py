@@ -121,6 +121,176 @@ Golden finger: speed 01, width 00, max_width = 16"""
         print("DEBUG: Created fallback sysinfo data")
         return fallback_content
 
+    def _load_demo_showport_file(self):
+        """Load showport.txt from DemoData directory"""
+        showport_paths = [
+            "DemoData/showport.txt",
+            "./DemoData/showport.txt",
+            "../DemoData/showport.txt",
+            os.path.join(os.path.dirname(__file__), "DemoData", "showport.txt"),
+            os.path.join(os.getcwd(), "DemoData", "showport.txt")
+        ]
+
+        print("DEBUG: Searching for demo showport.txt file...")
+        for i, path in enumerate(showport_paths):
+            abs_path = os.path.abspath(path)
+            print(f"DEBUG: Checking showport path {i + 1}: {abs_path}")
+
+            if os.path.exists(path):
+                try:
+                    with open(path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    print(f"DEBUG: ✓ Loaded demo showport from {path} ({len(content)} chars)")
+
+                    # Verify content has expected sections
+                    if 'Port' in content and ('Golden finger' in content or 'Port Upstream' in content):
+                        print("DEBUG: ✓ Showport content verification passed")
+                    else:
+                        print("DEBUG: ⚠ Showport content missing expected sections")
+
+                    return content
+                except Exception as e:
+                    print(f"DEBUG: ✗ Error loading showport {path}: {e}")
+                    continue
+            else:
+                print(f"DEBUG: ✗ Showport path does not exist: {abs_path}")
+
+        print("DEBUG: No showport.txt file found - creating fallback data")
+        return self._create_fallback_showport()
+
+    def _create_fallback_showport(self):
+        """Create fallback showport data if file not found"""
+        fallback_content = """Port Slot------------------------------------------------------------------------------
+
+    Port80 : speed 06, width 04, max_speed06, max_width16
+    Port112: speed 01, width 00, max_speed06, max_width16
+    Port128: speed 05, width 16, max_speed06, max_width16
+
+    Port Upstream------------------------------------------------------------------------------
+
+    Golden finger: speed 06, width 16, max_width = 16"""
+
+        print("DEBUG: Created fallback showport data")
+        return fallback_content
+
+    # Update the __init__ method to load showport data
+    def __init__(self, port="DEMO"):
+        self.port = port
+        self.baudrate = 115200
+        self.serial_connection = None
+        self.is_running = False
+        self.command_queue = queue.Queue()
+        self.response_queue = queue.Queue()
+        self.log_queue = queue.Queue()
+
+        # Load demo sysinfo file at initialization
+        self.demo_sysinfo_content = self._load_demo_sysinfo_file()
+
+        # Load demo showport file at initialization
+        self.demo_showport_content = self._load_demo_showport_file()
+
+        print(f"DEBUG: UnifiedDemoSerialCLI initialized for {port}")
+        if self.demo_sysinfo_content:
+            print(f"DEBUG: Demo sysinfo content loaded: {len(self.demo_sysinfo_content)} chars")
+        else:
+            print("DEBUG: No demo sysinfo content loaded")
+
+        if self.demo_showport_content:
+            print(f"DEBUG: Demo showport content loaded: {len(self.demo_showport_content)} chars")
+        else:
+            print("DEBUG: No demo showport content loaded")
+
+    # Update the _handle_unified_command method to handle showport
+    def _handle_unified_command(self, command):
+        """
+        Handle commands with showport support
+        """
+        command_lower = command.lower().strip()
+        print(f"DEBUG: Processing command: '{command}' -> '{command_lower}'")
+
+        if 'sysinfo' in command_lower:
+            print("DEBUG: Handling sysinfo command")
+
+            if self.demo_sysinfo_content:
+                print(f"DEBUG: Returning sysinfo content ({len(self.demo_sysinfo_content)} chars)")
+
+                # Verify content before returning
+                if len(self.demo_sysinfo_content) > 100:
+                    print("DEBUG: Sysinfo content size verification passed")
+
+                    # Format response like real device
+                    formatted_response = f"Cmd>sysinfo\n\n{self.demo_sysinfo_content}\n\nCmd>[]"
+                    return formatted_response
+                else:
+                    print("DEBUG: ⚠ Sysinfo content seems too small")
+                    return "ERROR: Demo sysinfo data too small"
+
+            else:
+                print("DEBUG: No sysinfo content available")
+                return "ERROR: Demo sysinfo data not available"
+
+        elif 'showport' in command_lower:
+            print("DEBUG: Handling showport command")
+
+            if self.demo_showport_content:
+                print(f"DEBUG: Returning showport content ({len(self.demo_showport_content)} chars)")
+
+                # Verify content before returning
+                if len(self.demo_showport_content) > 50:
+                    print("DEBUG: Showport content size verification passed")
+
+                    # Format response like real device
+                    formatted_response = f"Cmd>showport\n\n{self.demo_showport_content}\n\nCmd>[]"
+                    return formatted_response
+                else:
+                    print("DEBUG: ⚠ Showport content seems too small")
+                    return "ERROR: Demo showport data too small"
+            else:
+                print("DEBUG: No showport content available")
+                return "ERROR: Demo showport data not available"
+
+        elif 'help' in command_lower:
+            print("DEBUG: Handling help command")
+            return self._get_help_response()
+
+        elif 'status' in command_lower:
+            print("DEBUG: Handling status command")
+            return self._get_status_response()
+
+        elif 'version' in command_lower or 'ver' in command_lower:
+            print("DEBUG: Handling version command")
+            return self._get_version_response()
+
+        else:
+            print(f"DEBUG: Unknown command: {command}")
+            return f"ERROR: Unknown command '{command}'\nType 'help' for available commands."
+
+    # Update the _get_command_delay method to include showport
+    def _get_command_delay(self, command):
+        """Get realistic delay for command response"""
+        command_lower = command.lower()
+
+        if 'sysinfo' in command_lower:
+            return 0.3  # Reduced delay for testing
+        elif 'showport' in command_lower:
+            return 0.2  # Quick response for showport
+        elif any(cmd in command_lower for cmd in ['help', 'status', 'version']):
+            return 0.05  # Quick response for simple commands
+        else:
+            return 0.1  # Default delay
+
+    # Update the _get_help_response method to include showport
+    def _get_help_response(self):
+        """Generate help command response"""
+        return """Available commands:
+    help      - Show this help
+    sysinfo   - Get complete system information (ver + lsd + showport)
+    showport  - Get port and link status information
+    status    - Get device status
+    version   - Get firmware version
+
+    Demo Mode: All responses use actual device data from demo files"""
+
     def connect(self):
         """Simulate connection establishment"""
         self.log_queue.put("DEMO: Initializing unified demo mode...")

@@ -8,6 +8,7 @@ Joshua Mutschler, Serial Cables
 
 Dependencies:
 pySerial
+PIL
 """
 
 # Application Information
@@ -72,6 +73,7 @@ from enhanced_sysinfo_parser import EnhancedSystemInfoParser
 from settings_manager import SettingsManager
 from settings_ui import SettingsDialog
 import settings_ui  # Import module for CacheViewerDialog access
+from link_status_dashboard import LinkStatusDashboardUI, LinkStatusManager
 
 
 def load_demo_sysinfo_file():
@@ -494,7 +496,6 @@ class ConnectionWindow:
 
 class DashboardApp:
     """Main dashboard app with proper CLI initialization"""
-
     def __init__(self, root, port, settings_manager):
         self.root = root
         self.port = port
@@ -506,7 +507,7 @@ class DashboardApp:
         cache_ttl = self.settings_mgr.get('cache', 'default_ttl_seconds', 300)
         self.cache_manager = DeviceDataCache(cache_dir or None, cache_ttl)
 
-        # Initialize CLI based on mode - FIXED
+        # Initialize CLI based on mode
         if self.is_demo_mode:
             from demo_mode_integration import UnifiedDemoSerialCLI
             self.cli = UnifiedDemoSerialCLI(port)  # Use the unified version
@@ -522,6 +523,9 @@ class DashboardApp:
         self.host_card_manager = HostCardInfoManager(self.cli)
         self.host_card_ui = HostCardDashboardUI(self)
 
+        # Initialize Link Status components
+        self.link_status_ui = LinkStatusDashboardUI(self)
+
         # Rest of initialization...
         self.log_data = []
         self.current_dashboard = "host"
@@ -534,6 +538,7 @@ class DashboardApp:
         # Background task control
         self.background_tasks_enabled = True
         self.sysinfo_requested = False
+        self.showport_requested = False
 
         self.setup_window()
         self.create_layout()
@@ -744,7 +749,7 @@ class DashboardApp:
             tile[widget_name].configure(style=f'{style_prefix}.TLabel')
 
     def switch_dashboard(self, dashboard_id):
-        """Switch to a different dashboard with cache awareness"""
+        """Switch to a different dashboard with automatic command execution"""
         if dashboard_id == self.current_dashboard:
             return
 
@@ -754,14 +759,18 @@ class DashboardApp:
 
         self.current_dashboard = dashboard_id
 
-        # Warm cache if needed before updating content
-        cache_warmed = self.warm_cache_if_needed()
+        # Send appropriate command when switching to specific dashboards
+        if dashboard_id == "link":
+            print("DEBUG: Switching to link dashboard - will send showport command")
+            # The create_link_dashboard method will handle sending the command
+        elif dashboard_id == "host":
+            # Warm cache if needed before updating content
+            cache_warmed = self.warm_cache_if_needed()
+            if cache_warmed:
+                self.update_cache_status("Loading fresh data...")
 
         # Update content area
         self.update_content_area()
-
-        if cache_warmed:
-            self.update_cache_status("Loading fresh data...")
 
     def create_content_area(self):
         """Create the main content display area"""
@@ -871,16 +880,25 @@ class DashboardApp:
         """Refresh current dashboard with cache-first approach"""
         dashboard_name = self.current_dashboard
 
-        # Check if we need fresh data
-        if self.sysinfo_parser.force_refresh_needed():
-            # Clear old cache and request fresh data
-            self.sysinfo_parser.invalidate_all_data()
-            self.send_sysinfo_command()
-            self.update_cache_status("Requesting fresh data...")
+        if dashboard_name == "link":
+            # For link dashboard, refresh showport data
+            print("DEBUG: Refreshing link dashboard - sending showport command")
+            self.send_showport_command()
+            self.update_cache_status("Requesting fresh link data...")
+        elif dashboard_name == "host":
+            # Check if we need fresh data
+            if self.sysinfo_parser.force_refresh_needed():
+                # Clear old cache and request fresh data
+                self.sysinfo_parser.invalidate_all_data()
+                self.send_sysinfo_command()
+                self.update_cache_status("Requesting fresh data...")
+            else:
+                # Use cached data and update UI immediately
+                self.update_content_area()
+                self.update_cache_status("Using cached data")
         else:
-            # Use cached data and update UI immediately
+            # For other dashboards, just update content
             self.update_content_area()
-            self.update_cache_status("Using cached data")
 
         # Log the refresh
         timestamp = datetime.now().strftime('%H:%M:%S')
@@ -1222,50 +1240,58 @@ class DashboardApp:
                    command=self.refresh_current_dashboard).pack(side='right')
 
     def create_link_dashboard(self):
-        """Create link status dashboard with cache-first approach"""
-        # Get cached link JSON data
-        link_json = self.sysinfo_parser.get_link_status_json()
+        """Create link status dashboard using the new Link Status module"""
+        print("DEBUG: Creating link dashboard using new module...")
 
-        if link_json and link_json.get('data_fresh', False):
-            # Use cached JSON data
-            sections = link_json.get('sections', {})
+        if self.is_demo_mode:
+            # For demo mode, load demo showport data
+            print("DEBUG: Demo mode - loading showport data")
 
-            for section_key, section_data in sections.items():
-                icon = section_data.get('icon', '🔗')
-                title = section_data.get('title', section_key)
-                items = section_data.get('items', [])
+            try:
+                from link_status_dashboard import load_demo_showport_file
+                demo_content = load_demo_showport_file()
 
-                def link_content(frame):
-                    if not items:
-                        ttk.Label(frame, text="No link data available",
-                                  style='Info.TLabel', font=('Arial', 10, 'italic')).pack(anchor='w')
-                        return
+                if demo_content:
+                    print(f"DEBUG: Using demo showport content ({len(demo_content)} chars)")
 
-                    for item in items:
-                        row_frame = ttk.Frame(frame, style='Content.TFrame')
-                        row_frame.pack(fill='x', pady=2)
+                    # Parse and cache the showport data
+                    link_info = self.link_status_ui.link_status_manager.parser.parse_showport_response(demo_content)
+                    self.link_status_ui.link_status_manager.cached_info = link_info
+                    self.link_status_ui.link_status_manager.last_refresh = datetime.now()
 
-                        label = item.get('label', 'Unknown')
-                        value = item.get('value', 'Unknown')
-                        details = item.get('details', '')
+                    # Also parse using enhanced parser for caching
+                    if hasattr(self, 'sysinfo_parser'):
+                        self.sysinfo_parser.parse_showport_command(demo_content)
 
-                        ttk.Label(row_frame, text=f"{label}:", style='Info.TLabel',
-                                  font=('Arial', 10, 'bold')).pack(side='left')
+                    # Create the dashboard UI
+                    self.link_status_ui.create_link_dashboard()
 
-                        value_label = ttk.Label(row_frame, text=value, style='Info.TLabel')
-                        value_label.pack(side='right')
+                    print("DEBUG: Demo link dashboard created successfully")
+                else:
+                    print("DEBUG: No demo showport content, showing fallback")
+                    self.show_loading_message("Demo showport data not available - check DemoData/showport.txt")
 
-                        if details:
-                            detail_frame = ttk.Frame(frame, style='Content.TFrame')
-                            detail_frame.pack(fill='x', pady=(0, 5))
-                            ttk.Label(detail_frame, text=f"    {details}",
-                                      style='Info.TLabel', font=('Arial', 9)).pack(anchor='w')
-
-                self.create_info_card(self.scrollable_frame, f"{icon} {title}", link_content)
+            except Exception as e:
+                print(f"ERROR: Demo link dashboard failed: {e}")
+                import traceback
+                traceback.print_exc()
+                self.show_loading_message(f"Demo error: {e}")
         else:
-            # Show loading message and request data
-            self.show_loading_message("Loading link status...")
-            self.send_sysinfo_command()
+            # Real device mode - check for cached data first
+            cached_link_data = None
+            if hasattr(self, 'sysinfo_parser'):
+                cached_link_data = self.sysinfo_parser.get_cached_showport_data()
+
+            if cached_link_data and self.sysinfo_parser.is_showport_data_fresh(300):
+                print("DEBUG: Using fresh cached showport data")
+                # Convert cached data to LinkStatusInfo format
+                link_info = self._convert_cached_to_link_info(cached_link_data)
+                self.link_status_ui.link_status_manager.cached_info = link_info
+                self.link_status_ui.create_link_dashboard()
+            else:
+                print("DEBUG: Real device mode - sending showport command")
+                self.send_showport_command()
+                self.show_loading_message("Loading link status...")
 
     def create_port_dashboard(self):
         """Create port configuration dashboard"""
@@ -1422,6 +1448,83 @@ class DashboardApp:
                    command=self.view_cache_contents).pack(side='left', padx=(0, 10))
         ttk.Button(button_frame, text="Clear Cache",
                    command=self.clear_cache).pack(side='left')
+
+    def send_showport_command(self):
+        """Send showport command for link status data"""
+        print("DEBUG: Sending showport command...")
+
+        if not self.cli or not self.cli.is_running:
+            print("ERROR: CLI not running, cannot send showport command")
+            self.show_loading_message("Error: Connection not ready")
+            return
+
+        self.showport_requested = True
+
+        try:
+            if self.is_demo_mode:
+                # In demo mode, put command directly in queue
+                self.cli.command_queue.put("showport")
+                print("DEBUG: showport command queued for demo mode")
+            else:
+                # In real mode, send through normal command interface
+                self.send_command("showport")
+                print("DEBUG: showport command sent for real device")
+
+            timestamp = datetime.now().strftime('%H:%M:%S')
+            self.log_data.append(f"[{timestamp}] Requesting link status information...")
+            print(f"DEBUG: showport_requested set to {self.showport_requested}")
+
+            # Add timeout for showport request
+            self.root.after(8000, self.check_showport_timeout)  # 8 second timeout
+
+        except Exception as e:
+            print(f"ERROR: Failed to send showport command: {e}")
+            self.showport_requested = False
+            self.show_loading_message(f"Error sending showport command: {e}")
+
+    def check_showport_timeout(self):
+        """Check if showport command timed out"""
+        if hasattr(self, 'showport_requested') and self.showport_requested:
+            print("DEBUG: showport command timed out")
+            self.showport_requested = False
+            if self.current_dashboard == "link":
+                self.show_loading_message("Showport command timed out - click refresh to retry")
+
+    def _convert_cached_to_link_info(self, cached_data):
+        """Convert cached showport data to LinkStatusInfo format"""
+        from link_status_dashboard import LinkStatusInfo, PortInfo
+
+        link_info = LinkStatusInfo()
+        link_info.last_updated = cached_data.get('last_updated', 'Unknown')
+        link_info.raw_showport_response = cached_data.get('raw_output', '')
+
+        # Convert ports
+        for port_key, port_data in cached_data.get('ports', {}).items():
+            port_info = PortInfo()
+            port_info.port_number = port_data.get('port_number', 'Unknown')
+            port_info.speed_level = port_data.get('speed_level', '00')
+            port_info.width = port_data.get('width', '00')
+            port_info.display_speed = port_data.get('display_speed', 'Unknown')
+            port_info.display_width = port_data.get('display_width', '')
+            port_info.status = port_data.get('status', 'Unknown')
+            port_info.status_color = port_data.get('status_color', '#cccccc')
+            port_info.active = port_data.get('active', False)
+            link_info.ports[port_key] = port_info
+
+        # Convert golden finger
+        gf_data = cached_data.get('golden_finger', {})
+        if gf_data:
+            link_info.golden_finger = PortInfo()
+            link_info.golden_finger.port_number = gf_data.get('port_number', 'Golden Finger')
+            link_info.golden_finger.speed_level = gf_data.get('speed_level', '00')
+            link_info.golden_finger.width = gf_data.get('width', '00')
+            link_info.golden_finger.display_speed = gf_data.get('display_speed', 'Unknown')
+            link_info.golden_finger.display_width = gf_data.get('display_width', '')
+            link_info.golden_finger.status = gf_data.get('status', 'Unknown')
+            link_info.golden_finger.status_color = gf_data.get('status_color', '#cccccc')
+            link_info.golden_finger.active = gf_data.get('active', False)
+
+        return link_info
 
     def view_cache_contents(self):
         """Open cache viewer dialog"""
@@ -1763,7 +1866,7 @@ NEW FEATURES:
             print("ERROR: CLI not running, cannot start background threads")
 
     def start_queue_monitoring(self):
-        """FIXED: Add periodic queue monitoring to ensure responsiveness"""
+        """Add periodic queue monitoring to ensure responsiveness"""
 
         def check_queues():
             try:
@@ -1777,8 +1880,15 @@ NEW FEATURES:
                             timestamp = datetime.now().strftime('%H:%M:%S')
                             self.log_data.append(f"[{timestamp}] RECV: {response}")
 
+                            # Check if this is a showport response
+                            if self.showport_requested and len(response) > 50:
+                                if any(keyword in response.lower() for keyword in
+                                       ['port', 'golden finger', 'port slot', 'port upstream']):
+                                    print("DEBUG: Queue monitor processing showport response")
+                                    self.process_showport_response(response)
+
                             # Check if this is a sysinfo response
-                            if self.sysinfo_requested and len(response) > 200:
+                            elif self.sysinfo_requested and len(response) > 200:
                                 if any(keyword in response.lower() for keyword in
                                        ['s/n', 'thermal', 'voltage', '===', 'company']):
                                     print("DEBUG: Queue monitor processing sysinfo response")
@@ -1796,16 +1906,94 @@ NEW FEATURES:
         # Start the monitoring
         check_queues()
 
+    def process_showport_response(self, response):
+        """Process showport response from queue monitoring"""
+        try:
+            # Parse the showport response using link status manager
+            link_info = self.link_status_ui.link_status_manager.parser.parse_showport_response(response)
+            self.link_status_ui.link_status_manager.cached_info = link_info
+            self.link_status_ui.link_status_manager.last_refresh = datetime.now()
+
+            # Also parse using enhanced parser for caching
+            if hasattr(self, 'sysinfo_parser'):
+                self.sysinfo_parser.parse_showport_command(response)
+
+            print(f"DEBUG: Successfully processed showport with {len(link_info.ports)} ports")
+
+            self.showport_requested = False
+            timestamp = datetime.now().strftime('%H:%M:%S')
+            self.log_data.append(f"[{timestamp}] Link status information processed successfully")
+
+            # Update UI immediately if we're on link dashboard
+            if self.current_dashboard == "link":
+                self.root.after_idle(self.update_content_area)
+                self.update_cache_status("Fresh link data loaded")
+
+        except Exception as e:
+            print(f"DEBUG: Error processing showport response: {e}")
+            timestamp = datetime.now().strftime('%H:%M:%S')
+            self.log_data.append(f"[{timestamp}] Error processing showport: {e}")
+
+    def check_showport_timeout(self):
+        """Check if showport command timed out"""
+        if hasattr(self, 'showport_requested') and self.showport_requested:
+            print("DEBUG: showport command timed out")
+            self.showport_requested = False
+            self.show_loading_message("Showport command timed out - click refresh to retry")
+
+    # monitor_logs method to handle showport responses
     def monitor_logs(self):
-        """Monitor log queue with enhanced sysinfo handling for both modes"""
+        """Monitor log queue with enhanced sysinfo and showport handling"""
         while self.cli.is_running:
             try:
                 log_entry = self.cli.log_queue.get_nowait()
                 timestamp = datetime.now().strftime('%H:%M:%S')
                 self.log_data.append(f"[{timestamp}] {log_entry}")
 
-                # Enhanced sysinfo detection for both demo and real modes
-                if "sysinfo" in log_entry.lower() and ("RECV:" in log_entry or "DEMO RECV:" in log_entry):
+                # Enhanced showport detection
+                if "showport" in log_entry.lower() and ("RECV:" in log_entry or "DEMO RECV:" in log_entry):
+                    if hasattr(self, 'showport_requested') and self.showport_requested:
+                        # Extract the actual response content
+                        if "DEMO RECV:" in log_entry:
+                            response = log_entry.replace("DEMO RECV:", "").strip()
+                        else:
+                            response = log_entry.replace("RECV:", "").strip()
+
+                        print(f"DEBUG: Processing showport response, length: {len(response)}")
+
+                        # Check if this looks like a complete showport response
+                        if (len(response) > 100 and
+                                ("Port" in response or "Golden finger" in response or "Port Slot" in response)):
+
+                            print("DEBUG: Parsing complete showport response...")
+
+                            try:
+                                # Parse the showport response using link status manager
+                                link_info = self.link_status_ui.link_status_manager.parser.parse_showport_response(
+                                    response)
+                                self.link_status_ui.link_status_manager.cached_info = link_info
+                                self.link_status_ui.link_status_manager.last_refresh = datetime.now()
+
+                                # Also parse using enhanced parser for caching
+                                if hasattr(self, 'sysinfo_parser'):
+                                    self.sysinfo_parser.parse_showport_command(response)
+
+                                print(f"DEBUG: Successfully parsed showport with {len(link_info.ports)} ports")
+
+                                self.showport_requested = False
+                                self.log_data.append(f"[{timestamp}] Link status information cached successfully")
+
+                                # Update UI immediately if we're on link dashboard
+                                if self.current_dashboard == "link":
+                                    self.root.after_idle(self.update_content_area)
+                                    self.update_cache_status("Fresh link data loaded")
+
+                            except Exception as e:
+                                print(f"DEBUG: Error parsing showport: {e}")
+                                self.log_data.append(f"[{timestamp}] Error parsing showport: {e}")
+
+                # Enhanced sysinfo detection for both modes
+                elif "sysinfo" in log_entry.lower() and ("RECV:" in log_entry or "DEMO RECV:" in log_entry):
                     if self.sysinfo_requested:
                         # Extract the actual response content
                         if "DEMO RECV:" in log_entry:

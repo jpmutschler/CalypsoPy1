@@ -322,6 +322,243 @@ class EnhancedSystemInfoParser:
 
         return link_data
 
+    def parse_showport_command(self, showport_output: str) -> Dict[str, Any]:
+        """
+        Parse showport command output and cache the results
+
+        Args:
+            showport_output: Raw output from showport command
+
+        Returns:
+            Parsed showport information dictionary
+        """
+        parsed_data = {
+            'raw_output': showport_output,
+            'parsed_at': datetime.now().isoformat(),
+            'ports': {},
+            'golden_finger': {},
+            'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+
+        # Parse port information
+        parsed_data['ports'] = self._parse_showport_ports(showport_output)
+        parsed_data['golden_finger'] = self._parse_golden_finger(showport_output)
+
+        # Cache the parsed data
+        ttl = 300  # 5 minutes default TTL
+        self.cache.set('showport_data', parsed_data, 'showport', ttl)
+
+        # Create and cache JSON object for link dashboard
+        self._create_and_cache_link_json(parsed_data)
+
+        return parsed_data
+
+    def _parse_showport_ports(self, output: str) -> Dict[str, Any]:
+        """Parse individual port information from showport output"""
+        ports = {}
+
+        # Port pattern matching
+        port_pattern = r'Port(\d+)\s*:\s*speed\s+(\w+),\s*width\s+(\w+)(?:,\s*max_speed(\w+),\s*max_width(\d+))?'
+        port_matches = re.finditer(port_pattern, output, re.IGNORECASE | re.MULTILINE)
+
+        for match in port_matches:
+            port_num = match.group(1)
+            speed = match.group(2)
+            width = match.group(3)
+            max_speed = match.group(4) if match.group(4) else speed
+            max_width = match.group(5) if match.group(5) else "16"
+
+            # Process display formatting
+            display_info = self._process_port_display_formatting(speed, width)
+
+            ports[f'port_{port_num}'] = {
+                'port_number': port_num,
+                'speed_level': speed,
+                'width': width,
+                'max_speed': max_speed,
+                'max_width': max_width,
+                'display_speed': display_info['display_speed'],
+                'display_width': display_info['display_width'],
+                'status': display_info['status'],
+                'status_color': display_info['status_color'],
+                'active': display_info['active']
+            }
+
+        return ports
+
+    def _parse_golden_finger(self, output: str) -> Dict[str, Any]:
+        """Parse golden finger information from showport output"""
+        golden_finger = {}
+
+        # Golden finger pattern matching
+        gf_pattern = r'Golden\s+finger:\s*speed\s+(\w+),\s*width\s+(\w+)(?:,\s*max_width\s*=\s*(\d+))?'
+        gf_match = re.search(gf_pattern, output, re.IGNORECASE | re.MULTILINE)
+
+        if gf_match:
+            speed = gf_match.group(1)
+            width = gf_match.group(2)
+            max_width = gf_match.group(3) if gf_match.group(3) else "16"
+
+            # Process display formatting
+            display_info = self._process_port_display_formatting(speed, width)
+
+            golden_finger = {
+                'port_number': 'Golden Finger',
+                'speed_level': speed,
+                'width': width,
+                'max_width': max_width,
+                'display_speed': display_info['display_speed'],
+                'display_width': display_info['display_width'],
+                'status': display_info['status'],
+                'status_color': display_info['status_color'],
+                'active': display_info['active']
+            }
+
+        return golden_finger
+
+    def _process_port_display_formatting(self, speed_level: str, width: str) -> Dict[str, Any]:
+        """Process port information for display formatting according to requirements"""
+        display_info = {
+            'display_speed': 'Unknown',
+            'display_width': '',
+            'status': 'Unknown',
+            'status_color': '#cccccc',
+            'active': False
+        }
+
+        # Check for no link condition first (Speed=Level 01 AND Width 00)
+        if speed_level == "01" and width == "00":
+            display_info.update({
+                'display_speed': 'No Link',
+                'display_width': '',
+                'status': 'No Link',
+                'status_color': '#ff4444',  # Red light
+                'active': False
+            })
+            return display_info
+
+        # Process speed level to generation display
+        speed_mappings = {
+            "06": ("Gen6", "#00ff00"),  # Green light
+            "05": ("Gen5", "#ff9500"),  # Yellow light
+            "04": ("Gen4", "#ff9500"),  # Yellow light
+            "03": ("Gen3", "#ff9500"),  # Yellow light
+            "02": ("Gen2", "#ff9500"),  # Yellow light
+            "01": ("Gen1", "#ff4444"),  # Red light
+        }
+
+        if speed_level in speed_mappings:
+            display_speed, status_color = speed_mappings[speed_level]
+            display_info['display_speed'] = display_speed
+            display_info['status_color'] = status_color
+            display_info['active'] = True
+        else:
+            display_info['display_speed'] = f"Level {speed_level}"
+            display_info['status_color'] = "#cccccc"
+            display_info['active'] = False
+
+        # Process width formatting (Width=02 -> x2, Width=04 -> x4, etc.)
+        if width in ["02", "04", "08", "16"]:
+            # Remove leading zero and format as x2, x4, etc.
+            width_num = width.lstrip('0') or '0'
+            display_info['display_width'] = f"x{width_num}"
+        elif width == "00":
+            display_info['display_width'] = ""
+        else:
+            display_info['display_width'] = f"x{width}"
+
+        # Set overall status
+        if display_info['active'] and speed_level != "01":
+            display_info['status'] = "Active"
+        else:
+            display_info['status'] = "Inactive"
+
+        return display_info
+
+    def _create_and_cache_link_json(self, parsed_data: Dict[str, Any]):
+        """Create JSON object for Link Status dashboard and cache it"""
+        ttl = 300  # 5 minutes cache TTL
+
+        print("DEBUG: Creating Link Status JSON object...")
+
+        try:
+            # Create LINK STATUS JSON
+            link_status_json = {
+                'dashboard_type': 'link_status',
+                'data_source': 'showport_command',
+                'last_updated': parsed_data.get('last_updated', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+                'sections': {
+                    'port_status': {
+                        'title': 'Port and Link Status',
+                        'icon': '🔗',
+                        'ports': self._extract_port_items(parsed_data.get('ports', {})),
+                        'golden_finger': parsed_data.get('golden_finger', {})
+                    }
+                },
+                'data_fresh': True
+            }
+
+            # Cache the JSON object
+            self.cache.set('link_status_json', link_status_json, 'link_status', ttl)
+
+            print(f"DEBUG: Link Status JSON created and cached successfully")
+            print(f"  Port count: {len(link_status_json['sections']['port_status']['ports'])}")
+            print(f"  Golden finger available: {bool(link_status_json['sections']['port_status']['golden_finger'])}")
+
+        except Exception as e:
+            print(f"ERROR: Failed to create Link Status JSON object: {e}")
+            import traceback
+            traceback.print_exc()
+
+    def _extract_port_items(self, ports_data: Dict) -> List[Dict]:
+        """Extract port items for link status JSON"""
+        items = []
+
+        for port_key, port_info in ports_data.items():
+            item = {
+                'port_number': port_info.get('port_number', '?'),
+                'display_speed': port_info.get('display_speed', 'Unknown'),
+                'display_width': port_info.get('display_width', ''),
+                'status': port_info.get('status', 'Unknown'),
+                'status_color': port_info.get('status_color', '#cccccc'),
+                'active': port_info.get('active', False),
+                'speed_level': port_info.get('speed_level', '00'),
+                'width': port_info.get('width', '00')
+            }
+            items.append(item)
+
+        # Sort by port number
+        items.sort(key=lambda x: int(x['port_number']) if x['port_number'].isdigit() else 999)
+
+        print(f"DEBUG: Extracted {len(items)} port items")
+        return items
+
+    def get_link_status_json(self) -> Optional[Dict[str, Any]]:
+        """
+        Get JSON object for Link Status dashboard
+
+        Returns:
+            JSON object with structured link status data or None if not available
+        """
+        link_json = self.cache.get('link_status_json')
+        if link_json:
+            print("DEBUG: Retrieved link status JSON from cache")
+            return link_json
+        else:
+            print("DEBUG: No link status JSON in cache")
+            return None
+
+    def get_cached_showport_data(self) -> Optional[Dict[str, Any]]:
+        """Get cached showport data if available"""
+        return self.cache.get('showport_data')
+
+    def is_showport_data_fresh(self, max_age_seconds: int = 300) -> bool:
+        """Check if cached showport data is fresh enough"""
+        showport_data = self.cache.get_with_metadata('showport_data')
+        if showport_data:
+            return showport_data['age_seconds'] < max_age_seconds
+        return False
+
     def _get_default_host_display_data(self) -> Dict[str, Any]:
         """Return default host info based on sample data"""
         return {
