@@ -315,7 +315,7 @@ class LinkStatusDashboardUI:
         self.create_link_refresh_controls(link_info)
 
     def _load_hc_image(self):
-        """Load the HCFront.png image from Images directory with larger size"""
+        """Load the HCFront.png image from Images directory with larger size for high-res displays"""
         image_paths = [
             "Images/HCFront.png",
             "./Images/HCFront.png",
@@ -327,12 +327,12 @@ class LinkStatusDashboardUI:
         for path in image_paths:
             if os.path.exists(path):
                 try:
-                    # Load and resize image to larger size for full window display
+                    # Load and resize image to much larger size for high-resolution displays
                     image = Image.open(path)
-                    # Resize to larger size (adjust as needed for full window)
-                    image = image.resize((600, 450), Image.Resampling.LANCZOS)
+                    # Resize to larger size for 2400x1600 displays (80% = ~1920x1280 window)
+                    image = image.resize((800, 600), Image.Resampling.LANCZOS)
                     self.hc_image = ImageTk.PhotoImage(image)
-                    print(f"DEBUG: Loaded HCFront.png from {path} at larger size")
+                    print(f"DEBUG: Loaded HCFront.png from {path} at high-res size (800x600)")
                     break
                 except Exception as e:
                     print(f"DEBUG: Error loading image from {path}: {e}")
@@ -341,9 +341,9 @@ class LinkStatusDashboardUI:
             print("DEBUG: HCFront.png not found in Images directory")
 
     def create_image_section(self, parent):
-        """Create image display section that fills remaining space"""
+        """Create image display section optimized for large high-resolution displays"""
         image_frame = ttk.Frame(parent, style='Content.TFrame')
-        image_frame.pack(fill='both', expand=True, padx=10, pady=(5, 10))
+        image_frame.pack(fill='both', expand=True, padx=15, pady=(8, 15))
 
         # Center the image horizontally and vertically in remaining space
         image_container = ttk.Frame(image_frame, style='Content.TFrame')
@@ -356,31 +356,31 @@ class LinkStatusDashboardUI:
         image_label = tk.Label(inner_frame, image=self.hc_image, bg='#1e1e1e')
         image_label.pack()
 
-        # Add image caption
+        # Add image caption with larger font for high-res displays
         caption_label = ttk.Label(inner_frame,
                                   text="Gen6 PCIe Atlas 3 Host Card",
                                   style='Info.TLabel',
-                                  font=('Arial', 14, 'italic'))
-        caption_label.pack(pady=(15, 0))
+                                  font=('Arial', 18, 'italic'))  # Larger caption font
+        caption_label.pack(pady=(20, 0))
 
     def create_port_status_section(self, parent, link_info: LinkStatusInfo):
-        """Create port status section that fills the upper portion of the window"""
+        """Create port status section optimized for large high-resolution displays"""
         # Create section frame that uses full width and height
         section_frame = ttk.Frame(parent, style='Content.TFrame',
                                   relief='solid', borderwidth=1)
-        section_frame.pack(fill='both', expand=True, padx=10, pady=(10, 5))
+        section_frame.pack(fill='both', expand=True, padx=15, pady=(15, 8))
 
-        # Section header
+        # Section header with larger font for high-res displays
         header_frame = ttk.Frame(section_frame, style='Content.TFrame')
-        header_frame.pack(fill='x', padx=20, pady=(20, 15))
+        header_frame.pack(fill='x', padx=30, pady=(30, 25))
 
         header_label = ttk.Label(header_frame, text="🔗 Port and Link Status",
-                                 style='Dashboard.TLabel', font=('Arial', 18, 'bold'))
+                                 style='Dashboard.TLabel', font=('Arial', 24, 'bold'))
         header_label.pack()
 
-        # Section content with maximum width utilization
+        # Section content with maximum width utilization for large displays
         content_frame = ttk.Frame(section_frame, style='Content.TFrame')
-        content_frame.pack(fill='both', expand=True, padx=40, pady=(0, 20))
+        content_frame.pack(fill='both', expand=True, padx=60, pady=(0, 30))
 
         # Display port information
         if link_info.ports:
@@ -393,9 +393,9 @@ class LinkStatusDashboardUI:
 
         # Display golden finger information
         if link_info.golden_finger and link_info.golden_finger.port_number:
-            # Add separator
+            # Add separator with more spacing for large displays
             separator = ttk.Separator(content_frame, orient='horizontal')
-            separator.pack(fill='x', pady=20)
+            separator.pack(fill='x', pady=30)
 
             # Golden finger container
             gf_container = ttk.Frame(content_frame, style='Content.TFrame')
@@ -408,21 +408,21 @@ class LinkStatusDashboardUI:
             no_data_label = ttk.Label(content_frame,
                                       text="No port data available - click refresh to load",
                                       style='Info.TLabel',
-                                      font=('Arial', 16, 'italic'))
+                                      font=('Arial', 18, 'italic'))
             no_data_label.pack(expand=True)
 
     def create_port_row(self, parent, port_info: PortInfo):
-        """Create a single port row with enhanced formatting and green active checkboxes"""
+        """Create a single port row optimized for large high-resolution displays"""
         row_frame = ttk.Frame(parent, style='Content.TFrame')
-        row_frame.pack(fill='x', pady=15)
+        row_frame.pack(fill='x', pady=20)  # Increased spacing for large displays
 
-        # Port name/number (left side) - larger font
+        # Port name/number (left side) - much larger font for high-res
         name_frame = ttk.Frame(row_frame, style='Content.TFrame')
         name_frame.pack(side='left', fill='x', expand=True)
 
         port_name = f"Port {port_info.port_number}" if port_info.port_number != "Golden Finger" else port_info.port_number
         name_label = ttk.Label(name_frame, text=port_name,
-                               style='Info.TLabel', font=('Arial', 16, 'bold'))
+                               style='Info.TLabel', font=('Arial', 20, 'bold'))  # Larger font
         name_label.pack(side='left')
 
         # Status indicators (right side)
@@ -432,42 +432,38 @@ class LinkStatusDashboardUI:
         # Create custom checkbox with proper styling
         active_var = tk.BooleanVar(value=port_info.active)
 
-        # Create custom checkbox that appears green when active
+        # Create custom checkbox that appears green when active (for ALL active ports)
         if port_info.active:
-            # For active ports, create a green checkbutton
+            # For ALL active ports, create a green checkbutton
             checkbox_frame = ttk.Frame(status_frame, style='Content.TFrame')
-            checkbox_frame.pack(side='right', padx=(20, 0))
+            checkbox_frame.pack(side='right', padx=(30, 0))  # More spacing
 
-            # Create a custom green checkbox using a label and checkbox
+            # Create a custom green checkbox (removed font parameter that was causing error)
             active_check = ttk.Checkbutton(checkbox_frame, variable=active_var, state='disabled')
             active_check.pack(side='left')
 
-            # Add green "Active" text
-            if port_info.status_color == "#00ff00":  # Gen6 green
-                active_label = ttk.Label(checkbox_frame, text="Active",
-                                         foreground='#00ff00', background='#1e1e1e',
-                                         font=('Arial', 12, 'bold'))
-            else:
-                active_label = ttk.Label(checkbox_frame, text="Active",
-                                         style='Info.TLabel', font=('Arial', 12, 'bold'))
-            active_label.pack(side='left', padx=(5, 0))
+            # Add GREEN "Active" text for ALL active ports with larger font
+            active_label = ttk.Label(checkbox_frame, text="Active",
+                                     foreground='#00ff00', background='#1e1e1e',
+                                     font=('Arial', 16, 'bold'))  # Larger font
+            active_label.pack(side='left', padx=(8, 0))
         else:
-            # For inactive ports, use regular styling
+            # For inactive ports, use regular styling (removed font parameter)
             active_check = ttk.Checkbutton(status_frame, text="Active",
                                            variable=active_var, state='disabled')
-            active_check.pack(side='right', padx=(20, 0))
+            active_check.pack(side='right', padx=(30, 0))
 
         # Status light and text
         status_info_frame = ttk.Frame(status_frame, style='Content.TFrame')
-        status_info_frame.pack(side='right', padx=(20, 20))
+        status_info_frame.pack(side='right', padx=(30, 30))  # More spacing
 
-        # Create status light (colored circle) - larger size
-        status_canvas = tk.Canvas(status_info_frame, width=20, height=20,
+        # Create status light (colored circle) - much larger size for high-res
+        status_canvas = tk.Canvas(status_info_frame, width=28, height=28,
                                   bg='#1e1e1e', highlightthickness=0)
-        status_canvas.pack(side='left', padx=(0, 10))
-        status_canvas.create_oval(3, 3, 17, 17, fill=port_info.status_color, outline='')
+        status_canvas.pack(side='left', padx=(0, 15))
+        status_canvas.create_oval(4, 4, 24, 24, fill=port_info.status_color, outline='')
 
-        # Speed and width display - larger font
+        # Speed and width display - much larger font for high-res
         if port_info.display_speed == "No Link":
             status_text = "No Link"
         else:
@@ -475,7 +471,7 @@ class LinkStatusDashboardUI:
             status_text = f"{port_info.display_speed}{width_text}"
 
         status_label = ttk.Label(status_info_frame, text=status_text,
-                                 style='Info.TLabel', font=('Arial', 15, 'bold'))
+                                 style='Info.TLabel', font=('Arial', 18, 'bold'))  # Much larger font
         status_label.pack(side='left')
 
     def create_link_refresh_controls(self, link_info: LinkStatusInfo):
