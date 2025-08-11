@@ -1,0 +1,12 @@
+
+Port Slot------------------------------------------------------------------------------
+
+Port80 : speed 06, width 04, max_speed06, max_width16
+Port112: speed 01, width 00, max_speed06, max_width16
+Port128: speed 05, width 16, max_speed06, max_width16
+Port144: speed 04, width 02, max_speed06, max_width16
+
+Port Upstream------------------------------------------------------------------------------
+
+Golden finger: speed 06, width 16, max_width = 16
+	- 
