@@ -487,10 +487,41 @@ class ConnectionWindow:
                                  "• Device is connected\n• Port is not in use\n• Correct port selected")
 
     def open_dashboard(self, port):
-        """Open the main dashboard window"""
+        """Open the main dashboard window with 80% screen sizing for large displays"""
+        # Get screen dimensions before destroying connection window
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+
+        print(f"DEBUG: Detected screen resolution: {screen_width}x{screen_height}")
+
         self.root.destroy()
         dashboard_root = tk.Tk()
-        DashboardApp(dashboard_root, port, self.settings_mgr)  # ADD settings_mgr parameter
+
+        # Force the window to be maximized state for large displays
+        # For 2400x1600, this ensures we get a properly large window
+        try:
+            dashboard_root.state('zoomed')  # Windows maximize
+            print("DEBUG: Window set to maximized state")
+        except:
+            print("DEBUG: Maximize failed, using manual sizing")
+
+        # Also set explicit geometry as backup
+        window_width = int(screen_width * 0.85)  # Slightly larger - 85%
+        window_height = int(screen_height * 0.85)
+        x = (screen_width - window_width) // 2
+        y = (screen_height - window_height) // 2
+
+        # Set geometry and then maximize
+        dashboard_root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        dashboard_root.minsize(1400, 1000)  # Much larger minimum for high-res displays
+
+        print(f"DEBUG: Opening dashboard with size {window_width}x{window_height} at position {x},{y}")
+        print(f"DEBUG: For your 2400x1600 display, this should be approximately 2040x1360")
+
+        # Ensure window is properly sized before creating DashboardApp
+        dashboard_root.update_idletasks()
+
+        DashboardApp(dashboard_root, port, self.settings_mgr)
         dashboard_root.mainloop()
 
 
@@ -551,7 +582,7 @@ class DashboardApp:
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def setup_window(self):
-        """Configure the main dashboard window"""
+        """Configure the main dashboard window with 85% screen resolution"""
         title = get_window_title(APP_DESCRIPTION, self.is_demo_mode)
         self.root.title(title)
 
@@ -561,34 +592,33 @@ class DashboardApp:
         except:
             pass
 
-        # Use window size from settings - NEW
-        window_width = self.settings_mgr.get('ui', 'window_width', 1200)
-        window_height = self.settings_mgr.get('ui', 'window_height', 800)
+        # Calculate 85% of screen resolution for much larger window
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
 
-        # Position window - NEW with settings integration
-        if self.settings_mgr.get('ui', 'remember_window_position', True):
-            x = self.settings_mgr.get('ui', 'last_window_x', -1)
-            y = self.settings_mgr.get('ui', 'last_window_y', -1)
+        window_width = int(screen_width * 0.85)
+        window_height = int(screen_height * 0.85)
 
-            if x >= 0 and y >= 0:
-                self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
-            else:
-                # Center window
-                screen_width = self.root.winfo_screenwidth()
-                screen_height = self.root.winfo_screenheight()
-                x = (screen_width - window_width) // 2
-                y = (screen_height - window_height) // 2
-                self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
-        else:
-            # Center window
-            screen_width = self.root.winfo_screenwidth()
-            screen_height = self.root.winfo_screenheight()
-            x = (screen_width - window_width) // 2
-            y = (screen_height - window_height) // 2
-            self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        # Center the window on screen
+        x = (screen_width - window_width) // 2
+        y = (screen_height - window_height) // 2
+
+        print(
+            f"DEBUG: Setting dashboard window size to {window_width}x{window_height} (85% of {screen_width}x{screen_height})")
+
+        # Position window with calculated size and position
+        self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+
+        # Try to maximize the window for best experience
+        try:
+            self.root.state('zoomed')
+            print("DEBUG: Dashboard window maximized")
+        except:
+            print("DEBUG: Dashboard maximize failed, using manual size")
 
         self.root.configure(bg='#1e1e1e')
-        self.root.minsize(800, 600)
+        # Set minimum size to be reasonable but allow large windows
+        self.root.minsize(1400, 1000)  # Much larger minimum for 2400x1600 displays
 
         # Configure styles
         self.setup_styles()
