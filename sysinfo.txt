@@ -1,0 +1,46 @@
+================================================================================
+ver
+================================================================================
+
+S/N      : GBH14412506206Z
+Company  : SerialCables,Inc
+Model    : PCI6-RD-x16HT-BG6-144
+Version  : 0.1.0    Date : Jul 18 2025 11:05:16
+SBR Version : 0 34 160 28
+
+================================================================================
+lsd
+================================================================================
+
+Thermal:
+        Board Temperature : 55 degree
+
+Fans Speed:
+        Switch Fan : 6310 rpm
+
+Voltage Sensors:
+Board    0.8V  Voltage : 890 mV
+Board   0.89V  Voltage : 991 mV
+Board    1.2V  Voltage : 1304 mV
+Board    1.5v  Voltage : 1512 mV
+
+Current Status:
+Current : 10240 mA
+
+Error Status:
+Voltage    0.8V  error : 0
+Voltage   0.89V  error : 0
+Voltage    1.2V  error : 0
+Voltage    1.5v  error : 0
+
+================================================================================
+showport
+================================================================================
+Port Slot------------------------------------------------------------------------------
+
+Port80 : speed 06, width 04, max_speed06, max_width16
+Port112: speed 01, width 00, max_speed06, max_width16
+Port128: speed 01, width 00, max_speed06, max_width16
+Port Upstream------------------------------------------------------------------------------
+
+Golden finger: speed 05, width 16, max_width = 16
