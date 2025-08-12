@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="788c075a-584d-4f65-912f-d1e30ca41428" name="Changes" comment="Added DemoData">
-      <change afterPath="$PROJECT_DIR$/firmware_dashboard.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demo_mode_integration.py" beforeDir="false" afterPath="$PROJECT_DIR$/demo_mode_integration.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/enhanced_sysinfo_parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/enhanced_sysinfo_parser.py" afterDir="false" />
+    <list default="true" id="788c075a-584d-4f65-912f-d1e30ca41428" name="Changes" comment="Firmware Dashboard Added">
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -95,7 +91,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1754689470994</updated>
-      <workItem from="1754689482253" duration="74464000" />
+      <workItem from="1754689482253" duration="74532000" />
     </task>
     <task id="LOCAL-00001" summary="Normal code updates">
       <option name="closed" value="true" />
@@ -225,7 +221,15 @@
       <option name="project" value="LOCAL" />
       <updated>1755025466080</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="Firmware Dashboard Added">
+      <option name="closed" value="true" />
+      <created>1755029322323</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1755029322323</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -259,7 +263,8 @@
     <MESSAGE value="1.3.2 Updates (Port Status added)" />
     <MESSAGE value="Port Status Formatting Updates" />
     <MESSAGE value="Added DemoData" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added DemoData" />
+    <MESSAGE value="Firmware Dashboard Added" />
+    <option name="LAST_COMMIT_MESSAGE" value="Firmware Dashboard Added" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/CalypsoPy$port_status_dashboard.coverage" NAME="port_status_dashboard Coverage Results" MODIFIED="1755021474107" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

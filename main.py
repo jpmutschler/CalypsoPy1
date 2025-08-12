@@ -9,7 +9,7 @@ Joshua Mutschler, Serial Cables
 CalypsoPy Dependencies:
 - tkinter (built-in)
 - pySerial
-- Pillow (PIL) - for SBR mode image display
+- Pillow (PIL) - for dashboard image display
 - Standard library modules: threading, queue, json, os, re, datetime
 """
 
