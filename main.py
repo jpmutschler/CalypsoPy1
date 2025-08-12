@@ -13,7 +13,7 @@ PIL
 
 # Application Information
 APP_NAME = "CalypsoPy"
-APP_VERSION = "Beta 1.1.0"  # Updated version
+APP_VERSION = "Beta 1.1.2"  # Updated version
 APP_BUILD = "20250809-001"  # Updated build
 APP_DESCRIPTION = "Serial Cables Atlas 3 Serial UI for CLI Interface"
 APP_AUTHOR = "Serial Cables, LLC"
