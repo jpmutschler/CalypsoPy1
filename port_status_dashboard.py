@@ -223,25 +223,25 @@ class PortStatusDashboardUI:
         """Create section showing current SBR mode"""
         section_frame = ttk.Frame(self.app.scrollable_frame, style='Content.TFrame',
                                   relief='solid', borderwidth=1)
-        section_frame.pack(fill='x', pady=10)
+        section_frame.pack(fill='both', expand=True, padx=650, pady=15)
 
         # Section header
         header_frame = ttk.Frame(section_frame, style='Content.TFrame')
-        header_frame.pack(fill='x', padx=15, pady=(15, 10))
+        header_frame.pack(fill='x', padx=30, pady=(20, 15))
 
         header_label = ttk.Label(header_frame, text="🔌 Current Port Mode",
-                                 style='Dashboard.TLabel', font=('Arial', 12, 'bold'))
-        header_label.pack(anchor='w')
+                                 style='Dashboard.TLabel', font=('Arial', 14, 'bold'))
+        header_label.pack(anchor='center')
 
-        # Section content - centered
+        # Section content - centered and enlarged
         content_frame = ttk.Frame(section_frame, style='Content.TFrame')
-        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
+        content_frame.pack(fill='both', expand=True, padx=30, pady=(0, 20))
 
-        # Center the content
+        # Center the content with larger spacing
         center_frame = ttk.Frame(content_frame, style='Content.TFrame')
-        center_frame.pack(expand=True)
+        center_frame.pack(expand=True, fill='both')
 
-        # Display current mode data
+        # Display current mode data with larger fonts
         display_data = port_info.get_display_data()
         for field_name, value in display_data:
             if value and value != "Unknown":
@@ -250,29 +250,29 @@ class PortStatusDashboardUI:
     def create_centered_data_row(self, parent, field_name, value):
         """Create a centered data row with field name and value"""
         row_frame = ttk.Frame(parent, style='Content.TFrame')
-        row_frame.pack(pady=3)
+        row_frame.pack(pady=8, padx=20)
 
         # Create a frame to hold both labels and center them
         data_frame = ttk.Frame(row_frame, style='Content.TFrame')
-        data_frame.pack()
+        data_frame.pack(expand=True)
 
-        # Field name
+        # Field name with larger font
         field_label = ttk.Label(data_frame, text=f"{field_name}:",
-                                style='Info.TLabel', font=('Arial', 10, 'bold'))
-        field_label.pack(side='left', padx=(0, 10))
+                                style='Info.TLabel', font=('Arial', 12, 'bold'))
+        field_label.pack(side='left', padx=(0, 15))
 
-        # Value with status color if applicable
+        # Value with status color and larger font
         value_color = self.get_mode_status_color(field_name, value)
 
         if value_color != '#cccccc':  # Default color
             style_name = f"ModeStatus_{field_name.replace(' ', '_')}.TLabel"
             style = ttk.Style()
             style.configure(style_name, background='#1e1e1e',
-                            foreground=value_color, font=('Arial', 10, 'bold'))
+                            foreground=value_color, font=('Arial', 12, 'bold'))
             value_label = ttk.Label(data_frame, text=value, style=style_name)
         else:
             value_label = ttk.Label(data_frame, text=value, style='Info.TLabel',
-                                    font=('Arial', 10, 'bold'))
+                                    font=('Arial', 12, 'bold'))
 
         value_label.pack(side='left')
 
@@ -286,39 +286,40 @@ class PortStatusDashboardUI:
         """Create section for changing SBR mode"""
         section_frame = ttk.Frame(self.app.scrollable_frame, style='Content.TFrame',
                                   relief='solid', borderwidth=1)
-        section_frame.pack(fill='x', pady=10)
+        section_frame.pack(fill='both', expand=True, padx=50, pady=15)
 
         # Section header
         header_frame = ttk.Frame(section_frame, style='Content.TFrame')
-        header_frame.pack(fill='x', padx=15, pady=(15, 10))
+        header_frame.pack(fill='x', padx=30, pady=(20, 15))
 
         header_label = ttk.Label(header_frame, text="⚙️ Change Host Card Mode",
-                                 style='Dashboard.TLabel', font=('Arial', 12, 'bold'))
-        header_label.pack(anchor='w')
+                                 style='Dashboard.TLabel', font=('Arial', 14, 'bold'))
+        header_label.pack(anchor='center')
 
-        # Section content - centered
+        # Section content - centered and enlarged
         content_frame = ttk.Frame(section_frame, style='Content.TFrame')
-        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
+        content_frame.pack(fill='both', expand=True, padx=30, pady=(0, 20))
 
-        # Center the controls
+        # Center the controls with more spacing
         center_frame = ttk.Frame(content_frame, style='Content.TFrame')
-        center_frame.pack(expand=True)
+        center_frame.pack(expand=True, fill='both')
 
-        # Mode selection dropdown
+        # Mode selection dropdown with larger spacing
         mode_frame = ttk.Frame(center_frame, style='Content.TFrame')
-        mode_frame.pack(pady=10)
+        mode_frame.pack(pady=15)
 
         ttk.Label(mode_frame, text="Select SBR Mode:",
-                  style='Info.TLabel', font=('Arial', 10, 'bold')).pack(side='left', padx=(0, 10))
+                  style='Info.TLabel', font=('Arial', 12, 'bold')).pack(side='left', padx=(0, 15))
 
         self.mode_var = tk.StringVar(value="SBR0")
         self.mode_combo = ttk.Combobox(mode_frame, textvariable=self.mode_var,
-                                       values=self.sbr_modes, state='readonly', width=10)
+                                       values=self.sbr_modes, state='readonly',
+                                       width=12, font=('Arial', 11))
         self.mode_combo.pack(side='left')
 
-        # Change mode button
+        # Change mode button with larger size
         button_frame = ttk.Frame(center_frame, style='Content.TFrame')
-        button_frame.pack(pady=15)
+        button_frame.pack(pady=20)
 
         self.change_mode_btn = ttk.Button(button_frame, text="Change Host Card Mode",
                                           command=self.change_host_card_mode,
@@ -329,23 +330,23 @@ class PortStatusDashboardUI:
         """Create section showing mode-specific image"""
         section_frame = ttk.Frame(self.app.scrollable_frame, style='Content.TFrame',
                                   relief='solid', borderwidth=1)
-        section_frame.pack(fill='x', pady=10)
+        section_frame.pack(fill='both', expand=True, padx=50, pady=15)
 
         # Section header
         header_frame = ttk.Frame(section_frame, style='Content.TFrame')
-        header_frame.pack(fill='x', padx=15, pady=(15, 10))
+        header_frame.pack(fill='x', padx=30, pady=(20, 15))
 
         header_label = ttk.Label(header_frame, text="📊 Mode Configuration Diagram",
-                                 style='Dashboard.TLabel', font=('Arial', 12, 'bold'))
-        header_label.pack(anchor='w')
+                                 style='Dashboard.TLabel', font=('Arial', 14, 'bold'))
+        header_label.pack(anchor='center')
 
-        # Image content - centered
+        # Image content - centered with more space
         image_content_frame = ttk.Frame(section_frame, style='Content.TFrame')
-        image_content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
+        image_content_frame.pack(fill='both', expand=True, padx=30, pady=(0, 20))
 
-        # Center the image
+        # Center the image with larger area
         self.image_center_frame = ttk.Frame(image_content_frame, style='Content.TFrame')
-        self.image_center_frame.pack(expand=True)
+        self.image_center_frame.pack(expand=True, fill='both')
 
         # Load and display the appropriate image
         self.display_mode_image(port_info.current_mode)
@@ -376,14 +377,14 @@ class PortStatusDashboardUI:
                         # Load image
                         if image_path not in self.image_cache:
                             pil_image = Image.open(image_path)
-                            # Resize if too large (max 400x300)
-                            pil_image.thumbnail((400, 300), Image.Resampling.LANCZOS)
+                            # Resize for larger display (max 600x450)
+                            pil_image.thumbnail((600, 450), Image.Resampling.LANCZOS)
                             self.image_cache[image_path] = ImageTk.PhotoImage(pil_image)
 
-                        # Display image
+                        # Display image with centered alignment
                         image_label = ttk.Label(self.image_center_frame,
                                                 image=self.image_cache[image_path])
-                        image_label.pack(pady=10)
+                        image_label.pack(expand=True, pady=20)
                         image_loaded = True
                         break
 
@@ -392,67 +393,72 @@ class PortStatusDashboardUI:
                         continue
 
             if not image_loaded:
-                # Show placeholder if image not found
+                # Show placeholder if image not found with larger font
                 placeholder_label = ttk.Label(self.image_center_frame,
                                               text=f"📊 SBR{mode_number} Configuration\n(Image not available)",
                                               style='Info.TLabel',
-                                              font=('Arial', 12, 'italic'),
+                                              font=('Arial', 14, 'italic'),
                                               justify='center')
-                placeholder_label.pack(pady=20)
+                placeholder_label.pack(expand=True, pady=30)
 
         except Exception as e:
             print(f"Error displaying mode image: {e}")
-            # Show error placeholder
+            # Show error placeholder with larger font
             error_label = ttk.Label(self.image_center_frame,
                                     text=f"Error loading image for SBR{mode_number}",
                                     style='Info.TLabel',
-                                    font=('Arial', 10, 'italic'))
-            error_label.pack(pady=20)
+                                    font=('Arial', 12, 'italic'))
+            error_label.pack(expand=True, pady=30)
 
     def create_warning_section(self):
         """Create warning section about power cycling"""
         warning_frame = ttk.Frame(self.app.scrollable_frame, style='Content.TFrame',
                                   relief='solid', borderwidth=2)
-        warning_frame.pack(fill='x', pady=10)
+        warning_frame.pack(fill='both', expand=True, padx=50, pady=15)
 
         # Configure warning style
         style = ttk.Style()
         style.configure('Warning.TFrame', background='#ffeeaa', relief='solid', borderwidth=2)
         style.configure('Warning.TLabel', background='#ffeeaa', foreground='#cc6600',
-                        font=('Arial', 10, 'bold'))
+                        font=('Arial', 12, 'bold'))
 
         warning_frame.configure(style='Warning.TFrame')
 
-        # Warning content - centered
+        # Warning content - centered with more padding
         warning_content = ttk.Frame(warning_frame, style='Warning.TFrame')
-        warning_content.pack(fill='x', padx=15, pady=15)
+        warning_content.pack(fill='both', expand=True, padx=30, pady=20)
 
         # Center the warning text
         center_warning = ttk.Frame(warning_content, style='Warning.TFrame')
-        center_warning.pack(expand=True)
+        center_warning.pack(expand=True, fill='both')
 
         warning_text = "⚠️ WARNING ⚠️\n\nThe host card must be power cycled after changing the SBR mode.\nThe new mode will not take effect until the card is restarted."
 
         warning_label = ttk.Label(center_warning, text=warning_text,
                                   style='Warning.TLabel', justify='center')
-        warning_label.pack()
+        warning_label.pack(expand=True)
 
     def create_refresh_controls(self, port_info: PortStatusInfo):
         """Create refresh controls and status display"""
         controls_frame = ttk.Frame(self.app.scrollable_frame, style='Content.TFrame')
-        controls_frame.pack(fill='x', pady=15)
+        controls_frame.pack(fill='x', padx=50, pady=20)
 
-        # Refresh button
-        refresh_btn = ttk.Button(controls_frame, text="🔄 Refresh Port Status",
-                                 command=self.refresh_port_status)
-        refresh_btn.pack(side='left')
+        # Center the controls
+        center_controls = ttk.Frame(controls_frame, style='Content.TFrame')
+        center_controls.pack(expand=True)
 
-        # Last update time
+        # Refresh button with larger size
+        refresh_btn = ttk.Button(center_controls, text="🔄 Refresh Port Status",
+                                 command=self.refresh_port_status,
+                                 style='Connect.TButton')
+        refresh_btn.pack(side='left', padx=(0, 20))
+
+        # Last update time with larger font
         if port_info.last_updated:
-            update_label = ttk.Label(controls_frame,
+            update_label = ttk.Label(center_controls,
                                      text=f"Last updated: {port_info.last_updated}",
-                                     style='Info.TLabel', font=('Arial', 9))
-            update_label.pack(side='right')
+                                     style='Info.TLabel', font=('Arial', 10))
+            update_label.pack(side='left')
 
     def create_raw_output_section(self, port_info: PortStatusInfo):
         """Create collapsible raw output section for debugging"""
