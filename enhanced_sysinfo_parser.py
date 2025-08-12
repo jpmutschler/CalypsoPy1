@@ -559,6 +559,188 @@ class EnhancedSystemInfoParser:
             return showport_data['age_seconds'] < max_age_seconds
         return False
 
+    def parse_showmode_response(self, showmode_output: str) -> Dict[str, Any]:
+        """
+        Parse showmode command output and cache the data
+
+        Args:
+            showmode_output: Raw output from showmode command
+
+        Returns:
+            Parsed showmode information
+        """
+        parsed_data = {
+            'raw_output': showmode_output,
+            'parsed_at': datetime.now().isoformat(),
+            'current_mode': 0,
+            'mode_name': 'SBR0',
+            'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+
+        # Extract SBR mode number
+        mode_patterns = [
+            r'SBR\s*mode\s*:\s*(\d+)',
+            r'mode\s*:\s*(\d+)',
+            r'SBR\s*(\d+)',
+            r'current.*?mode.*?(\d+)'
+        ]
+
+        mode_lower = showmode_output.lower()
+        for pattern in mode_patterns:
+            match = re.search(pattern, mode_lower, re.IGNORECASE)
+            if match:
+                try:
+                    mode_num = int(match.group(1))
+                    if 0 <= mode_num <= 6:  # Valid SBR mode range
+                        parsed_data['current_mode'] = mode_num
+                        parsed_data['mode_name'] = f"SBR{mode_num}"
+                        break
+                except ValueError:
+                    continue
+
+        # Cache the parsed showmode data
+        self._cache_showmode_data(parsed_data)
+
+        return parsed_data
+
+    def _cache_showmode_data(self, parsed_data: Dict[str, Any]):
+        """Cache showmode data with appropriate TTL"""
+        ttl = 300  # 5 minutes default TTL
+
+        # Cache the raw showmode data
+        self.cache.set('showmode_data', parsed_data, 'showmode', ttl)
+
+        # Cache formatted display data for port dashboard
+        display_data = {
+            'current_mode': parsed_data['current_mode'],
+            'mode_name': parsed_data['mode_name'],
+            'image_filename': f"SBR{parsed_data['current_mode']}.png",
+            'last_updated': parsed_data['last_updated'],
+            'raw_response': parsed_data['raw_output'],
+            'data_fresh': True
+        }
+
+        self.cache.set('port_display_data', display_data, 'showmode', ttl)
+
+        print(f"DEBUG: Cached showmode data - mode: {parsed_data['current_mode']}")
+
+    def get_showmode_data(self) -> Optional[Dict[str, Any]]:
+        """Get cached showmode data"""
+        return self.cache.get('showmode_data')
+
+    def get_port_display_data(self) -> Optional[Dict[str, Any]]:
+        """Get formatted port display data from cache"""
+        return self.cache.get('port_display_data')
+
+    def is_showmode_data_fresh(self, max_age_seconds: int = 300) -> bool:
+        """Check if cached showmode data is fresh enough"""
+        showmode_data = self.cache.get_with_metadata('showmode_data')
+        if showmode_data:
+            return showmode_data['age_seconds'] < max_age_seconds
+        return False
+
+    def invalidate_showmode_data(self):
+        """Invalidate cached showmode data"""
+        cache_keys = ['showmode_data', 'port_display_data']
+        for key in cache_keys:
+            self.cache.invalidate(key)
+
+    def parse_unified_sysinfo_with_showmode(self, sysinfo_output: str, showmode_output: str = None, source="device") -> \
+    Dict[str, Any]:
+        """
+        Enhanced unified parsing that includes showmode data
+
+        Args:
+            sysinfo_output: Raw sysinfo response
+            showmode_output: Optional raw showmode response
+            source: "device" or "demo" for tracking data source
+
+        Returns:
+            Combined parsed data dictionary
+        """
+        print(f"DEBUG: Unified parser with showmode processing {source} data")
+
+        try:
+            # Parse sysinfo data using existing method
+            parsed_data = self.parse_unified_sysinfo(sysinfo_output, source)
+
+            # If showmode data provided, parse and add it
+            if showmode_output:
+                showmode_data = self.parse_showmode_response(showmode_output)
+                parsed_data['showmode_section'] = showmode_data
+                print(f"DEBUG: Added showmode data - mode: SBR{showmode_data['current_mode']}")
+
+            return parsed_data
+
+        except Exception as e:
+            print(f"ERROR: Unified parsing with showmode failed: {e}")
+            return {
+                'data_source': source,
+                'unified_parsing': False,
+                'error': str(e),
+                'processed_at': datetime.now().isoformat()
+            }
+
+    def _create_and_cache_json_objects_with_showmode(self, parsed_data: Dict[str, Any]):
+        """
+        Enhanced version that includes showmode data in JSON objects
+        """
+        ttl = 300  # 5 minutes cache TTL
+
+        print("DEBUG: Creating JSON objects with showmode data...")
+
+        try:
+            # Create existing JSON objects
+            self._create_and_cache_json_objects(parsed_data)
+
+            # Create PORT STATUS JSON if showmode data exists
+            if 'showmode_section' in parsed_data:
+                showmode_data = parsed_data['showmode_section']
+
+                port_status_json = {
+                    'dashboard_type': 'port_status',
+                    'data_source': parsed_data.get('data_source', 'unknown'),
+                    'last_updated': showmode_data.get('last_updated', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+                    'current_mode': showmode_data.get('current_mode', 0),
+                    'mode_name': showmode_data.get('mode_name', 'SBR0'),
+                    'image_filename': f"SBR{showmode_data.get('current_mode', 0)}.png",
+                    'raw_response': showmode_data.get('raw_output', ''),
+                    'data_fresh': True
+                }
+
+                # Cache the port status JSON object
+                self.cache.set('port_status_json', port_status_json, 'port_status', ttl)
+                print(f"DEBUG: Port status JSON cached - mode: {port_status_json['mode_name']}")
+
+        except Exception as e:
+            print(f"ERROR: Failed to create JSON objects with showmode: {e}")
+
+    def get_port_status_json(self) -> Optional[Dict[str, Any]]:
+        """
+        Get JSON object for Port Status dashboard
+
+        Returns:
+            JSON object with structured port status data or None if not available
+        """
+        port_json = self.cache.get('port_status_json')
+        if port_json:
+            print("DEBUG: Retrieved port status JSON from cache")
+            return port_json
+        else:
+            print("DEBUG: No port status JSON in cache")
+            return None
+
+    def is_port_status_data_available(self) -> bool:
+        """
+        Check if port status JSON data is available in cache
+
+        Returns:
+            True if port status JSON object is cached
+        """
+        port_available = self.cache.get('port_status_json') is not None
+        print(f"DEBUG: Port status data availability: {port_available}")
+        return port_available
+
     def _get_default_host_display_data(self) -> Dict[str, Any]:
         """Return default host info based on sample data"""
         return {

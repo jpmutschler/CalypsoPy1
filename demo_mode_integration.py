@@ -7,10 +7,7 @@ import os
 
 
 class UnifiedDemoSerialCLI:
-    """
-    FIXED VERSION: Unified Demo CLI with enhanced debugging and proper threading
-    """
-
+    """Unified Demo CLI with enhanced debugging and proper threading"""
     def __init__(self, port="DEMO"):
         self.port = port
         self.baudrate = 115200
@@ -19,6 +16,14 @@ class UnifiedDemoSerialCLI:
         self.command_queue = queue.Queue()
         self.response_queue = queue.Queue()
         self.log_queue = queue.Queue()
+
+        # Demo device state
+        self.demo_device_state = {
+            'current_mode': 0,  # Default SBR mode
+            'temperature': 45.5,
+            'serial_number': 'DEMO12345678',
+            'firmware_version': 'RC28'
+        }
 
         # Load demo sysinfo file at initialization
         self.demo_sysinfo_content = self._load_demo_sysinfo_file()
@@ -203,51 +208,54 @@ Golden finger: speed 01, width 00, max_width = 16"""
     # Update the _handle_unified_command method to handle showport
     def _handle_unified_command(self, command):
         """
-        Handle commands with showport support
+        UPDATED: Handle commands including showmode and setmode
         """
         command_lower = command.lower().strip()
         print(f"DEBUG: Processing command: '{command}' -> '{command_lower}'")
 
         if 'sysinfo' in command_lower:
             print("DEBUG: Handling sysinfo command")
-
             if self.demo_sysinfo_content:
                 print(f"DEBUG: Returning sysinfo content ({len(self.demo_sysinfo_content)} chars)")
-
-                # Verify content before returning
                 if len(self.demo_sysinfo_content) > 100:
-                    print("DEBUG: Sysinfo content size verification passed")
-
-                    # Format response like real device
+                    print("DEBUG: Content size verification passed")
                     formatted_response = f"Cmd>sysinfo\n\n{self.demo_sysinfo_content}\n\nCmd>[]"
                     return formatted_response
                 else:
-                    print("DEBUG: ⚠ Sysinfo content seems too small")
+                    print("DEBUG: ⚠ Content seems too small")
                     return "ERROR: Demo sysinfo data too small"
-
             else:
                 print("DEBUG: No sysinfo content available")
                 return "ERROR: Demo sysinfo data not available"
 
-        elif 'showport' in command_lower:
-            print("DEBUG: Handling showport command")
+        elif 'showmode' in command_lower:
+            print("DEBUG: Handling showmode command")
+            current_mode = self.demo_device_state.get('current_mode', 0)
+            response = f"Cmd>showmode\n\nSBR mode: {current_mode}\n\nOK>"
+            print(f"DEBUG: Generated showmode response: SBR mode {current_mode}")
+            return response
 
-            if self.demo_showport_content:
-                print(f"DEBUG: Returning showport content ({len(self.demo_showport_content)} chars)")
+        elif command_lower.startswith('setmode'):
+            print("DEBUG: Handling setmode command")
+            # Extract mode number from command
+            try:
+                parts = command.split()
+                if len(parts) >= 2:
+                    new_mode = int(parts[1])
+                    if 0 <= new_mode <= 6:
+                        # Update demo device state
+                        old_mode = self.demo_device_state.get('current_mode', 0)
+                        self.demo_device_state['current_mode'] = new_mode
 
-                # Verify content before returning
-                if len(self.demo_showport_content) > 50:
-                    print("DEBUG: Showport content size verification passed")
-
-                    # Format response like real device
-                    formatted_response = f"Cmd>showport\n\n{self.demo_showport_content}\n\nCmd>[]"
-                    return formatted_response
+                        response = f"Cmd>setmode {new_mode}\n\nMode changed from SBR{old_mode} to SBR{new_mode}\n\nOK>"
+                        print(f"DEBUG: Mode changed from SBR{old_mode} to SBR{new_mode}")
+                        return response
+                    else:
+                        return f"ERROR: Invalid mode {new_mode}. Valid modes: 0-6"
                 else:
-                    print("DEBUG: ⚠ Showport content seems too small")
-                    return "ERROR: Demo showport data too small"
-            else:
-                print("DEBUG: No showport content available")
-                return "ERROR: Demo showport data not available"
+                    return "ERROR: setmode command requires mode number (0-6)"
+            except (ValueError, IndexError):
+                return "ERROR: Invalid setmode command format. Use: setmode <0-6>"
 
         elif 'help' in command_lower:
             print("DEBUG: Handling help command")
@@ -272,24 +280,28 @@ Golden finger: speed 01, width 00, max_width = 16"""
 
         if 'sysinfo' in command_lower:
             return 0.3  # Reduced delay for testing
-        elif 'showport' in command_lower:
-            return 0.2  # Quick response for showport
+        elif 'showmode' in command_lower:
+            return 0.1  # Quick response for showmode
+        elif 'setmode' in command_lower:
+            return 0.2  # Slightly longer for setmode
         elif any(cmd in command_lower for cmd in ['help', 'status', 'version']):
             return 0.05  # Quick response for simple commands
         else:
             return 0.1  # Default delay
 
     # Update the _get_help_response method to include showport
-    def _get_help_response(self):
-        """Generate help command response"""
-        return """Available commands:
+        def _get_help_response(self):
+            """Generate help command response with showmode/setmode info"""
+            return """Available commands:
     help      - Show this help
     sysinfo   - Get complete system information (ver + lsd + showport)
-    showport  - Get port and link status information
+    showmode  - Get current SBR mode
+    setmode <0-6> - Set SBR mode (requires power cycle)
     status    - Get device status
     version   - Get firmware version
 
-    Demo Mode: All responses use actual device data from demo files"""
+    Demo Mode: All responses use actual device data from sysinfo.txt
+    Current SBR mode: """ + str(self.demo_device_state.get('current_mode', 0))
 
     def connect(self):
         """Simulate connection establishment"""
@@ -449,16 +461,27 @@ version   - Get firmware version
 
 Demo Mode: All responses use actual device data from sysinfo.txt"""
 
-    def _get_status_response(self):
-        """Generate status command response"""
-        return """Device Status: ONLINE (DEMO MODE)
-Power: GOOD
-Temperature: 45°C
-Link: ACTIVE
-Uptime: 1h 23m
-Errors: 0
+        def _get_status_response(self):
+            """Generate status command response with current mode"""
+            current_mode = self.demo_device_state.get('current_mode', 0)
+            return f"""Device Status: ONLINE (DEMO MODE)
+    Power: GOOD
+    Temperature: 45°C
+    Link: ACTIVE
+    Current SBR Mode: SBR{current_mode}
+    Uptime: 1h 23m
+    Errors: 0
 
-Note: Demo mode using unified workflow with file data"""
+    Note: Demo mode using unified workflow with file data"""
+
+        def get_demo_device_state(self):
+            """Get current demo device state"""
+            return self.demo_device_state.copy()
+
+        def update_demo_device_state(self, key, value):
+            """Update demo device state"""
+            self.demo_device_state[key] = value
+            print(f"DEBUG: Updated demo state - {key}: {value}")
 
     def _get_version_response(self):
         """Generate version command response"""

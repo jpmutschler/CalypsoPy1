@@ -4,8 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="788c075a-584d-4f65-912f-d1e30ca41428" name="Changes" comment="Routine Updates">
+    <list default="true" id="788c075a-584d-4f65-912f-d1e30ca41428" name="Changes" comment="Standard Updates">
+      <change afterPath="$PROJECT_DIR$/port_status_dashboard.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo_mode_integration.py" beforeDir="false" afterPath="$PROJECT_DIR$/demo_mode_integration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/enhanced_sysinfo_parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/enhanced_sysinfo_parser.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -91,7 +94,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1754689470994</updated>
-      <workItem from="1754689482253" duration="67033000" />
+      <workItem from="1754689482253" duration="70133000" />
     </task>
     <task id="LOCAL-00001" summary="Normal code updates">
       <option name="closed" value="true" />
@@ -173,7 +176,31 @@
       <option name="project" value="LOCAL" />
       <updated>1754942479635</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Commands added">
+      <option name="closed" value="true" />
+      <created>1755013392293</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1755013392293</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Standard Updates">
+      <option name="closed" value="true" />
+      <created>1755013416527</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1755013416527</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Standard Updates">
+      <option name="closed" value="true" />
+      <created>1755013428629</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1755013428629</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -202,7 +229,9 @@
     <MESSAGE value="New styling and parsing method for Port Status data" />
     <MESSAGE value="Code Updates" />
     <MESSAGE value="Routine Updates" />
-    <option name="LAST_COMMIT_MESSAGE" value="Routine Updates" />
+    <MESSAGE value="Commands added" />
+    <MESSAGE value="Standard Updates" />
+    <option name="LAST_COMMIT_MESSAGE" value="Standard Updates" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/CalypsoPy$host_card_info.coverage" NAME="host_card_info Coverage Results" MODIFIED="1754763199598" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

@@ -6,14 +6,16 @@ A modern GUI application for serial communication with the Gen6 PCIe Atlas 3 Hos
 Developed by:
 Joshua Mutschler, Serial Cables
 
-Dependencies:
-pySerial
-PIL
+CalypsoPy Dependencies:
+- tkinter (built-in)
+- pySerial
+- Pillow (PIL) - for SBR mode image display
+- Standard library modules: threading, queue, json, os, re, datetime
 """
 
 # Application Information
 APP_NAME = "CalypsoPy"
-APP_VERSION = "Beta 1.1.2"  # Updated version
+APP_VERSION = "Beta 1.3.2"  # Updated version
 APP_BUILD = "20250809-001"  # Updated build
 APP_DESCRIPTION = "Serial Cables Atlas 3 Serial UI for CLI Interface"
 APP_AUTHOR = "Serial Cables, LLC"
@@ -74,7 +76,14 @@ from settings_manager import SettingsManager
 from settings_ui import SettingsDialog
 import settings_ui  # Import module for CacheViewerDialog access
 from link_status_dashboard import LinkStatusDashboardUI, LinkStatusManager
+from port_status_dashboard import PortStatusManager, PortStatusDashboardUI, get_demo_showmode_response, update_demo_device_state
 
+try:
+    from PIL import Image, ImageTk
+    PIL_AVAILABLE = True
+except ImportError:
+    PIL_AVAILABLE = False
+    print("WARNING: PIL not available. SBR mode images will not be displayed.")
 
 def load_demo_sysinfo_file():
     """Load sysinfo.txt from DemoData directory"""
@@ -557,6 +566,13 @@ class DashboardApp:
         # Initialize Link Status components
         self.link_status_ui = LinkStatusDashboardUI(self)
 
+        # Initialize Port Status components
+        self.port_status_manager = PortStatusManager(self.cli)
+        self.port_status_ui = PortStatusDashboardUI(self)
+
+        # Demo device state for port status (if demo mode)
+        self.demo_device_state = {'current_mode': 0}
+
         # Rest of initialization...
         self.log_data = []
         self.current_dashboard = "host"
@@ -910,11 +926,11 @@ class DashboardApp:
         """Refresh current dashboard with cache-first approach"""
         dashboard_name = self.current_dashboard
 
-        if dashboard_name == "link":
-            # For link dashboard, refresh showport data
-            print("DEBUG: Refreshing link dashboard - sending showport command")
-            self.send_showport_command()
-            self.update_cache_status("Requesting fresh link data...")
+        if dashboard_name == "port":
+            # Special handling for port dashboard
+            self.port_status_manager.get_port_status_info(force_refresh=True)
+            self.update_content_area()
+            self.update_cache_status("Port status refreshed")
         elif dashboard_name == "host":
             # Check if we need fresh data
             if self.sysinfo_parser.force_refresh_needed():
@@ -927,7 +943,7 @@ class DashboardApp:
                 self.update_content_area()
                 self.update_cache_status("Using cached data")
         else:
-            # For other dashboards, just update content
+            # Other dashboards - use existing logic
             self.update_content_area()
 
         # Log the refresh
@@ -1324,27 +1340,116 @@ class DashboardApp:
                 self.show_loading_message("Loading link status...")
 
     def create_port_dashboard(self):
-        """Create port configuration dashboard"""
+        """Create port status dashboard with showmode integration"""
+        if self.is_demo_mode:
+            # For demo mode, use existing showmode.txt or generate response
+            print("DEBUG: Demo mode - creating port dashboard with simulated data")
 
-        def port_content(frame):
-            # Port configuration options
-            configs = [
-                ("Port 1", "Enabled", "High Speed"),
-                ("Port 2", "Enabled", "Super Speed"),
-                ("Port 3", "Disabled", "N/A"),
-                ("Port 4", "Enabled", "High Speed")
-            ]
+            try:
+                # Try to load showmode.txt first
+                demo_showmode_content = None
+                showmode_paths = ["showmode.txt", "DemoData/showmode.txt", "./showmode.txt"]
 
-            for port, status, speed in configs:
-                row_frame = ttk.Frame(frame, style='Content.TFrame')
-                row_frame.pack(fill='x', pady=5)
+                for path in showmode_paths:
+                    if os.path.exists(path):
+                        try:
+                            with open(path, 'r', encoding='utf-8') as f:
+                                demo_showmode_content = f.read()
+                            print(f"DEBUG: Loaded showmode.txt from {path}")
+                            break
+                        except Exception as e:
+                            print(f"DEBUG: Error loading {path}: {e}")
+                            continue
 
-                ttk.Label(row_frame, text=port, style='Info.TLabel',
-                          font=('Arial', 10, 'bold')).pack(side='left')
-                ttk.Label(row_frame, text=f"{status} ({speed})",
-                          style='Info.TLabel').pack(side='right')
+                if demo_showmode_content:
+                    # Parse mode from file content
+                    import re
+                    mode_match = re.search(r'SBR\s*mode\s*:\s*(\d+)', demo_showmode_content, re.IGNORECASE)
+                    if mode_match:
+                        try:
+                            mode_num = int(mode_match.group(1))
+                            if 0 <= mode_num <= 6:
+                                self.demo_device_state['current_mode'] = mode_num
+                        except ValueError:
+                            pass
 
-        self.create_info_card(self.scrollable_frame, "Port Configuration", port_content)
+                    demo_response = demo_showmode_content
+                else:
+                    # Generate demo response using existing function
+                    demo_response = get_demo_showmode_response(self.demo_device_state)
+                    print("DEBUG: Generated demo showmode response")
+
+                # Parse the demo response using existing parser
+                port_info = self.port_status_manager.parser.parse_showmode_response(demo_response)
+                port_info.raw_showmode_response = demo_response
+
+                # Cache the demo info
+                self.port_status_manager.cached_info = port_info
+                self.port_status_manager.last_refresh = datetime.now()
+
+                # Create the port dashboard UI
+                self.port_status_ui.create_port_dashboard()
+
+                # Log demo data loading
+                timestamp = datetime.now().strftime('%H:%M:%S')
+                self.log_data.append(f"[{timestamp}] Port status demo data loaded - SBR{port_info.current_mode}")
+
+            except Exception as e:
+                print(f"ERROR: Demo mode port dashboard failed: {e}")
+                self.show_loading_message(f"Demo port status error: {e}")
+
+        else:
+            # Real device mode
+            print("DEBUG: Real device mode - requesting showmode data")
+
+            # Check if we have cached showmode data
+            port_info = self.port_status_manager.get_port_status_info()
+
+            if port_info and port_info.mode_name and port_info.mode_name != "Unknown":
+                print("DEBUG: Using cached port status data")
+                self.port_status_ui.create_port_dashboard()
+            else:
+                print("DEBUG: No cached data, requesting showmode...")
+                self.send_showmode_command()
+                self.show_loading_message("Loading port status information...")
+
+    def send_showmode_command(self):
+        """Send showmode command to get current SBR mode"""
+        print("DEBUG: Sending showmode command...")
+
+        if not self.cli or not self.cli.is_running:
+            print("ERROR: CLI not running, cannot send showmode command")
+            self.show_loading_message("Error: Connection not ready")
+            return
+
+        try:
+            # Send showmode command
+            if self.is_demo_mode:
+                # In demo mode, handle the command differently
+                self.cli.command_queue.put("showmode")
+                print("DEBUG: showmode command queued for demo mode")
+            else:
+                # In real mode, send through normal command interface
+                self.send_command("showmode")
+                print("DEBUG: showmode command sent for real device")
+
+            timestamp = datetime.now().strftime('%H:%M:%S')
+            self.log_data.append(f"[{timestamp}] Requesting port status (showmode)...")
+
+            # Add timeout for showmode request
+            self.root.after(5000, self.check_showmode_timeout)  # 5 second timeout
+
+        except Exception as e:
+            print(f"ERROR: Failed to send showmode command: {e}")
+            self.show_loading_message(f"Error sending showmode command: {e}")
+
+    def check_showmode_timeout(self):
+        """Check if showmode request timed out"""
+        port_info = self.port_status_manager.get_port_status_info()
+
+        if not port_info or port_info.mode_name == "Unknown":
+            print("DEBUG: showmode request timed out")
+            self.show_loading_message("Showmode request timed out - please try refreshing")
 
     def create_compliance_dashboard(self):
         """Create compliance dashboard"""
@@ -1555,6 +1660,25 @@ class DashboardApp:
             link_info.golden_finger.active = gf_data.get('active', False)
 
         return link_info
+
+    def handle_demo_setmode(self, mode_number: int):
+        """Handle setmode command in demo mode"""
+        try:
+            # Update demo device state
+            self.demo_device_state = update_demo_device_state(self.demo_device_state, mode_number)
+
+            # Log the demo mode change
+            timestamp = datetime.now().strftime('%H:%M:%S')
+            self.log_data.append(f"[{timestamp}] DEMO: setmode {mode_number} - mode changed to SBR{mode_number}")
+
+            # Refresh the port dashboard after mode change
+            self.root.after(1000, lambda: self.update_content_area() if self.current_dashboard == "port" else None)
+
+            return True
+
+        except Exception as e:
+            print(f"ERROR: Demo setmode failed: {e}")
+            return False
 
     def view_cache_contents(self):
         """Open cache viewer dialog"""
@@ -1973,56 +2097,58 @@ NEW FEATURES:
 
     # monitor_logs method to handle showport responses
     def monitor_logs(self):
-        """Monitor log queue with enhanced sysinfo and showport handling"""
+        """Monitor log queue with enhanced sysinfo and showmode handling for both modes"""
         while self.cli.is_running:
             try:
                 log_entry = self.cli.log_queue.get_nowait()
                 timestamp = datetime.now().strftime('%H:%M:%S')
                 self.log_data.append(f"[{timestamp}] {log_entry}")
 
-                # Enhanced showport detection
-                if "showport" in log_entry.lower() and ("RECV:" in log_entry or "DEMO RECV:" in log_entry):
-                    if hasattr(self, 'showport_requested') and self.showport_requested:
-                        # Extract the actual response content
-                        if "DEMO RECV:" in log_entry:
-                            response = log_entry.replace("DEMO RECV:", "").strip()
-                        else:
-                            response = log_entry.replace("RECV:", "").strip()
+                # Enhanced showmode detection for both demo and real modes
+                if "showmode" in log_entry.lower() and ("RECV:" in log_entry or "DEMO RECV:" in log_entry):
+                    # Extract the actual response content
+                    if "DEMO RECV:" in log_entry:
+                        response = log_entry.replace("DEMO RECV:", "").strip()
+                    else:
+                        response = log_entry.replace("RECV:", "").strip()
 
-                        print(f"DEBUG: Processing showport response, length: {len(response)}")
+                    print(f"DEBUG: Processing showmode response, length: {len(response)}")
 
-                        # Check if this looks like a complete showport response
-                        if (len(response) > 100 and
-                                ("Port" in response or "Golden finger" in response or "Port Slot" in response)):
+                    # Check if this looks like a showmode response
+                    if "mode" in response.lower() and any(char.isdigit() for char in response):
+                        print("DEBUG: Parsing showmode response...")
 
-                            print("DEBUG: Parsing complete showport response...")
+                        try:
+                            # Parse and cache the showmode response
+                            port_info = self.port_status_manager.parser.parse_showmode_response(response)
+                            port_info.raw_showmode_response = response
 
-                            try:
-                                # Parse the showport response using link status manager
-                                link_info = self.link_status_ui.link_status_manager.parser.parse_showport_response(
-                                    response)
-                                self.link_status_ui.link_status_manager.cached_info = link_info
-                                self.link_status_ui.link_status_manager.last_refresh = datetime.now()
+                            # Cache the parsed info
+                            self.port_status_manager.cached_info = port_info
+                            self.port_status_manager.last_refresh = datetime.now()
 
-                                # Also parse using enhanced parser for caching
-                                if hasattr(self, 'sysinfo_parser'):
-                                    self.sysinfo_parser.parse_showport_command(response)
+                            print(f"DEBUG: Successfully parsed showmode - mode: SBR{port_info.current_mode}")
+                            self.log_data.append(
+                                f"[{timestamp}] Port status cached successfully - SBR{port_info.current_mode}")
 
-                                print(f"DEBUG: Successfully parsed showport with {len(link_info.ports)} ports")
+                            # Update UI immediately if on port dashboard
+                            if self.current_dashboard == "port":
+                                self.root.after_idle(self.update_content_area)
 
-                                self.showport_requested = False
-                                self.log_data.append(f"[{timestamp}] Link status information cached successfully")
+                        except Exception as e:
+                            print(f"DEBUG: Error parsing showmode: {e}")
+                            self.log_data.append(f"[{timestamp}] Error parsing showmode: {e}")
 
-                                # Update UI immediately if we're on link dashboard
-                                if self.current_dashboard == "link":
-                                    self.root.after_idle(self.update_content_area)
-                                    self.update_cache_status("Fresh link data loaded")
+                # Handle setmode command responses
+                elif "setmode" in log_entry.lower() and ("SENT:" in log_entry or "DEMO SENT:" in log_entry):
+                    print("DEBUG: setmode command sent")
+                    self.log_data.append(f"[{timestamp}] setmode command processed")
 
-                            except Exception as e:
-                                print(f"DEBUG: Error parsing showport: {e}")
-                                self.log_data.append(f"[{timestamp}] Error parsing showport: {e}")
+                    # Refresh showmode data after setmode
+                    if self.current_dashboard == "port":
+                        self.root.after(2000, self.send_showmode_command)  # Refresh after 2 seconds
 
-                # Enhanced sysinfo detection for both modes
+                # Enhanced sysinfo detection (existing code)
                 elif "sysinfo" in log_entry.lower() and ("RECV:" in log_entry or "DEMO RECV:" in log_entry):
                     if self.sysinfo_requested:
                         # Extract the actual response content
