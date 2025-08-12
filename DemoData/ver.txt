@@ -1,0 +1,5 @@
+S/N      : DEMO12345678
+Company  : SerialCables,Inc
+Model    : DEMO-DEVICE-MODEL
+Version  : 1.0.0    Date : Aug 09 2025 12:00:00
+SBR Version : 0 34 160 28
