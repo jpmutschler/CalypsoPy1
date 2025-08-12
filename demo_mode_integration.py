@@ -269,6 +269,22 @@ Golden finger: speed 01, width 00, max_width = 16"""
             print("DEBUG: Handling version command")
             return self._get_version_response()
 
+        elif 'ver' in command_lower and command_lower.strip() == 'ver':
+            print("DEBUG: Handling standalone ver command")
+            return self._get_demo_ver_response()
+
+        elif 'fdl mcu' in command_lower:
+            print("DEBUG: Handling fdl mcu command (firmware upload)")
+            return "Ready for XMODEM transfer...\nCCCCCC"
+
+        elif 'fdl sbr0' in command_lower:
+            print("DEBUG: Handling fdl sbr0 command (Atlas 3 firmware upload)")
+            return "Ready for XMODEM transfer (SBR0)...\nCCCCCC"
+
+        elif 'fdl sbr1' in command_lower:
+            print("DEBUG: Handling fdl sbr1 command (Atlas 3 firmware upload)")
+            return "Ready for XMODEM transfer (SBR1)...\nCCCCCC"
+
         else:
             print(f"DEBUG: Unknown command: {command}")
             return f"ERROR: Unknown command '{command}'\nType 'help' for available commands."
@@ -302,6 +318,18 @@ Golden finger: speed 01, width 00, max_width = 16"""
 
     Demo Mode: All responses use actual device data from sysinfo.txt
     Current SBR mode: """ + str(self.demo_device_state.get('current_mode', 0))
+
+    def _get_demo_ver_response(self):
+        """Generate demo ver command response for firmware dashboard"""
+        return """Cmd>ver
+
+    S/N      : GBH14412506206Z
+    Company  : SerialCables,Inc
+    Model    : PCI6-RD-x16HT-BG6-144
+    Version  : 0.1.0    Date : Jul 18 2025 11:05:16
+    SBR Version : 0 34 160 28
+
+    OK>"""
 
     def connect(self):
         """Simulate connection establishment"""

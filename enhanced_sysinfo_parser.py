@@ -110,6 +110,36 @@ class EnhancedSystemInfoParser:
         """Get raw ver section data from cache"""
         return self.cache.get('ver_data')
 
+    def get_firmware_info_json(self) -> Optional[Dict[str, Any]]:
+        """
+        Get JSON object for Firmware Information dashboard
+
+        Returns:
+            JSON object with structured firmware data or None if not available
+        """
+        ver_data = self.cache.get('ver_data')
+
+        if ver_data:
+            firmware_json = {
+                'dashboard_type': 'firmware_information',
+                'data_source': 'device',
+                'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'current_versions': {
+                    'mcpu_version': ver_data.get('version', 'Unknown'),
+                    'atlas3_version': ver_data.get('sbr_version', 'Unknown'),
+                    'build_date': ver_data.get('build_date', 'Unknown'),
+                    'serial_number': ver_data.get('serial_number', 'Unknown'),
+                    'model': ver_data.get('model', 'Unknown'),
+                    'company': ver_data.get('company', 'Unknown')
+                },
+                'data_fresh': True
+            }
+
+            self.cache.set('firmware_info_json', firmware_json, 'firmware', 300)
+            return firmware_json
+
+        return None
+
     def get_raw_lsd_data(self) -> Optional[Dict[str, Any]]:
         """Get raw lsd section data from cache"""
         return self.cache.get('lsd_data')

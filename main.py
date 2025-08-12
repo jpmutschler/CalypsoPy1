@@ -77,6 +77,7 @@ from settings_ui import SettingsDialog
 import settings_ui  # Import module for CacheViewerDialog access
 from link_status_dashboard import LinkStatusDashboardUI, LinkStatusManager
 from port_status_dashboard import PortStatusManager, PortStatusDashboardUI, get_demo_showmode_response, update_demo_device_state
+from firmware_dashboard import FirmwareDashboard, integrate_firmware_dashboard
 
 try:
     from PIL import Image, ImageTk
@@ -569,6 +570,9 @@ class DashboardApp:
         # Initialize Port Status components
         self.port_status_manager = PortStatusManager(self.cli)
         self.port_status_ui = PortStatusDashboardUI(self)
+
+        # Initialize Firmware Dashboard
+        self.firmware_dashboard = FirmwareDashboard(self)
 
         # Demo device state for port status (if demo mode)
         self.demo_device_state = {'current_mode': 0}
@@ -1723,53 +1727,7 @@ class DashboardApp:
 
     def create_firmware_dashboard(self):
         """Create firmware updates dashboard"""
-
-        def firmware_info_content(frame):
-            info = [
-                ("Current Version", "v2.1.3"),
-                ("Release Date", "2024-01-15"),
-                ("Build Number", "20240115-001"),
-                ("Last Update", "Never"),
-                ("Update Available", "❌ Up to date")
-            ]
-
-            for label, value in info:
-                row_frame = ttk.Frame(frame, style='Content.TFrame')
-                row_frame.pack(fill='x', pady=2)
-                ttk.Label(row_frame, text=f"{label}:", style='Info.TLabel',
-                          font=('Arial', 10, 'bold')).pack(side='left')
-                ttk.Label(row_frame, text=value, style='Info.TLabel').pack(side='right')
-
-        self.create_info_card(self.scrollable_frame, "Current Firmware", firmware_info_content)
-
-        # Firmware update section
-        update_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame', relief='solid', borderwidth=1)
-        update_frame.pack(fill='x', pady=20)
-
-        header_frame = ttk.Frame(update_frame, style='Content.TFrame')
-        header_frame.pack(fill='x', padx=15, pady=(15, 10))
-
-        ttk.Label(header_frame, text="📦 Firmware Update", style='Dashboard.TLabel').pack(anchor='w')
-
-        content_frame = ttk.Frame(update_frame, style='Content.TFrame')
-        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
-
-        ttk.Label(content_frame, text="Select firmware file (.bin):", style='Info.TLabel').pack(anchor='w')
-
-        file_frame = ttk.Frame(content_frame, style='Content.TFrame')
-        file_frame.pack(fill='x', pady=(5, 10))
-
-        self.firmware_path = tk.StringVar(value="No file selected")
-        ttk.Label(file_frame, textvariable=self.firmware_path, style='Info.TLabel').pack(side='left')
-        ttk.Button(file_frame, text="Browse", command=self.browse_firmware).pack(side='right')
-
-        button_frame = ttk.Frame(content_frame, style='Content.TFrame')
-        button_frame.pack(fill='x', pady=10)
-
-        ttk.Button(button_frame, text="🔍 Check for Updates",
-                   command=self.check_firmware_updates).pack(side='left', padx=(0, 10))
-        ttk.Button(button_frame, text="📤 Upload Firmware",
-                   command=self.upload_firmware).pack(side='left')
+        self.firmware_dashboard.create_firmware_dashboard()
 
     def load_demo_data_directly(self):
         """Load demo data directly without waiting for threading"""
