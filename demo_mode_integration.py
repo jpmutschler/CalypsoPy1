@@ -208,7 +208,7 @@ Golden finger: speed 01, width 00, max_width = 16"""
     # Update the _handle_unified_command method to handle showport
     def _handle_unified_command(self, command):
         """
-        UPDATED: Handle commands including showmode and setmode
+        Handle commands
         """
         command_lower = command.lower().strip()
         print(f"DEBUG: Processing command: '{command}' -> '{command_lower}'")
@@ -285,39 +285,153 @@ Golden finger: speed 01, width 00, max_width = 16"""
             print("DEBUG: Handling fdl sbr1 command (Atlas 3 firmware upload)")
             return "Ready for XMODEM transfer (SBR1)...\nCCCCCC"
 
+        # Handle RESET COMMANDS
+        elif command_lower in ['msrst', 'swreset', 'reset']:
+            print(f"DEBUG: Handling reset command: {command}")
+            return self._handle_reset_command(command_lower)
+
+        # Handle HELP command
+        elif 'help' in command_lower:
+            print("DEBUG: Handling help command")
+            return """Available commands:
+        help      - Show this help
+        sysinfo   - Get complete system information (ver + lsd + showport)
+        status    - Get device status
+        version   - Get firmware version
+
+        Reset Commands:
+        msrst     - Reset x16 Straddle Mount component
+        swreset   - Reset Atlas 3 Switch component  
+        reset     - Full system reset (will disconnect)
+
+        Demo Mode: All responses use simulated device behavior"""
+
         else:
             print(f"DEBUG: Unknown command: {command}")
             return f"ERROR: Unknown command '{command}'\nType 'help' for available commands."
 
+    def _handle_reset_command(self, command):
+        """Handle reset commands in demo mode"""
+        print(f"DEBUG: Handling reset command: {command}")
+
+        if command == 'msrst':
+            return """Cmd>msrst
+
+    Initiating x16 Straddle Mount Reset...
+    Resetting straddle mount components...
+    Clearing mount buffers...
+    Reinitializing mount interface...
+
+    x16 Straddle Mount Reset: COMPLETE
+    Status: Ready
+
+    Cmd>[]"""
+
+        elif command == 'swreset':
+            return """Cmd>swreset
+
+    Initiating Atlas 3 Switch Reset...
+    Stopping switch operations...
+    Resetting switch fabric...
+    Clearing switch tables...
+    Reinitializing switch ports...
+    Restoring switch configuration...
+
+    Atlas 3 Switch Reset: COMPLETE
+    Switch Status: Online
+    Port Status: All ports operational
+
+    Cmd>[]"""
+
+        elif command == 'reset':
+            return """Cmd>reset
+
+    WARNING: Full System Reset Initiated
+    Shutting down all subsystems...
+    Clearing all memory buffers...
+    Resetting hardware components...
+    Performing system diagnostics...
+
+    SYSTEM RESET IN PROGRESS...
+    Connection will be lost in 3 seconds...
+
+    RESET COMPLETE - System Rebooting...
+
+    [CONNECTION LOST - DEMO MODE SIMULATING DISCONNECT]"""
+
+        else:
+            return f"ERROR: Unknown reset command '{command}'"
+
+    def _simulate_msrst_response(self):
+        """Simulate x16 Straddle Mount Reset response"""
+        return """Cmd>msrst
+
+    Initiating x16 Straddle Mount Reset...
+    Resetting straddle mount components...
+    Clearing mount buffers...
+    Reinitializing mount interface...
+
+    x16 Straddle Mount Reset: COMPLETE
+    Status: Ready
+
+    Cmd>[]"""
+
+    def _simulate_swreset_response(self):
+        """Simulate Atlas 3 Switch Reset response"""
+        return """Cmd>swreset
+
+    Initiating Atlas 3 Switch Reset...
+    Stopping switch operations...
+    Resetting switch fabric...
+    Clearing switch tables...
+    Reinitializing switch ports...
+    Restoring switch configuration...
+
+    Atlas 3 Switch Reset: COMPLETE
+    Switch Status: Online
+    Port Status: All ports operational
+
+    Cmd>[]"""
+
+    def _simulate_full_reset_response(self):
+        """Simulate Full System Reset response"""
+        return """Cmd>reset
+
+    WARNING: Full System Reset Initiated
+    Shutting down all subsystems...
+    Clearing all memory buffers...
+    Resetting hardware components...
+    Performing system diagnostics...
+
+    SYSTEM RESET IN PROGRESS...
+    Connection will be lost in 3 seconds...
+
+    RESET COMPLETE - System Rebooting...
+
+    [CONNECTION LOST - DEMO MODE SIMULATING DISCONNECT]"""
+
     # Update the _get_command_delay method to include showport
     def _get_command_delay(self, command):
-        """Get realistic delay for command response"""
+        """
+        UPDATED: Get realistic delay for command response including reset commands
+        """
         command_lower = command.lower()
 
-        if 'sysinfo' in command_lower:
-            return 0.3  # Reduced delay for testing
-        elif 'showmode' in command_lower:
-            return 0.1  # Quick response for showmode
-        elif 'setmode' in command_lower:
-            return 0.2  # Slightly longer for setmode
+        # Reset command delays
+        if command_lower == 'msrst':
+            return 1.5  # x16 mount reset takes time
+        elif command_lower == 'swreset':
+            return 2.0  # Switch reset takes longer
+        elif command_lower == 'reset':
+            return 0.5  # Full reset starts immediately but then disconnects
+
+        # Existing delays
+        elif 'sysinfo' in command_lower:
+            return 0.3
         elif any(cmd in command_lower for cmd in ['help', 'status', 'version']):
-            return 0.05  # Quick response for simple commands
+            return 0.05
         else:
-            return 0.1  # Default delay
-
-    # Update the _get_help_response method to include showport
-        def _get_help_response(self):
-            """Generate help command response with showmode/setmode info"""
-            return """Available commands:
-    help      - Show this help
-    sysinfo   - Get complete system information (ver + lsd + showport)
-    showmode  - Get current SBR mode
-    setmode <0-6> - Set SBR mode (requires power cycle)
-    status    - Get device status
-    version   - Get firmware version
-
-    Demo Mode: All responses use actual device data from sysinfo.txt
-    Current SBR mode: """ + str(self.demo_device_state.get('current_mode', 0))
+            return 0.1
 
     def _get_demo_ver_response(self):
         """Generate demo ver command response for firmware dashboard"""
@@ -480,36 +594,21 @@ Golden finger: speed 01, width 00, max_width = 16"""
             return 0.1  # Default delay
 
     def _get_help_response(self):
-        """Generate help command response"""
+        """
+        UPDATED: Generate help command response with reset commands
+        """
         return """Available commands:
-help      - Show this help
-sysinfo   - Get complete system information (ver + lsd + showport)
-status    - Get device status
-version   - Get firmware version
+    help      - Show this help
+    sysinfo   - Get complete system information (ver + lsd + showport)
+    status    - Get device status
+    version   - Get firmware version
 
-Demo Mode: All responses use actual device data from sysinfo.txt"""
+    Reset Commands:
+    msrst     - Reset x16 Straddle Mount component
+    swreset   - Reset Atlas 3 Switch component  
+    reset     - Full system reset (will disconnect)
 
-        def _get_status_response(self):
-            """Generate status command response with current mode"""
-            current_mode = self.demo_device_state.get('current_mode', 0)
-            return f"""Device Status: ONLINE (DEMO MODE)
-    Power: GOOD
-    Temperature: 45°C
-    Link: ACTIVE
-    Current SBR Mode: SBR{current_mode}
-    Uptime: 1h 23m
-    Errors: 0
-
-    Note: Demo mode using unified workflow with file data"""
-
-        def get_demo_device_state(self):
-            """Get current demo device state"""
-            return self.demo_device_state.copy()
-
-        def update_demo_device_state(self, key, value):
-            """Update demo device state"""
-            self.demo_device_state[key] = value
-            print(f"DEBUG: Updated demo state - {key}: {value}")
+    Demo Mode: All responses use simulated device behavior"""
 
     def _get_version_response(self):
         """Generate version command response"""

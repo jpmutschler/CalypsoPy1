@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-dashboards/__init__.py
+Dashboards/__init__.py
 
 Dashboard modules package for CalypsoPy application.
 Contains all dashboard-specific modules for the application.
