@@ -78,6 +78,7 @@ import settings_ui  # Import module for CacheViewerDialog access
 from link_status_dashboard import LinkStatusDashboardUI, LinkStatusManager
 from port_status_dashboard import PortStatusManager, PortStatusDashboardUI, get_demo_showmode_response, update_demo_device_state
 from firmware_dashboard import FirmwareDashboard, integrate_firmware_dashboard
+from resets_dashboard import ResetsDashboard
 
 try:
     from PIL import Image, ImageTk
@@ -873,7 +874,7 @@ class DashboardApp:
             "compliance": "✅ Compliance",
             "registers": "📋 Registers",
             "advanced": "⚙️ Advanced",
-            "resets": "🔄 Resets",
+            "resets": "🔄 Resets",  # Updated title
             "firmware": "📦 Firmware Updates",
             "help": "❓ Help"
         }
@@ -1698,32 +1699,8 @@ class DashboardApp:
             messagebox.showinfo("Cache Cleared", "All cached data has been cleared.")
 
     def create_resets_dashboard(self):
-        """Create resets dashboard"""
-        reset_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
-        reset_frame.pack(fill='x', pady=20)
-
-        ttk.Label(reset_frame, text="⚠️  Device Reset Options", style='Dashboard.TLabel').pack(anchor='w', pady=(0, 20))
-
-        reset_options = [
-            ("Soft Reset", "Restart device software", "soft_reset"),
-            ("Hard Reset", "Full hardware reset", "hard_reset"),
-            ("Factory Reset", "Reset to factory defaults", "factory_reset"),
-            ("Link Reset", "Reset communication link", "link_reset")
-        ]
-
-        for title, description, command in reset_options:
-            option_frame = ttk.Frame(reset_frame, style='Content.TFrame', relief='solid', borderwidth=1)
-            option_frame.pack(fill='x', pady=5)
-
-            content_frame = ttk.Frame(option_frame, style='Content.TFrame')
-            content_frame.pack(fill='both', expand=True, padx=15, pady=10)
-
-            ttk.Label(content_frame, text=title, style='Dashboard.TLabel',
-                      font=('Arial', 11, 'bold')).pack(anchor='w')
-            ttk.Label(content_frame, text=description, style='Info.TLabel').pack(anchor='w', pady=(2, 10))
-
-            ttk.Button(content_frame, text=f"Execute {title}",
-                       command=lambda c=command: self.confirm_reset(c)).pack(anchor='w')
+        """Create resets dashboard using the dedicated module"""
+        self.resets_dashboard.create_resets_dashboard(self.scrollable_frame)
 
     def create_firmware_dashboard(self):
         """Create firmware updates dashboard"""
