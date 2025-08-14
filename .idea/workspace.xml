@@ -4,11 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="788c075a-584d-4f65-912f-d1e30ca41428" name="Changes" comment="Debug Resets">
+    <list default="true" id="788c075a-584d-4f65-912f-d1e30ca41428" name="Changes" comment="Fixed Reset Dashboard Resets">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboards/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboards/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dashboards/resets_dashboard.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboards/resets_dashboard.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demo_mode_integration.py" beforeDir="false" afterPath="$PROJECT_DIR$/demo_mode_integration.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,31 +45,32 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Python.demo_mode_integration.executor&quot;: &quot;Run&quot;,
-    &quot;Python.host_card_info.executor&quot;: &quot;Run&quot;,
-    &quot;Python.link_status_dashboard.executor&quot;: &quot;Run&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;Python.port_status_dashboard.executor&quot;: &quot;Run&quot;,
-    &quot;Python.settings_ui.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test_link_status.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test_step2.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test_step3.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/josh/PycharmProjects/CalypsoPy/assets&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.demo_mode_integration.executor": "Run",
+    "Python.host_card_info.executor": "Run",
+    "Python.link_status_dashboard.executor": "Run",
+    "Python.main.executor": "Run",
+    "Python.port_status_dashboard.executor": "Run",
+    "Python.resets_dashboard.executor": "Run",
+    "Python.settings_ui.executor": "Run",
+    "Python.test_link_status.executor": "Run",
+    "Python.test_step2.executor": "Run",
+    "Python.test_step3.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "master",
+    "last_opened_file_path": "C:/Users/josh/PycharmProjects/CalypsoPy/assets",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\josh\PycharmProjects\CalypsoPy\assets" />
@@ -98,7 +96,7 @@
       <updated>1754689470994</updated>
       <workItem from="1754689482253" duration="75159000" />
       <workItem from="1755106413475" duration="120000" />
-      <workItem from="1755106580546" duration="5131000" />
+      <workItem from="1755106580546" duration="5920000" />
     </task>
     <task id="LOCAL-00001" summary="Normal code updates">
       <option name="closed" value="true" />
@@ -276,7 +274,15 @@
       <option name="project" value="LOCAL" />
       <updated>1755132700115</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="Fixed Reset Dashboard Resets">
+      <option name="closed" value="true" />
+      <created>1755135343910</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1755135343910</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -314,15 +320,17 @@
     <MESSAGE value="Minor fixes" />
     <MESSAGE value="Changed sources root dir" />
     <MESSAGE value="Debug Resets" />
-    <option name="LAST_COMMIT_MESSAGE" value="Debug Resets" />
+    <MESSAGE value="Fixed Reset Dashboard Resets" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed Reset Dashboard Resets" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/CalypsoPy$port_status_dashboard.coverage" NAME="port_status_dashboard Coverage Results" MODIFIED="1755021474107" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/CalypsoPy$resets_dashboard.coverage" NAME="resets_dashboard Coverage Results" MODIFIED="1755135289728" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Dashboards" />
     <SUITE FILE_PATH="coverage/CalypsoPy$host_card_info.coverage" NAME="host_card_info Coverage Results" MODIFIED="1754763199598" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$test_step2.coverage" NAME="test_step2 Coverage Results" MODIFIED="1754766140226" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$demo_mode_integration.coverage" NAME="demo_mode_integration Coverage Results" MODIFIED="1754775976264" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$link_status_dashboard.coverage" NAME="link_status_dashboard Coverage Results" MODIFIED="1754937742874" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/CalypsoPy$main.coverage" NAME="main Coverage Results" MODIFIED="1755135245683" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/CalypsoPy$main.coverage" NAME="main Coverage Results" MODIFIED="1755136036390" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$settings_ui.coverage" NAME="settings_ui Coverage Results" MODIFIED="1754754241481" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$test_step3.coverage" NAME="test_step3 Coverage Results" MODIFIED="1754772558858" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$test_link_status.coverage" NAME="test_link_status Coverage Results" MODIFIED="1754932252852" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
