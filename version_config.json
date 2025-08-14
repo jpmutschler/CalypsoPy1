@@ -1,0 +1,111 @@
+{
+  "version_config": {
+    "description": "CalypsoPy Version Management Configuration",
+    "version": "1.0.0",
+    "project_name": "CalypsoPy",
+
+    "versioning_scheme": {
+      "type": "semantic",
+      "format": "MAJOR.MINOR.PATCH",
+      "prefix_support": true,
+      "supported_prefixes": ["Beta", "Alpha", "Release", "RC"],
+      "default_prefix": "Beta"
+    },
+
+    "files": {
+      "required": {
+        "main.py": {
+          "patterns": [
+            {
+              "name": "APP_VERSION",
+              "pattern": "APP_VERSION\\s*=\\s*[\"']([^\"']+)[\"']",
+              "replacement": "APP_VERSION = \"{version}\"",
+              "description": "Main application version"
+            }
+          ]
+        },
+        "README.md": {
+          "patterns": [
+            {
+              "name": "badge_version",
+              "pattern": "version-([^-\\)]+)-",
+              "replacement": "version-{version}-",
+              "description": "README badge version"
+            },
+            {
+              "name": "changelog_version",
+              "pattern": "### (Beta|Alpha|Release) ([\\d\\.]+)",
+              "replacement": "### \\1 {version}",
+              "description": "README changelog version"
+            }
+          ]
+        },
+        "Admin/__init__.py": {
+          "patterns": [
+            {
+              "name": "module_version",
+              "pattern": "__version__\\s*=\\s*[\"']([^\"']+)[\"']",
+              "replacement": "__version__ = \"{version}\"",
+              "description": "Admin module version"
+            }
+          ]
+        },
+        "Dashboards/__init__.py": {
+          "patterns": [
+            {
+              "name": "module_version",
+              "pattern": "__version__\\s*=\\s*[\"']([^\"']+)[\"']",
+              "replacement": "__version__ = \"{version}\"",
+              "description": "Dashboard module version"
+            }
+          ]
+        }
+      },
+
+      "optional": {
+        "setup.py": {
+          "patterns": [
+            {
+              "name": "setup_version",
+              "pattern": "version\\s*=\\s*[\"']([^\"']+)[\"']",
+              "replacement": "version=\"{version}\"",
+              "description": "Setup.py version"
+            }
+          ]
+        },
+        "pyproject.toml": {
+          "patterns": [
+            {
+              "name": "pyproject_version",
+              "pattern": "version\\s*=\\s*[\"']([^\"']+)[\"']",
+              "replacement": "version = \"{version}\"",
+              "description": "PyProject.toml version"
+            }
+          ]
+        }
+      }
+    },
+
+    "automation": {
+      "git_integration": {
+        "auto_commit": false,
+        "auto_tag": false,
+        "tag_format": "v{version}",
+        "commit_message": "Bump version to {version}"
+      },
+
+      "build_integration": {
+        "auto_build": false,
+        "build_command": "python -m build",
+        "test_command": "python -m pytest"
+      }
+    },
+
+    "changelog": {
+      "auto_update": true,
+      "file": "README.md",
+      "section": "## 📝 Changelog",
+      "format": "### {version} ({date})\n- 🔄 Version bump to {version}\n- 📝 Add your changes here\n"
+    }
+  }
+}

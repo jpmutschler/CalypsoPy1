@@ -15,7 +15,7 @@ CalypsoPy Dependencies:
 
 # Application Information
 APP_NAME = "CalypsoPy"
-APP_VERSION = "Beta 1.3.3"  # Updated version
+APP_VERSION = "1.3.3"  # Updated version
 APP_BUILD = "20250809-001"  # Updated build
 APP_DESCRIPTION = "Serial Cables Atlas 3 Serial UI for CLI Interface"
 APP_AUTHOR = "Serial Cables, LLC"
@@ -60,7 +60,7 @@ from tkinter import ttk, messagebox, filedialog
 import serial
 import serial.tools.list_ports
 import threading
-import tim
+import time
 import queue
 import sys
 import os

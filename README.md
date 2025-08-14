@@ -1,6 +1,6 @@
 # CalypsoPy
 
-[![Version](https://img.shields.io/badge/version-Beta%201.1.0-blue.svg)](https://github.com/your-username/CalypsoPy)
+[![Version](https://img.shields.io/badge/version-1.3.3-blue.svg)](https://github.com/your-username/CalypsoPy)
 [![Python](https://img.shields.io/badge/python-3.8+-green.svg)](https://python.org)
 [![License](https://img.shields.io/badge/license-Proprietary-red.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-Beta-orange.svg)](https://github.com/your-username/CalypsoPy)

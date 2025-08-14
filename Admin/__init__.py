@@ -15,7 +15,7 @@ Author: Serial Cables Development Team
 """
 
 # Version info
-__version__ = "1.0.0"
+__version__ = "1.3.3"
 __author__ = "Serial Cables Development Team"
 
 # Import main classes for easy access
