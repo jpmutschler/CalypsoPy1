@@ -4,8 +4,23 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="788c075a-584d-4f65-912f-d1e30ca41428" name="Changes" comment="Fixed Reset Dashboard Resets">
+    <list default="true" id="788c075a-584d-4f65-912f-d1e30ca41428" name="Changes" comment="Routine Changes">
+      <change afterPath="$PROJECT_DIR$/Admin/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Admin/advanced_response_handler.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Admin/debug_config.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboards/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboards/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cache_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/Admin/cache_manager.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo_mode_integration.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboards/demo_mode_integration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/enhanced_sysinfo_parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/Admin/enhanced_sysinfo_parser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/firmware_dashboard.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboards/firmware_dashboard.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/host_card_info.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboards/host_card_info.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/link_status_dashboard.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboards/link_status_dashboard.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/port_status_dashboard.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboards/port_status_dashboard.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/settings_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/Admin/settings_manager.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/settings_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/Admin/settings_ui.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sysinfo.txt" beforeDir="false" afterPath="$PROJECT_DIR$/DemoData/sysinfo.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -76,6 +91,9 @@
       <recent name="C:\Users\josh\PycharmProjects\CalypsoPy\assets" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\josh\PycharmProjects\CalypsoPy\DemoData" />
+      <recent name="C:\Users\josh\PycharmProjects\CalypsoPy\Dashboards" />
+      <recent name="C:\Users\josh\PycharmProjects\CalypsoPy\Admin" />
       <recent name="C:\Users\josh\PycharmProjects\CalypsoPy" />
     </key>
   </component>
@@ -96,7 +114,7 @@
       <updated>1754689470994</updated>
       <workItem from="1754689482253" duration="75159000" />
       <workItem from="1755106413475" duration="120000" />
-      <workItem from="1755106580546" duration="5920000" />
+      <workItem from="1755106580546" duration="14231000" />
     </task>
     <task id="LOCAL-00001" summary="Normal code updates">
       <option name="closed" value="true" />
@@ -282,7 +300,15 @@
       <option name="project" value="LOCAL" />
       <updated>1755135343910</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="Routine Changes">
+      <option name="closed" value="true" />
+      <created>1755136294928</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1755136294928</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -321,7 +347,8 @@
     <MESSAGE value="Changed sources root dir" />
     <MESSAGE value="Debug Resets" />
     <MESSAGE value="Fixed Reset Dashboard Resets" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed Reset Dashboard Resets" />
+    <MESSAGE value="Routine Changes" />
+    <option name="LAST_COMMIT_MESSAGE" value="Routine Changes" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/CalypsoPy$port_status_dashboard.coverage" NAME="port_status_dashboard Coverage Results" MODIFIED="1755021474107" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
@@ -330,7 +357,7 @@
     <SUITE FILE_PATH="coverage/CalypsoPy$test_step2.coverage" NAME="test_step2 Coverage Results" MODIFIED="1754766140226" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$demo_mode_integration.coverage" NAME="demo_mode_integration Coverage Results" MODIFIED="1754775976264" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$link_status_dashboard.coverage" NAME="link_status_dashboard Coverage Results" MODIFIED="1754937742874" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/CalypsoPy$main.coverage" NAME="main Coverage Results" MODIFIED="1755136036390" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/CalypsoPy$main.coverage" NAME="main Coverage Results" MODIFIED="1755210799339" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$settings_ui.coverage" NAME="settings_ui Coverage Results" MODIFIED="1754754241481" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$test_step3.coverage" NAME="test_step3 Coverage Results" MODIFIED="1754772558858" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$test_link_status.coverage" NAME="test_link_status Coverage Results" MODIFIED="1754932252852" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

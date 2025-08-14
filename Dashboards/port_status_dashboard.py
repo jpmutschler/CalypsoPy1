@@ -363,9 +363,9 @@ class PortStatusDashboardUI:
 
             # Try multiple image paths
             image_paths = [
-                os.path.join("Images", image_filename),
-                os.path.join("assets", "Images", image_filename),
-                os.path.join("DemoData", "Images", image_filename),
+                os.path.join("../Images", image_filename),
+                os.path.join("../assets", "Images", image_filename),
+                os.path.join("../DemoData", "Images", image_filename),
                 os.path.join(os.path.dirname(__file__), "Images", image_filename),
                 os.path.join(os.path.dirname(__file__), "assets", "Images", image_filename)
             ]

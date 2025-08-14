@@ -9,8 +9,8 @@ Provides a comprehensive interface for viewing and editing application settings.
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import os
-from typing import Dict, Any, Callable
-from settings_manager import SettingsManager
+from typing import Callable
+from Admin.settings_manager import SettingsManager
 
 
 class SettingsDialog:
@@ -889,7 +889,7 @@ class SettingsDialog:
         import sys
         import tkinter as tk
         from tkinter import ttk  # ADD this import
-        from settings_manager import SettingsManager
+        from Admin.settings_manager import SettingsManager
 
         # Test the settings dialog
         root = tk.Tk()

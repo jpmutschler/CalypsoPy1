@@ -60,25 +60,24 @@ from tkinter import ttk, messagebox, filedialog
 import serial
 import serial.tools.list_ports
 import threading
-import time
+import tim
 import queue
-import subprocess
 import sys
 import os
 import re
 from datetime import datetime
-import json
-from demo_mode_integration import UnifiedDemoSerialCLI
-from host_card_info import HostCardInfoManager, HostCardDashboardUI
-from cache_manager import DeviceDataCache
-from enhanced_sysinfo_parser import EnhancedSystemInfoParser
-from settings_manager import SettingsManager
-from settings_ui import SettingsDialog
-import settings_ui  # Import module for CacheViewerDialog access
-from link_status_dashboard import LinkStatusDashboardUI, LinkStatusManager
-from port_status_dashboard import PortStatusManager, PortStatusDashboardUI, get_demo_showmode_response, update_demo_device_state
-from firmware_dashboard import FirmwareDashboard, integrate_firmware_dashboard
+from Dashboards.host_card_info import HostCardInfoManager, HostCardDashboardUI
+from Admin.cache_manager import DeviceDataCache
+from Admin.enhanced_sysinfo_parser import EnhancedSystemInfoParser
+from Admin.settings_manager import SettingsManager
+from Admin.settings_ui import SettingsDialog
+from Dashboards.link_status_dashboard import LinkStatusDashboardUI
+from Dashboards.port_status_dashboard import PortStatusManager, PortStatusDashboardUI, get_demo_showmode_response, update_demo_device_state
+from Dashboards.firmware_dashboard import FirmwareDashboard
 from Dashboards.resets_dashboard import ResetsDashboard
+from Admin.advanced_response_handler import AdvancedResponseHandler
+from Admin.debug_config import debug_print, debug_error, debug_warning, debug_info, is_debug_enabled
+import Admin.settings_ui as settings_ui
 
 try:
     from PIL import Image, ImageTk
@@ -229,7 +228,7 @@ class SerialCLI:
 
         # Initialize queues
         self.command_queue = queue.Queue()
-        self.response_queue = queue.Queue()
+        self.response_queue = queue.Queue()  # CRITICAL: Must have this
         self.log_queue = queue.Queue()
 
         # Serial connection setup
@@ -269,17 +268,24 @@ class SerialCLI:
         return False
 
     def read_response(self):
-        """Read response from device"""
+        """UPDATED: Make sure this puts responses in response_queue"""
         if self.serial_connection and self.is_running:
             try:
-                response = self.serial_connection.readline().decode().strip()
-                if response:
-                    self.log_queue.put(f"RECV: {response}")
-                    self.response_queue.put(response)
-                return response
+                if self.serial_connection.in_waiting > 0:
+                    response = self.serial_connection.readline().decode('utf-8', errors='ignore').strip()
+
+                    if response:
+                        # Put in log queue
+                        self.log_queue.put(f"RECV: {response}")
+
+                        # CRITICAL: Also put in response_queue for advanced handler
+                        self.response_queue.put(response)
+
+                        return response
+
             except Exception as e:
                 self.log_queue.put(f"Read error: {str(e)}")
-                return None
+
         return None
 
     def run_background(self):
@@ -551,7 +557,7 @@ class DashboardApp:
 
         # Initialize CLI based on mode
         if self.is_demo_mode:
-            from demo_mode_integration import UnifiedDemoSerialCLI
+            from Dashboards.demo_mode_integration import UnifiedDemoSerialCLI
             self.cli = UnifiedDemoSerialCLI(port)  # Use the unified version
             print("DEBUG: Using UnifiedDemoSerialCLI for demo mode")
         else:
@@ -560,6 +566,9 @@ class DashboardApp:
 
         # Initialize parser with cache manager
         self.sysinfo_parser = EnhancedSystemInfoParser(self.cache_manager)
+
+        # Initialize the advanced response handler
+        self.init_advanced_response_handler()
 
         # Initialize Host Card Info components
         self.host_card_manager = HostCardInfoManager(self.cli)
@@ -604,6 +613,16 @@ class DashboardApp:
             self.start_auto_refresh()
 
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+    def init_advanced_response_handler(self):
+        """Initialize the advanced response handler"""
+        try:
+            self.response_handler = AdvancedResponseHandler(self)
+            print("DEBUG: Advanced Response Handler integrated with DashboardApp")
+        except Exception as e:
+            print(f"ERROR: Failed to initialize Advanced Response Handler: {e}")
+            # Fallback to basic handling if advanced handler fails
+            self.response_handler = None
 
     def setup_window(self):
         """Configure the main dashboard window with 85% screen resolution"""
@@ -1024,6 +1043,66 @@ class DashboardApp:
 
         SettingsDialog(self.root, self.settings_mgr, on_settings_changed)
 
+    def check_sysinfo_timeout(self):
+        """
+        IMPROVED: Timeout handling with advanced response handler
+        """
+        # The advanced handler manages its own timeouts, but we keep this for compatibility
+        if self.sysinfo_requested:
+            print("DEBUG: Checking sysinfo timeout...")
+
+            # Check if advanced handler is managing this
+            if hasattr(self, 'response_handler') and self.response_handler:
+                status = self.response_handler.get_status()
+                if status['active_buffers'] > 0:
+                    print("DEBUG: Advanced handler has active buffers, letting it manage timeout")
+                    return
+
+            # Fallback timeout handling
+            print("DEBUG: Fallback timeout - no active advanced handler buffers")
+            self.sysinfo_requested = False
+            self.show_loading_message("Request timed out. Click refresh to try again.")
+            self.update_cache_status("Request timed out")
+
+    def process_sysinfo_response(self, response):
+        """
+        Process sysinfo response from queue monitoring
+        """
+        try:
+            print(f"DEBUG: Processing sysinfo response ({len(response)} chars)")
+
+            # Parse using the enhanced parser
+            parsed_data = self.sysinfo_parser.parse_unified_sysinfo(
+                response,
+                "demo" if self.is_demo_mode else "device"
+            )
+
+            print(f"DEBUG: Sysinfo parsed successfully")
+
+            # Reset request flag
+            self.sysinfo_requested = False
+
+            # Update UI on main thread
+            self.root.after_idle(self.update_content_area)
+            self.update_cache_status("Fresh data loaded")
+
+            # Log success
+            timestamp = datetime.now().strftime('%H:%M:%S')
+            self.log_data.append(f"[{timestamp}] System information updated successfully")
+
+        except Exception as e:
+            print(f"ERROR: Failed to process sysinfo response: {e}")
+
+            # Reset request flag
+            self.sysinfo_requested = False
+
+            # Show error in UI
+            self.show_loading_message(f"Error processing response: {e}")
+
+            # Log error
+            timestamp = datetime.now().strftime('%H:%M:%S')
+            self.log_data.append(f"[{timestamp}] Error processing sysinfo: {e}")
+
     def create_host_dashboard(self):
         """FIXED: Create host card information dashboard"""
         print("DEBUG: Creating host dashboard...")
@@ -1302,7 +1381,7 @@ class DashboardApp:
             print("DEBUG: Demo mode - loading showport data")
 
             try:
-                from link_status_dashboard import load_demo_showport_file
+                from Dashboards.link_status_dashboard import load_demo_showport_file
                 demo_content = load_demo_showport_file()
 
                 if demo_content:
@@ -1592,6 +1671,85 @@ class DashboardApp:
         ttk.Button(button_frame, text="Clear Cache",
                    command=self.clear_cache).pack(side='left')
 
+        def add_response_handler_section_to_advanced_dashboard(self):
+            """
+            ADD this to the end of your create_advanced_dashboard method
+            """
+            # Response Handler Debug Section
+            handler_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame',
+                                      relief='solid', borderwidth=1)
+            handler_frame.pack(fill='x', pady=20)
+
+            header_frame = ttk.Frame(handler_frame, style='Content.TFrame')
+            header_frame.pack(fill='x', padx=15, pady=(15, 10))
+
+            ttk.Label(header_frame, text="🔧 Advanced Response Handler",
+                      style='Dashboard.TLabel').pack(anchor='w')
+
+            content_frame = ttk.Frame(handler_frame, style='Content.TFrame')
+            content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
+
+            # Status display
+            self.handler_status_text = tk.Text(content_frame, height=8, wrap='word',
+                                               state='disabled', bg='#f8f8f8',
+                                               font=('Consolas', 9))
+            self.handler_status_text.pack(fill='x', pady=(0, 10))
+
+            # Control buttons
+            button_frame = ttk.Frame(content_frame, style='Content.TFrame')
+            button_frame.pack(fill='x')
+
+            ttk.Button(button_frame, text="📊 Show Handler Status",
+                       command=self.show_handler_status).pack(side='left', padx=(0, 5))
+            ttk.Button(button_frame, text="⚡ Force Process Buffers",
+                       command=self.force_process_responses).pack(side='left', padx=5)
+            ttk.Button(button_frame, text="🗑️ Clear All Buffers",
+                       command=self.clear_response_buffers).pack(side='left', padx=5)
+            ttk.Button(button_frame, text="🔄 Restart Handler",
+                       command=self.restart_response_handler).pack(side='left', padx=5)
+
+        self.add_response_handler_section()
+
+    def add_response_handler_section(self):
+        """
+        ADD this method to create the advanced handler debug section
+        """
+        if not hasattr(self, 'response_handler') or not self.response_handler:
+            return  # Don't add section if handler not available
+
+        # Advanced Response Handler Section
+        handler_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame',
+                                  relief='solid', borderwidth=1)
+        handler_frame.pack(fill='x', pady=20)
+
+        header_frame = ttk.Frame(handler_frame, style='Content.TFrame')
+        header_frame.pack(fill='x', padx=15, pady=(15, 10))
+
+        ttk.Label(header_frame, text="🚀 Advanced Response Handler",
+                  style='Dashboard.TLabel').pack(anchor='w')
+
+        content_frame = ttk.Frame(handler_frame, style='Content.TFrame')
+        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
+
+        # Status display
+        self.handler_status_text = tk.Text(content_frame, height=8, wrap='word',
+                                           state='disabled', bg='#f8f8f8',
+                                           font=('Consolas', 9))
+        self.handler_status_text.pack(fill='x', pady=(0, 10))
+
+        # Control buttons
+        button_frame = ttk.Frame(content_frame, style='Content.TFrame')
+        button_frame.pack(fill='x')
+
+        ttk.Button(button_frame, text="📊 Show Status",
+                   command=self.show_handler_status).pack(side='left', padx=(0, 5))
+        ttk.Button(button_frame, text="⚡ Force Process",
+                   command=self.force_process_responses).pack(side='left', padx=5)
+        ttk.Button(button_frame, text="🗑️ Clear Buffers",
+                   command=self.clear_response_buffers).pack(side='left', padx=5)
+        ttk.Button(button_frame, text="🔄 Restart Handler",
+                   command=self.restart_response_handler).pack(side='left', padx=5)
+
     def send_showport_command(self):
         """Send showport command for link status data"""
         print("DEBUG: Sending showport command...")
@@ -1625,6 +1783,140 @@ class DashboardApp:
             self.showport_requested = False
             self.show_loading_message(f"Error sending showport command: {e}")
 
+    def show_handler_status(self):
+        """Show advanced response handler status"""
+        if not hasattr(self, 'response_handler') or not self.response_handler:
+            self.handler_status_text.config(state='normal')
+            self.handler_status_text.delete(1.0, tk.END)
+            self.handler_status_text.insert(1.0, "Advanced Response Handler not available")
+            self.handler_status_text.config(state='disabled')
+            return
+
+        try:
+            status = self.response_handler.get_status()
+
+            status_text = f"Advanced Response Handler Status\n"
+            status_text += f"{'=' * 40}\n\n"
+            status_text += f"State: {status['state'].upper()}\n"
+            status_text += f"Active Buffers: {status['active_buffers']}\n\n"
+
+            if status['buffer_details']:
+                status_text += "Buffer Details:\n"
+                for cmd, details in status['buffer_details'].items():
+                    status_text += f"  {cmd}: {details['lines']} lines, "
+                    status_text += f"{details['age_seconds']:.1f}s old\n"
+
+            status_text += f"\nStatistics:\n"
+            stats = status['statistics']
+            status_text += f"  Processed: {stats['responses_processed']}\n"
+            status_text += f"  Failed: {stats['responses_failed']}\n"
+            status_text += f"  Timeouts: {stats['responses_timeout']}\n"
+            status_text += f"  Fragments: {stats['fragments_collected']}\n"
+            status_text += f"  Avg fragments/response: {stats['average_fragments_per_response']:.1f}\n"
+
+            # Calculate success rate
+            total = stats['responses_processed'] + stats['responses_failed'] + stats['responses_timeout']
+            if total > 0:
+                success_rate = (stats['responses_processed'] / total) * 100
+                status_text += f"  Success rate: {success_rate:.1f}%\n"
+
+            self.handler_status_text.config(state='normal')
+            self.handler_status_text.delete(1.0, tk.END)
+            self.handler_status_text.insert(1.0, status_text)
+            self.handler_status_text.config(state='disabled')
+
+        except Exception as e:
+            error_text = f"Error getting handler status: {e}"
+            self.handler_status_text.config(state='normal')
+            self.handler_status_text.delete(1.0, tk.END)
+            self.handler_status_text.insert(1.0, error_text)
+            self.handler_status_text.config(state='disabled')
+
+    def force_process_responses(self):
+        """Force process all pending response buffers"""
+        if not hasattr(self, 'response_handler') or not self.response_handler:
+            messagebox.showerror("Handler Error", "Advanced Response Handler not available.")
+            return
+
+        try:
+            status_before = self.response_handler.get_status()
+            active_before = status_before['active_buffers']
+
+            if active_before == 0:
+                messagebox.showinfo("No Buffers", "No active response buffers to process.")
+                return
+
+            self.response_handler.force_process_all()
+
+            status_after = self.response_handler.get_status()
+            active_after = status_after['active_buffers']
+            processed = active_before - active_after
+
+            timestamp = datetime.now().strftime('%H:%M:%S')
+            self.log_data.append(f"[{timestamp}] Forced processing: {processed} buffers")
+
+            messagebox.showinfo("Processing Complete",
+                                f"Processed {processed} response buffers.\n"
+                                f"{active_after} buffers remain active.")
+
+            self.show_handler_status()
+
+        except Exception as e:
+            messagebox.showerror("Processing Error", f"Error forcing response processing: {e}")
+
+    def clear_response_buffers(self):
+        """Clear all response buffers after confirmation"""
+        if not hasattr(self, 'response_handler') or not self.response_handler:
+            messagebox.showerror("Handler Error", "Advanced Response Handler not available.")
+            return
+
+        try:
+            status = self.response_handler.get_status()
+            active_buffers = status['active_buffers']
+
+            if active_buffers == 0:
+                messagebox.showinfo("No Buffers", "No active response buffers to clear.")
+                return
+
+            if messagebox.askyesno("Clear Response Buffers",
+                                   f"Clear all {active_buffers} active response buffers?\n\n"
+                                   "This will discard any pending response data."):
+                self.response_handler.clear_all_buffers()
+                self.sysinfo_requested = False
+
+                timestamp = datetime.now().strftime('%H:%M:%S')
+                self.log_data.append(f"[{timestamp}] All response buffers cleared")
+
+                messagebox.showinfo("Buffers Cleared", f"All {active_buffers} buffers cleared.")
+                self.show_handler_status()
+
+        except Exception as e:
+            messagebox.showerror("Clear Error", f"Error clearing response buffers: {e}")
+
+    def restart_response_handler(self):
+        """Restart the response handler"""
+        try:
+            if messagebox.askyesno("Restart Handler",
+                                   "Restart the advanced response handler?\n\n"
+                                   "This will clear all buffers and reinitialize."):
+
+                # Clear existing handler
+                if hasattr(self, 'response_handler') and self.response_handler:
+                    self.response_handler.clear_all_buffers()
+                    del self.response_handler
+
+                # Reinitialize
+                self.init_advanced_response_handler()
+
+                timestamp = datetime.now().strftime('%H:%M:%S')
+                self.log_data.append(f"[{timestamp}] Advanced response handler restarted")
+
+                messagebox.showinfo("Handler Restarted", "Handler has been restarted.")
+                self.show_handler_status()
+
+        except Exception as e:
+            messagebox.showerror("Restart Error", f"Error restarting handler: {e}")
+
     def check_showport_timeout(self):
         """Check if showport command timed out"""
         if hasattr(self, 'showport_requested') and self.showport_requested:
@@ -1635,7 +1927,7 @@ class DashboardApp:
 
     def _convert_cached_to_link_info(self, cached_data):
         """Convert cached showport data to LinkStatusInfo format"""
-        from link_status_dashboard import LinkStatusInfo, PortInfo
+        from Dashboards.link_status_dashboard import LinkStatusInfo, PortInfo
 
         link_info = LinkStatusInfo()
         link_info.last_updated = cached_data.get('last_updated', 'Unknown')
@@ -1977,33 +2269,30 @@ NEW FEATURES:
             print("ERROR: CLI not running, cannot start background threads")
 
     def start_queue_monitoring(self):
-        """Add periodic queue monitoring to ensure responsiveness"""
+        """
+        IMPROVED: Queue monitoring with advanced response handler
+        """
 
         def check_queues():
             try:
-                # Check if we have any pending responses
+                # Check for new responses
                 if hasattr(self.cli, 'response_queue'):
                     try:
                         response = self.cli.response_queue.get_nowait()
                         if response:
-                            print(f"DEBUG: Queue monitor found response: {response[:100]}...")
-                            # Process the response immediately
-                            timestamp = datetime.now().strftime('%H:%M:%S')
-                            self.log_data.append(f"[{timestamp}] RECV: {response}")
+                            print(f"DEBUG: Queue monitor received: {response[:80]}...")
 
-                            # Check if this is a showport response
-                            if self.showport_requested and len(response) > 50:
-                                if any(keyword in response.lower() for keyword in
-                                       ['port', 'golden finger', 'port slot', 'port upstream']):
-                                    print("DEBUG: Queue monitor processing showport response")
-                                    self.process_showport_response(response)
+                            # Try advanced handler first
+                            if hasattr(self, 'response_handler') and self.response_handler:
+                                handled = self.response_handler.add_response_fragment(response)
 
-                            # Check if this is a sysinfo response
-                            elif self.sysinfo_requested and len(response) > 200:
-                                if any(keyword in response.lower() for keyword in
-                                       ['s/n', 'thermal', 'voltage', '===', 'company']):
-                                    print("DEBUG: Queue monitor processing sysinfo response")
-                                    self.process_sysinfo_response(response)
+                                if not handled:
+                                    print(f"DEBUG: Advanced handler didn't process: {response[:50]}...")
+                                    # Fall back to basic handling
+                                    self._basic_response_handling(response)
+                            else:
+                                # No advanced handler, use basic handling
+                                self._basic_response_handling(response)
 
                     except queue.Empty:
                         pass
@@ -2012,10 +2301,28 @@ NEW FEATURES:
                 print(f"DEBUG: Queue monitor error: {e}")
 
             # Schedule next check
-            self.root.after(100, check_queues)  # Check every 100ms
+            self.root.after(100, check_queues)
 
-        # Start the monitoring
+        # Start monitoring
         check_queues()
+        print("DEBUG: Queue monitoring started with advanced handler support")
+
+    def _basic_response_handling(self, response):
+        """
+        Fallback response handling if advanced handler fails
+        """
+        timestamp = datetime.now().strftime('%H:%M:%S')
+        self.log_data.append(f"[{timestamp}] BASIC RECV: {response}")
+
+        # Basic sysinfo detection (your original logic)
+        if self.sysinfo_requested:
+            sysinfo_indicators = [
+                "port", "speed", "width", "golden", "s/n", "company",
+                "model", "version", "thermal", "voltage", "current", "error"
+            ]
+
+            if any(indicator in response.lower() for indicator in sysinfo_indicators):
+                print(f"DEBUG: Basic handler found sysinfo data: {response[:50]}...")
 
     def process_showport_response(self, response):
         """Process showport response from queue monitoring"""
@@ -2144,32 +2451,45 @@ NEW FEATURES:
             time.sleep(0.1)
 
     def send_sysinfo_command(self):
-        """FIXED: Send sysinfo command without creating new CLI instance"""
-        print(f"DEBUG: Sending sysinfo command (Demo mode: {self.is_demo_mode})...")
+
+        print(f"DEBUG: Sending sysinfo command with advanced handler (Demo mode: {self.is_demo_mode})")
 
         if not self.cli or not self.cli.is_running:
             print("ERROR: CLI not running, cannot send sysinfo command")
             self.show_loading_message("Error: Connection not ready")
             return
 
+        if self.sysinfo_requested:
+            print("DEBUG: sysinfo request already pending, skipping")
+            return
+
         self.sysinfo_requested = True
 
         try:
+            # Start advanced response collection if available
+            if hasattr(self, 'response_handler') and self.response_handler:
+                self.response_handler.start_response_collection("sysinfo")
+                print("DEBUG: Advanced response collection started")
+            else:
+                print("DEBUG: No advanced handler, using basic collection")
+
             if self.is_demo_mode:
-                # In demo mode, put command directly in queue
                 self.cli.command_queue.put("sysinfo")
                 print("DEBUG: sysinfo command queued for demo mode")
             else:
-                # In real mode, send through normal command interface
-                self.send_command("sysinfo")
+                success = self.cli.send_command("sysinfo")
+                if not success:
+                    print("ERROR: Failed to send sysinfo command")
+                    self.sysinfo_requested = False
+                    self.show_loading_message("Failed to send command")
+                    return
                 print("DEBUG: sysinfo command sent for real device")
 
             timestamp = datetime.now().strftime('%H:%M:%S')
-            self.log_data.append(f"[{timestamp}] Requesting system information...")
-            print(f"DEBUG: sysinfo_requested set to {self.sysinfo_requested}")
+            self.log_data.append(f"[{timestamp}] Requesting system information with advanced handler...")
 
-            # Add timeout for sysinfo request
-            self.root.after(10000, self.check_sysinfo_timeout)  # 10 second timeout
+            # Set timeout (advanced handler manages its own, but keep for fallback)
+            self.root.after(15000, self.check_sysinfo_timeout)  # 15 second timeout
 
         except Exception as e:
             print(f"ERROR: Failed to send sysinfo command: {e}")
