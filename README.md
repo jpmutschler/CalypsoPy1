@@ -9,7 +9,7 @@
 
 ## 🚀 Overview
 
-CalypsoPy is a professional serial communication interface designed specifically for the Gen6 PCIe Atlas 3 Host Card. It provides a modern, intuitive GUI for device management, monitoring, and configuration with advanced features like intelligent response handling, data caching, and comprehensive debugging tools.
+CalypsoPy is a professional serial communication interface designed specifically for the Gen6 PCIe Atlas 3 Host Card from Serial Cables. It provides a modern, intuitive GUI for device management, monitoring, and configuration with advanced features like intelligent response handling, data caching, and comprehensive debugging tools.
 
 ### ✨ Key Features
 
