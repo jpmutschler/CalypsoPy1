@@ -15,7 +15,7 @@ CalypsoPy Dependencies:
 
 # Application Information
 APP_NAME = "CalypsoPy"
-APP_VERSION = "Beta 1.3.2"  # Updated version
+APP_VERSION = "Beta 1.3.3"  # Updated version
 APP_BUILD = "20250809-001"  # Updated build
 APP_DESCRIPTION = "Serial Cables Atlas 3 Serial UI for CLI Interface"
 APP_AUTHOR = "Serial Cables, LLC"
@@ -78,7 +78,7 @@ import settings_ui  # Import module for CacheViewerDialog access
 from link_status_dashboard import LinkStatusDashboardUI, LinkStatusManager
 from port_status_dashboard import PortStatusManager, PortStatusDashboardUI, get_demo_showmode_response, update_demo_device_state
 from firmware_dashboard import FirmwareDashboard, integrate_firmware_dashboard
-from resets_dashboard import ResetsDashboard
+from Dashboards.resets_dashboard import ResetsDashboard
 
 try:
     from PIL import Image, ImageTk
@@ -571,6 +571,9 @@ class DashboardApp:
         # Initialize Port Status components
         self.port_status_manager = PortStatusManager(self.cli)
         self.port_status_ui = PortStatusDashboardUI(self)
+
+        # Initialize Resets Dashboard components
+        self.resets_dashboard = ResetsDashboard(self)
 
         # Initialize Firmware Dashboard
         self.firmware_dashboard = FirmwareDashboard(self)
@@ -1700,7 +1703,26 @@ class DashboardApp:
 
     def create_resets_dashboard(self):
         """Create resets dashboard using the dedicated module"""
-        self.resets_dashboard.create_resets_dashboard(self.scrollable_frame)
+        try:
+            self.resets_dashboard.create_resets_dashboard(self.scrollable_frame)
+        except Exception as e:
+            print(f"ERROR: Failed to create resets dashboard: {e}")
+            import traceback
+            traceback.print_exc()
+
+            # Show error message in the dashboard
+            error_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+            error_frame.pack(fill='both', expand=True, padx=20, pady=20)
+
+            ttk.Label(error_frame,
+                      text="❌ Error Loading Resets Dashboard",
+                      style='Dashboard.TLabel',
+                      font=('Arial', 16, 'bold')).pack(pady=(0, 10))
+
+            ttk.Label(error_frame,
+                      text=f"Error: {str(e)}",
+                      style='Info.TLabel',
+                      font=('Arial', 10)).pack()
 
     def create_firmware_dashboard(self):
         """Create firmware updates dashboard"""
