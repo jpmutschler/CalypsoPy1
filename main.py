@@ -410,7 +410,7 @@ class ConnectionWindow:
         main_frame = ttk.Frame(self.root, style='Modern.TFrame', padding=40)
         main_frame.pack(fill='both', expand=True)
 
-        # Title with settings gear icon - UPDATED
+        # Title with settings gear icon
         title_frame = ttk.Frame(main_frame, style='Modern.TFrame')
         title_frame.pack(fill='x', pady=(0, 30))
 
@@ -418,12 +418,12 @@ class ConnectionWindow:
                                 style='Modern.TLabel', font=('Arial', 18, 'bold'))
         title_label.pack(side='left')
 
-        # Settings gear icon button - NEW
+        # Settings gear icon button
         settings_btn = ttk.Button(title_frame, text="⚙️", width=3,
                                   command=self.open_settings)
         settings_btn.pack(side='right')
 
-        # Keep all your existing COM Port selection code unchanged
+        # COM Port selection with enhanced refresh
         port_frame = ttk.Frame(main_frame, style='Modern.TFrame')
         port_frame.pack(fill='x', pady=10)
 
@@ -437,24 +437,46 @@ class ConnectionWindow:
                                        state='readonly', font=('Arial', 11))
         self.port_combo.pack(side='left', fill='x', expand=True)
 
-        refresh_btn = ttk.Button(port_select_frame, text="🔄", width=3,
-                                 command=self.refresh_ports)
-        refresh_btn.pack(side='right', padx=(5, 0))
+        # Enhanced refresh button with animation
+        self.refresh_btn = ttk.Button(port_select_frame, text="🔄", width=3,
+                                      command=self.refresh_ports_with_feedback)
+        self.refresh_btn.pack(side='right', padx=(5, 0))
 
-        # Call the demo option method (keep this unchanged)
+        # Port status frame for better feedback
+        port_status_frame = ttk.Frame(port_frame, style='Modern.TFrame')
+        port_status_frame.pack(fill='x', pady=(5, 0))
+
+        self.port_status_label = ttk.Label(port_status_frame, text="",
+                                           style='Modern.TLabel', font=('Arial', 9))
+        self.port_status_label.pack(anchor='w')
+
+        # Demo mode section
         self.create_demo_option(main_frame)
 
-        # Connect button (keep unchanged)
+        # Connect button
         connect_btn = ttk.Button(main_frame, text="Connect to Device",
                                  style='Connect.TButton', command=self.connect)
         connect_btn.pack(pady=30)
 
-        # Status label (keep unchanged)
+        # Status label
         self.status_label = ttk.Label(main_frame, text="Select a COM port to continue",
                                       style='Modern.TLabel')
         self.status_label.pack(pady=10)
 
-    # ADD this new method for settings dialog:
+        # Auto-refresh option
+        auto_refresh_frame = ttk.Frame(main_frame, style='Modern.TFrame')
+        auto_refresh_frame.pack(fill='x', pady=(20, 0))
+
+        self.auto_refresh_var = tk.BooleanVar()
+        auto_refresh_check = ttk.Checkbutton(auto_refresh_frame,
+                                             text="🔄 Auto-refresh COM ports every 3 seconds",
+                                             variable=self.auto_refresh_var,
+                                             command=self.toggle_auto_refresh)
+        auto_refresh_check.pack(anchor='w')
+
+        # Initial port scan
+        self.refresh_ports()
+
     def open_settings(self):
         """Open settings dialog"""
 
@@ -540,6 +562,143 @@ class ConnectionWindow:
 
         DashboardApp(dashboard_root, port, self.settings_mgr)
         dashboard_root.mainloop()
+
+    def refresh_ports_with_feedback(self):
+        """Enhanced refresh with visual feedback"""
+        # Disable button and show refreshing state
+        self.refresh_btn.config(state='disabled', text="⟳")
+        self.port_status_label.config(text="🔄 Scanning for COM ports...")
+        self.root.update()
+
+        # Store current selection
+        current_selection = self.port_var.get()
+
+        # Perform refresh
+        try:
+            ports = [port.device for port in serial.tools.list_ports.comports()]
+
+            # Update combo box
+            self.port_combo['values'] = ports
+
+            if ports:
+                # Try to maintain previous selection if still available
+                if current_selection in ports:
+                    self.port_combo.set(current_selection)
+                    self.port_status_label.config(text=f"✅ {len(ports)} port(s) found - Previous selection maintained")
+                else:
+                    # Select first port if previous selection no longer available
+                    self.port_combo.set(ports[0])
+                    if current_selection:
+                        self.port_status_label.config(
+                            text=f"⚠️ {len(ports)} port(s) found - Previous port {current_selection} no longer available")
+                    else:
+                        self.port_status_label.config(text=f"✅ {len(ports)} port(s) found")
+
+                self.status_label.config(text=f"Found {len(ports)} COM port(s) - Ready to connect")
+            else:
+                self.port_combo.set("")
+                self.port_status_label.config(text="❌ No COM ports detected")
+                self.status_label.config(text="No COM ports detected - Connect a device and refresh")
+
+        except Exception as e:
+            self.port_status_label.config(text=f"❌ Error scanning ports: {str(e)}")
+            self.status_label.config(text="Error scanning COM ports")
+
+        # Re-enable button
+        self.refresh_btn.config(state='normal', text="🔄")
+
+    def refresh_ports(self):
+        """Standard refresh method (backwards compatibility)"""
+        self.refresh_ports_with_feedback()
+
+    def toggle_auto_refresh(self):
+        """Toggle automatic COM port refresh"""
+        if self.auto_refresh_var.get():
+            self.start_auto_refresh()
+            self.port_status_label.config(text="🔄 Auto-refresh enabled - checking every 3 seconds")
+        else:
+            self.stop_auto_refresh()
+            self.port_status_label.config(text="Auto-refresh disabled")
+
+    def start_auto_refresh(self):
+        """Start automatic COM port refresh"""
+        if hasattr(self, 'auto_refresh_job'):
+            self.root.after_cancel(self.auto_refresh_job)
+
+        def auto_refresh_task():
+            if self.auto_refresh_var.get():
+                current_ports = set(port.device for port in serial.tools.list_ports.comports())
+                current_combo_ports = set(self.port_combo['values'])
+
+                # Only refresh if ports have changed
+                if current_ports != current_combo_ports:
+                    self.refresh_ports_with_feedback()
+
+                # Schedule next refresh
+                self.auto_refresh_job = self.root.after(3000, auto_refresh_task)
+
+        auto_refresh_task()
+
+    def stop_auto_refresh(self):
+        """Stop automatic COM port refresh"""
+        if hasattr(self, 'auto_refresh_job'):
+            self.root.after_cancel(self.auto_refresh_job)
+            delattr(self, 'auto_refresh_job')
+
+    def create_demo_option(self, main_frame):
+        """Add demo mode option to connection window"""
+        demo_frame = ttk.Frame(main_frame, style='Modern.TFrame')
+        demo_frame.pack(fill='x', pady=15)
+
+        # Create demo mode checkbox
+        self.demo_var = tk.BooleanVar()
+        self.demo_var.set(self.settings_mgr.get('demo', 'enabled_by_default', False))
+
+        # Configure demo checkbox style
+        style = ttk.Style()
+        style.configure('Demo.TCheckbutton',
+                        background='#1e1e1e',
+                        foreground='#ff9500',
+                        font=('Arial', 11, 'bold'))
+
+        demo_check = ttk.Checkbutton(demo_frame,
+                                     text="🎭 Demo Mode (No hardware required)",
+                                     variable=self.demo_var,
+                                     style='Demo.TCheckbutton',
+                                     command=self.on_demo_toggle)
+        demo_check.pack(anchor='w')
+
+        # Demo mode description
+        self.demo_info = ttk.Label(demo_frame,
+                                   text="• Perfect for training and testing without real hardware\n• All features work with simulated responses\n• Safe environment for learning the interface",
+                                   style='Modern.TLabel',
+                                   font=('Arial', 9),
+                                   justify='left')
+        self.demo_info.pack(anchor='w', padx=(25, 0), pady=(5, 0))
+
+    def on_demo_toggle(self):
+        """Handle demo mode checkbox toggle"""
+        if self.demo_var.get():
+            # Demo mode enabled - disable COM port controls
+            self.port_combo.config(state='disabled')
+            self.refresh_btn.config(state='disabled')
+            self.auto_refresh_var.set(False)
+            self.stop_auto_refresh()
+            self.status_label.config(text="Demo mode enabled - click Connect to start training session")
+            self.port_status_label.config(text="🎭 Demo mode active - COM port scanning disabled")
+        else:
+            # Demo mode disabled - re-enable COM port controls
+            self.port_combo.config(state='readonly')
+            self.refresh_btn.config(state='normal')
+            self.refresh_ports()
+
+    def __del__(self):
+        """Cleanup when window is destroyed"""
+        if hasattr(self, 'auto_refresh_job'):
+            try:
+                self.root.after_cancel(self.auto_refresh_job)
+            except:
+                pass
 
 
 class DashboardApp:
