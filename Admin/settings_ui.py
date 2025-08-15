@@ -9,8 +9,8 @@ Provides a comprehensive interface for viewing and editing application settings.
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import os
-from typing import Callable
-from Admin.settings_manager import SettingsManager
+from typing import Dict, Any, Callable
+from settings_manager import SettingsManager
 
 
 class SettingsDialog:
@@ -582,326 +582,326 @@ class SettingsDialog:
         self.cache_info_text.insert(1.0, info_text)
         self.cache_info_text.config(state='disabled')
 
-        def _browse_cache_directory(self):
-            """Browse for cache directory"""
-            directory = filedialog.askdirectory(
-                title="Select Cache Directory",
-                initialdir=self.cache_directory.get() or os.path.expanduser('~')
-            )
-            if directory:
-                self.cache_directory.set(directory)
+    def _browse_cache_directory(self):
+        """Browse for cache directory"""
+        directory = filedialog.askdirectory(
+            title="Select Cache Directory",
+            initialdir=self.cache_directory.get() or os.path.expanduser('~')
+        )
+        if directory:
+            self.cache_directory.set(directory)
 
-        def _view_cache_contents(self):
-            """Show cache contents in a new window"""
-            # This would open a new dialog showing cache entries
-            messagebox.showinfo("Cache Contents", "Cache viewer will be implemented here.")
+    def _view_cache_contents(self):
+        """Show cache contents in a new window"""
+        # This would open a new dialog showing cache entries
+        messagebox.showinfo("Cache Contents", "Cache viewer will be implemented here.")
 
-        def _clear_cache(self):
-            """Clear cache after confirmation"""
-            if messagebox.askyesno("Clear Cache",
-                                   "Are you sure you want to clear all cached data?\n\n"
-                                   "This action cannot be undone."):
-                # Implementation would clear the cache
-                messagebox.showinfo("Cache Cleared", "All cached data has been cleared.")
-                self._update_cache_info()
+    def _clear_cache(self):
+        """Clear cache after confirmation"""
+        if messagebox.askyesno("Clear Cache",
+                               "Are you sure you want to clear all cached data?\n\n"
+                               "This action cannot be undone."):
+            # Implementation would clear the cache
+            messagebox.showinfo("Cache Cleared", "All cached data has been cleared.")
+            self._update_cache_info()
 
-        def _open_settings_folder(self):
-            """Open settings folder in file manager"""
-            settings_dir = os.path.dirname(self.settings_mgr.settings_file)
+    def _open_settings_folder(self):
+        """Open settings folder in file manager"""
+        settings_dir = os.path.dirname(self.settings_mgr.settings_file)
+        try:
+            if os.name == 'nt':  # Windows
+                os.startfile(settings_dir)
+            elif os.name == 'posix':  # Unix/Linux/Mac
+                import sys
+                if sys.platform == 'darwin':  # macOS
+                    os.system(f'open "{settings_dir}"')
+                else:  # Linux
+                    os.system(f'xdg-open "{settings_dir}"')
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not open settings folder: {e}")
+
+    def _export_settings(self):
+        """Export settings to a file"""
+        filename = filedialog.asksaveasfilename(
+            title="Export Settings",
+            defaultextension=".json",
+            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
+        )
+        if filename:
             try:
-                if os.name == 'nt':  # Windows
-                    os.startfile(settings_dir)
-                elif os.name == 'posix':  # Unix/Linux/Mac
-                    import sys
-                    if sys.platform == 'darwin':  # macOS
-                        os.system(f'open "{settings_dir}"')
-                    else:  # Linux
-                        os.system(f'xdg-open "{settings_dir}"')
+                import shutil
+                shutil.copy2(self.settings_mgr.settings_file, filename)
+                messagebox.showinfo("Export Complete", f"Settings exported to:\n{filename}")
             except Exception as e:
-                messagebox.showerror("Error", f"Could not open settings folder: {e}")
+                messagebox.showerror("Export Error", f"Failed to export settings: {e}")
 
-        def _export_settings(self):
-            """Export settings to a file"""
-            filename = filedialog.asksaveasfilename(
-                title="Export Settings",
-                defaultextension=".json",
-                filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
-            )
-            if filename:
+    def _import_settings(self):
+        """Import settings from a file"""
+        filename = filedialog.askopenfilename(
+            title="Import Settings",
+            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
+        )
+        if filename:
+            if messagebox.askyesno("Import Settings",
+                                   "This will replace all current settings.\n\n"
+                                   "Are you sure you want to continue?"):
                 try:
                     import shutil
-                    shutil.copy2(self.settings_mgr.settings_file, filename)
-                    messagebox.showinfo("Export Complete", f"Settings exported to:\n{filename}")
+                    shutil.copy2(filename, self.settings_mgr.settings_file)
+                    self.settings_mgr.load()  # Reload settings
+                    self._load_settings()  # Update UI
+                    messagebox.showinfo("Import Complete", "Settings imported successfully.")
                 except Exception as e:
-                    messagebox.showerror("Export Error", f"Failed to export settings: {e}")
+                    messagebox.showerror("Import Error", f"Failed to import settings: {e}")
 
-        def _import_settings(self):
-            """Import settings from a file"""
-            filename = filedialog.askopenfilename(
-                title="Import Settings",
-                filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
-            )
-            if filename:
-                if messagebox.askyesno("Import Settings",
-                                       "This will replace all current settings.\n\n"
-                                       "Are you sure you want to continue?"):
-                    try:
-                        import shutil
-                        shutil.copy2(filename, self.settings_mgr.settings_file)
-                        self.settings_mgr.load()  # Reload settings
-                        self._load_settings()  # Update UI
-                        messagebox.showinfo("Import Complete", "Settings imported successfully.")
-                    except Exception as e:
-                        messagebox.showerror("Import Error", f"Failed to import settings: {e}")
+    def _validate_settings(self):
+        """Validate current settings and show results"""
+        # First save current UI values temporarily
+        temp_settings = self.settings_mgr.settings
+        try:
+            self._save_settings_to_temp(temp_settings)
+            issues = self.settings_mgr.validate_settings()
 
-        def _validate_settings(self):
-            """Validate current settings and show results"""
-            # First save current UI values temporarily
-            temp_settings = self.settings_mgr.settings
-            try:
-                self._save_settings_to_temp(temp_settings)
-                issues = self.settings_mgr.validate_settings()
+            self.validation_text.config(state='normal')
+            self.validation_text.delete(1.0, tk.END)
 
-                self.validation_text.config(state='normal')
-                self.validation_text.delete(1.0, tk.END)
+            if not issues:
+                self.validation_text.insert(1.0, "✅ All settings are valid!")
+            else:
+                result_text = "❌ Validation Issues Found:\n\n"
+                for section, section_issues in issues.items():
+                    result_text += f"{section.upper()}:\n"
+                    for issue in section_issues:
+                        result_text += f"  • {issue}\n"
+                    result_text += "\n"
+                self.validation_text.insert(1.0, result_text)
 
-                if not issues:
-                    self.validation_text.insert(1.0, "✅ All settings are valid!")
-                else:
-                    result_text = "❌ Validation Issues Found:\n\n"
-                    for section, section_issues in issues.items():
-                        result_text += f"{section.upper()}:\n"
-                        for issue in section_issues:
-                            result_text += f"  • {issue}\n"
-                        result_text += "\n"
-                    self.validation_text.insert(1.0, result_text)
+            self.validation_text.config(state='disabled')
 
-                self.validation_text.config(state='disabled')
+        except Exception as e:
+            self.validation_text.config(state='normal')
+            self.validation_text.delete(1.0, tk.END)
+            self.validation_text.insert(1.0, f"❌ Validation Error: {e}")
+            self.validation_text.config(state='disabled')
 
-            except Exception as e:
-                self.validation_text.config(state='normal')
-                self.validation_text.delete(1.0, tk.END)
-                self.validation_text.insert(1.0, f"❌ Validation Error: {e}")
-                self.validation_text.config(state='disabled')
+    def _save_settings_to_temp(self, settings):
+        """Save UI values to a settings object without file persistence"""
+        # Cache settings
+        settings.cache.enabled = self.cache_enabled.get()
+        settings.cache.default_ttl_seconds = int(self.cache_ttl.get())
+        settings.cache.max_entries = int(self.cache_max_entries.get())
+        settings.cache.cleanup_interval_minutes = int(self.cache_cleanup_interval.get())
+        settings.cache.cache_directory = self.cache_directory.get()
 
-        def _save_settings_to_temp(self, settings):
-            """Save UI values to a settings object without file persistence"""
-            # Cache settings
-            settings.cache.enabled = self.cache_enabled.get()
-            settings.cache.default_ttl_seconds = int(self.cache_ttl.get())
-            settings.cache.max_entries = int(self.cache_max_entries.get())
-            settings.cache.cleanup_interval_minutes = int(self.cache_cleanup_interval.get())
-            settings.cache.cache_directory = self.cache_directory.get()
+        # Refresh settings
+        settings.refresh.enabled = self.refresh_enabled.get()
+        settings.refresh.interval_seconds = int(self.refresh_interval.get())
 
-            # Refresh settings
-            settings.refresh.enabled = self.refresh_enabled.get()
-            settings.refresh.interval_seconds = int(self.refresh_interval.get())
+        # UI settings
+        settings.ui.theme = self.ui_theme.get()
+        settings.ui.font_family = self.ui_font_family.get()
+        settings.ui.font_size = int(self.ui_font_size.get())
+        settings.ui.window_width = int(self.ui_window_width.get())
+        settings.ui.window_height = int(self.ui_window_height.get())
 
-            # UI settings
-            settings.ui.theme = self.ui_theme.get()
-            settings.ui.font_family = self.ui_font_family.get()
-            settings.ui.font_size = int(self.ui_font_size.get())
-            settings.ui.window_width = int(self.ui_window_width.get())
-            settings.ui.window_height = int(self.ui_window_height.get())
+        # Communication settings
+        settings.communication.default_baudrate = int(self.comm_baudrate.get())
+        settings.communication.timeout_seconds = float(self.comm_timeout.get())
+        settings.communication.retry_attempts = int(self.comm_retry_attempts.get())
+        settings.communication.retry_delay_seconds = float(self.comm_retry_delay.get())
 
-            # Communication settings
-            settings.communication.default_baudrate = int(self.comm_baudrate.get())
-            settings.communication.timeout_seconds = float(self.comm_timeout.get())
-            settings.communication.retry_attempts = int(self.comm_retry_attempts.get())
-            settings.communication.retry_delay_seconds = float(self.comm_retry_delay.get())
+    def _reset_to_defaults(self):
+        """Reset all settings to defaults"""
+        if messagebox.askyesno("Reset to Defaults",
+                               "This will reset all settings to their default values.\n\n"
+                               "Are you sure you want to continue?"):
+            self.settings_mgr.reset_to_defaults()
+            self._load_settings()
+            messagebox.showinfo("Reset Complete", "All settings have been reset to defaults.")
 
-        def _reset_to_defaults(self):
-            """Reset all settings to defaults"""
-            if messagebox.askyesno("Reset to Defaults",
-                                   "This will reset all settings to their default values.\n\n"
-                                   "Are you sure you want to continue?"):
-                self.settings_mgr.reset_to_defaults()
-                self._load_settings()
-                messagebox.showinfo("Reset Complete", "All settings have been reset to defaults.")
-
-        def _on_ok(self):
-            """Handle OK button"""
-            if self._save_settings():
-                if self.on_settings_changed:
-                    self.on_settings_changed()
-                self.dialog.destroy()
-
-        def _on_apply(self):
-            """Handle Apply button"""
-            if self._save_settings():
-                if self.on_settings_changed:
-                    self.on_settings_changed()
-                messagebox.showinfo("Applied", "Settings have been applied successfully.")
-
-        def _on_cancel(self):
-            """Handle Cancel button"""
+    def _on_ok(self):
+        """Handle OK button"""
+        if self._save_settings():
+            if self.on_settings_changed:
+                self.on_settings_changed()
             self.dialog.destroy()
 
-    class CacheViewerDialog:
-        """
-        Dialog for viewing cache contents
-        """
+    def _on_apply(self):
+        """Handle Apply button"""
+        if self._save_settings():
+            if self.on_settings_changed:
+                self.on_settings_changed()
+            messagebox.showinfo("Applied", "Settings have been applied successfully.")
 
-        def __init__(self, parent: tk.Tk, cache_manager):
-            """Initialize cache viewer dialog"""
-            self.parent = parent
-            self.cache_manager = cache_manager
+    def _on_cancel(self):
+        """Handle Cancel button"""
+        self.dialog.destroy()
 
-            # Create dialog
-            self.dialog = tk.Toplevel(parent)
-            self.dialog.title("Cache Contents - CalypsoPy")
-            self.dialog.geometry("800x500")
-            self.dialog.resizable(True, True)
 
-            # Make modal
-            self.dialog.transient(parent)
-            self.dialog.grab_set()
+class CacheViewerDialog:
+    """
+    Dialog for viewing cache contents
+    """
 
-            # Create UI
-            self._create_ui()
-            self._load_cache_data()
+    def __init__(self, parent: tk.Tk, cache_manager):
+        """Initialize cache viewer dialog"""
+        self.parent = parent
+        self.cache_manager = cache_manager
 
-        def _create_ui(self):
-            """Create the cache viewer UI"""
-            main_frame = ttk.Frame(self.dialog, padding=10)
-            main_frame.pack(fill='both', expand=True)
+        # Create dialog
+        self.dialog = tk.Toplevel(parent)
+        self.dialog.title("Cache Contents - CalypsoPy")
+        self.dialog.geometry("800x500")
+        self.dialog.resizable(True, True)
 
-            # Header
-            header_frame = ttk.Frame(main_frame)
-            header_frame.pack(fill='x', pady=(0, 10))
+        # Make modal
+        self.dialog.transient(parent)
+        self.dialog.grab_set()
 
-            ttk.Label(header_frame, text="Cache Contents",
-                      font=('Arial', 14, 'bold')).pack(side='left')
+        # Create UI
+        self._create_ui()
+        self._load_cache_data()
 
-            ttk.Button(header_frame, text="Refresh",
-                       command=self._load_cache_data).pack(side='right')
+    def _create_ui(self):
+        """Create the cache viewer UI"""
+        main_frame = ttk.Frame(self.dialog, padding=10)
+        main_frame.pack(fill='both', expand=True)
 
-            # Treeview for cache entries
-            columns = ('Key', 'Command', 'Age', 'Type', 'Size', 'Status')
-            self.tree = ttk.Treeview(main_frame, columns=columns, show='headings', height=15)
+        # Header
+        header_frame = ttk.Frame(main_frame)
+        header_frame.pack(fill='x', pady=(0, 10))
 
-            # Configure columns
-            self.tree.heading('Key', text='Cache Key')
-            self.tree.heading('Command', text='Command')
-            self.tree.heading('Age', text='Age (seconds)')
-            self.tree.heading('Type', text='Data Type')
-            self.tree.heading('Size', text='Size (chars)')
-            self.tree.heading('Status', text='Status')
+        ttk.Label(header_frame, text="Cache Contents",
+                  font=('Arial', 14, 'bold')).pack(side='left')
 
-            self.tree.column('Key', width=200)
-            self.tree.column('Command', width=120)
-            self.tree.column('Age', width=100)
-            self.tree.column('Type', width=80)
-            self.tree.column('Size', width=80)
-            self.tree.column('Status', width=80)
+        ttk.Button(header_frame, text="Refresh",
+                   command=self._load_cache_data).pack(side='right')
 
-            # Scrollbar
-            scrollbar = ttk.Scrollbar(main_frame, orient='vertical', command=self.tree.yview)
-            self.tree.configure(yscrollcommand=scrollbar.set)
+        # Treeview for cache entries
+        columns = ('Key', 'Command', 'Age', 'Type', 'Size', 'Status')
+        self.tree = ttk.Treeview(main_frame, columns=columns, show='headings', height=15)
 
-            # Pack treeview and scrollbar
-            self.tree.pack(side='left', fill='both', expand=True)
-            scrollbar.pack(side='right', fill='y')
+        # Configure columns
+        self.tree.heading('Key', text='Cache Key')
+        self.tree.heading('Command', text='Command')
+        self.tree.heading('Age', text='Age (seconds)')
+        self.tree.heading('Type', text='Data Type')
+        self.tree.heading('Size', text='Size (chars)')
+        self.tree.heading('Status', text='Status')
 
-            # Buttons
-            button_frame = ttk.Frame(main_frame)
-            button_frame.pack(fill='x', pady=(10, 0))
+        self.tree.column('Key', width=200)
+        self.tree.column('Command', width=120)
+        self.tree.column('Age', width=100)
+        self.tree.column('Type', width=80)
+        self.tree.column('Size', width=80)
+        self.tree.column('Status', width=80)
 
-            ttk.Button(button_frame, text="View Details",
-                       command=self._view_details).pack(side='left', padx=(0, 5))
-            ttk.Button(button_frame, text="Delete Entry",
-                       command=self._delete_entry).pack(side='left', padx=5)
-            ttk.Button(button_frame, text="Close",
-                       command=self.dialog.destroy).pack(side='right')
+        # Scrollbar
+        scrollbar = ttk.Scrollbar(main_frame, orient='vertical', command=self.tree.yview)
+        self.tree.configure(yscrollcommand=scrollbar.set)
 
-        def _load_cache_data(self):
-            """Load cache data into the treeview"""
-            # Clear existing items
-            for item in self.tree.get_children():
-                self.tree.delete(item)
+        # Pack treeview and scrollbar
+        self.tree.pack(side='left', fill='both', expand=True)
+        scrollbar.pack(side='right', fill='y')
 
-            # Get cache entries
-            if hasattr(self.cache_manager, 'get_entry_list'):
-                entries = self.cache_manager.get_entry_list()
+        # Buttons
+        button_frame = ttk.Frame(main_frame)
+        button_frame.pack(fill='x', pady=(10, 0))
 
-                for entry in entries:
-                    status = "Expired" if entry['expired'] else "Valid"
+        ttk.Button(button_frame, text="View Details",
+                   command=self._view_details).pack(side='left', padx=(0, 5))
+        ttk.Button(button_frame, text="Delete Entry",
+                   command=self._delete_entry).pack(side='left', padx=5)
+        ttk.Button(button_frame, text="Close",
+                   command=self.dialog.destroy).pack(side='right')
 
-                    self.tree.insert('', 'end', values=(
-                        entry['key'],
-                        entry['command'],
-                        f"{entry['age_seconds']:.1f}",
-                        entry['data_type'],
-                        entry['data_size'],
-                        status
-                    ))
+    def _load_cache_data(self):
+        """Load cache data into the treeview"""
+        # Clear existing items
+        for item in self.tree.get_children():
+            self.tree.delete(item)
 
-        def _view_details(self):
-            """View details of selected cache entry"""
-            selection = self.tree.selection()
-            if not selection:
-                messagebox.showwarning("No Selection", "Please select a cache entry to view.")
-                return
+        # Get cache entries
+        if hasattr(self.cache_manager, 'get_entry_list'):
+            entries = self.cache_manager.get_entry_list()
 
-            item = self.tree.item(selection[0])
-            cache_key = item['values'][0]
+            for entry in entries:
+                status = "Expired" if entry['expired'] else "Valid"
 
-            # Get detailed cache data
-            cache_data = self.cache_manager.get_with_metadata(cache_key)
-            if cache_data:
-                detail_text = f"Cache Key: {cache_key}\n\n"
-                detail_text += f"Command: {cache_data['command']}\n"
-                detail_text += f"Age: {cache_data['age_seconds']:.1f} seconds\n"
-                detail_text += f"Timestamp: {cache_data['timestamp']}\n\n"
-                detail_text += f"Data:\n{cache_data['data']}"
+                self.tree.insert('', 'end', values=(
+                    entry['key'],
+                    entry['command'],
+                    f"{entry['age_seconds']:.1f}",
+                    entry['data_type'],
+                    entry['data_size'],
+                    status
+                ))
 
-                # Show in a new dialog
-                detail_dialog = tk.Toplevel(self.dialog)
-                detail_dialog.title(f"Cache Entry Details - {cache_key}")
-                detail_dialog.geometry("600x400")
+    def _view_details(self):
+        """View details of selected cache entry"""
+        selection = self.tree.selection()
+        if not selection:
+            messagebox.showwarning("No Selection", "Please select a cache entry to view.")
+            return
 
-                text_widget = tk.Text(detail_dialog, wrap='word', padx=10, pady=10)
-                text_widget.pack(fill='both', expand=True)
-                text_widget.insert(1.0, detail_text)
-                text_widget.config(state='disabled')
+        item = self.tree.item(selection[0])
+        cache_key = item['values'][0]
 
-        def _delete_entry(self):
-            """Delete selected cache entry"""
-            selection = self.tree.selection()
-            if not selection:
-                messagebox.showwarning("No Selection", "Please select a cache entry to delete.")
-                return
+        # Get detailed cache data
+        cache_data = self.cache_manager.get_with_metadata(cache_key)
+        if cache_data:
+            detail_text = f"Cache Key: {cache_key}\n\n"
+            detail_text += f"Command: {cache_data['command']}\n"
+            detail_text += f"Age: {cache_data['age_seconds']:.1f} seconds\n"
+            detail_text += f"Timestamp: {cache_data['timestamp']}\n\n"
+            detail_text += f"Data:\n{cache_data['data']}"
 
-            item = self.tree.item(selection[0])
-            cache_key = item['values'][0]
+            # Show in a new dialog
+            detail_dialog = tk.Toplevel(self.dialog)
+            detail_dialog.title(f"Cache Entry Details - {cache_key}")
+            detail_dialog.geometry("600x400")
 
-            if messagebox.askyesno("Delete Entry", f"Delete cache entry '{cache_key}'?"):
-                if self.cache_manager.invalidate(cache_key):
-                    self._load_cache_data()  # Refresh the list
-                    messagebox.showinfo("Deleted", f"Cache entry '{cache_key}' has been deleted.")
-                else:
-                    messagebox.showerror("Error", f"Failed to delete cache entry '{cache_key}'.")
+            text_widget = tk.Text(detail_dialog, wrap='word', padx=10, pady=10)
+            text_widget.pack(fill='both', expand=True)
+            text_widget.insert(1.0, detail_text)
+            text_widget.config(state='disabled')
 
-    # REPLACE the test code at the bottom of your settings_ui.py file (around line 898) with this:
+    def _delete_entry(self):
+        """Delete selected cache entry"""
+        selection = self.tree.selection()
+        if not selection:
+            messagebox.showwarning("No Selection", "Please select a cache entry to delete.")
+            return
 
-    # Usage example
-    if __name__ == "__main__":
-        import sys
-        import tkinter as tk
-        from tkinter import ttk  # ADD this import
-        from Admin.settings_manager import SettingsManager
+        item = self.tree.item(selection[0])
+        cache_key = item['values'][0]
 
-        # Test the settings dialog
-        root = tk.Tk()
-        root.title("Settings Test")
-        root.geometry("300x200")
+        if messagebox.askyesno("Delete Entry", f"Delete cache entry '{cache_key}'?"):
+            if self.cache_manager.invalidate(cache_key):
+                self._load_cache_data()  # Refresh the list
+                messagebox.showinfo("Deleted", f"Cache entry '{cache_key}' has been deleted.")
+            else:
+                messagebox.showerror("Error", f"Failed to delete cache entry '{cache_key}'.")
 
-        settings_mgr = SettingsManager()
 
-        def show_settings():
-            dialog = SettingsDialog(root, settings_mgr,
-                                    on_settings_changed=lambda: print("Settings changed!"))
+# Usage example
+if __name__ == "__main__":
+    import sys
+    import tkinter as tk
+    from tkinter import ttk
+    from settings_manager import SettingsManager
 
-        ttk.Button(root, text="Open Settings", command=show_settings).pack(pady=50)
+    # Test the settings dialog
+    root = tk.Tk()
+    root.title("Settings Test")
+    root.geometry("300x200")
 
-        root.mainloop()
+    settings_mgr = SettingsManager()
+
+    def show_settings():
+        dialog = SettingsDialog(root, settings_mgr,
+                                on_settings_changed=lambda: print("Settings changed!"))
+
+    ttk.Button(root, text="Open Settings", command=show_settings).pack(pady=50)
+
+    root.mainloop()

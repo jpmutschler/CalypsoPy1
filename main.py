@@ -15,7 +15,7 @@ CalypsoPy Dependencies:
 
 # Application Information
 APP_NAME = "CalypsoPy"
-APP_VERSION = "1.3.3"  # Updated version
+APP_VERSION = "1.3.4"  # Updated version
 APP_BUILD = "20250809-001"  # Updated build
 APP_DESCRIPTION = "Serial Cables Atlas 3 Serial UI for CLI Interface"
 APP_AUTHOR = "Serial Cables, LLC"
@@ -718,19 +718,14 @@ class DashboardApp:
         self.create_content_area()
 
     def create_sidebar(self):
-        """Create the sidebar with dashboard tiles and settings"""
-        # Header with settings gear - UPDATED
+        """Create the sidebar with dashboard tiles"""
+        # Header - simplified without settings gear
         header_frame = ttk.Frame(self.sidebar, style='Sidebar.TFrame')
         header_frame.pack(fill='x', padx=10, pady=10)
 
         ttk.Label(header_frame, text="📊 Dashboards",
                   background='#2d2d2d', foreground='#ffffff',
-                  font=('Arial', 12, 'bold')).pack(side='left')
-
-        # Settings gear icon - NEW
-        settings_btn = ttk.Button(header_frame, text="⚙️", width=3,
-                                  command=self.open_settings)
-        settings_btn.pack(side='right')
+                  font=('Arial', 12, 'bold')).pack()
 
         # Dashboard tiles (existing code stays the same)
         self.dashboards = [
@@ -749,7 +744,7 @@ class DashboardApp:
         for dashboard_id, icon, title in self.dashboards:
             self.create_dashboard_tile(dashboard_id, icon, title)
 
-        # *** MODIFIED: CONNECTION STATUS WITH DEMO MODE INDICATOR ***
+        # *** CONNECTION STATUS WITH DEMO MODE INDICATOR ***
         status_frame = ttk.Frame(self.sidebar, style='Sidebar.TFrame')
         status_frame.pack(side='bottom', fill='x', padx=10, pady=10)
 
@@ -776,6 +771,14 @@ class DashboardApp:
                                         foreground='#cccccc',
                                         font=('Arial', 8))
             demo_info_label.pack()
+
+        # Add settings access hint
+        hint_label = ttk.Label(status_frame,
+                               text="Settings: ⚙️ (top right)",
+                               background='#2d2d2d',
+                               foreground='#888888',
+                               font=('Arial', 7))
+        hint_label.pack(pady=(5, 0))
 
     def create_dashboard_tile(self, dashboard_id, icon, title):
         """Create an individual dashboard tile"""
@@ -855,15 +858,24 @@ class DashboardApp:
                                        style='Dashboard.TLabel')
         self.content_title.pack(side='left')
 
+        # Right side button group
+        button_group = ttk.Frame(header_frame, style='Content.TFrame')
+        button_group.pack(side='right')
+
+        # Settings button
+        self.settings_btn = ttk.Button(button_group, text="⚙️", width=3,
+                                       command=self.open_settings)
+        self.settings_btn.pack(side='right', padx=(5, 0))
+
         # Refresh button for current dashboard
-        self.refresh_btn = ttk.Button(header_frame, text="🔄", width=3,
+        self.refresh_btn = ttk.Button(button_group, text="🔄", width=3,
                                       command=self.refresh_current_dashboard)
         self.refresh_btn.pack(side='right')
 
-        # Cache status indicator
+        # Cache status indicator (between title and buttons)
         self.cache_status_label = ttk.Label(header_frame, text="",
                                             style='Info.TLabel', font=('Arial', 8))
-        self.cache_status_label.pack(side='right', padx=(0, 10))
+        self.cache_status_label.pack(side='right', padx=(20, 10))
 
         # Scrollable content area
         canvas = tk.Canvas(self.content_frame, bg='#1e1e1e', highlightthickness=0)
