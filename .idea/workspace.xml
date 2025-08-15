@@ -5,10 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="788c075a-584d-4f65-912f-d1e30ca41428" name="Changes" comment="Port Status Changes">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Admin/debug_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/Admin/debug_config.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Admin/enhanced_sysinfo_parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/Admin/enhanced_sysinfo_parser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -134,7 +131,7 @@
       <updated>1754689470994</updated>
       <workItem from="1754689482253" duration="75159000" />
       <workItem from="1755106413475" duration="120000" />
-      <workItem from="1755106580546" duration="27439000" />
+      <workItem from="1755106580546" duration="28215000" />
     </task>
     <task id="LOCAL-00001" summary="Normal code updates">
       <option name="closed" value="true" />
@@ -384,7 +381,15 @@
       <option name="project" value="LOCAL" />
       <updated>1755225715929</updated>
     </task>
-    <option name="localTasksCounter" value="32" />
+    <task id="LOCAL-00032" summary="Port Status Changes">
+      <option name="closed" value="true" />
+      <created>1755229548110</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1755229548110</updated>
+    </task>
+    <option name="localTasksCounter" value="33" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
