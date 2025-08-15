@@ -5,202 +5,343 @@ Admin/debug_config.py
 Centralized Debug Configuration for CalypsoPy
 Control all debug output from this single file
 
-Place this file in: Admin/debug_config.py
 """
 
-# ===================================================================
-# 🔧 MAIN DEBUG CONTROL - CHANGE THIS TO ENABLE/DISABLE DEBUG
-# ===================================================================
-
-DEBUG_ENABLED = True  # Set to False to disable ALL debug messages
-
-# ===================================================================
-# 📊 GRANULAR DEBUG CONTROLS (optional - for fine-tuning)
-# ===================================================================
-
-# You can enable/disable specific debug categories
-DEBUG_CATEGORIES = {
-    'response_handler': True,  # Advanced Response Handler debug
-    'cache_manager': True,  # Cache operations debug
-    'serial_cli': True,  # Serial communication debug
-    'sysinfo_parser': True,  # System info parsing debug
-    'settings': True,  # Settings management debug
-    'ui': True,  # UI operations debug
-    'demo_mode': True,  # Demo mode debug
-    'host_card': True,  # Host card info debug
-    'queue_monitor': True,  # Queue monitoring debug
-    'connection': True,  # Connection debug
-}
+import os
+import sys
+import logging
+from datetime import datetime
+from typing import Dict, Any, Optional
+from enum import Enum
 
 
-# ===================================================================
-# 🎯 DEBUG FUNCTIONS - USE THESE INSTEAD OF DIRECT PRINT
-# ===================================================================
+class DebugLevel(Enum):
+    """Debug levels for CalypsoPy"""
+    NONE = 0  # No debug output
+    ERROR = 1  # Errors only
+    WARNING = 2  # Warnings and errors
+    INFO = 3  # Info, warnings, and errors
+    DEBUG = 4  # Debug, info, warnings, and errors
+    VERBOSE = 5  # All output including verbose tracing
 
-def debug_print(message, category='general'):
+
+class DebugConfig:
     """
-    Centralized debug print function
-
-    Args:
-        message: Debug message to print
-        category: Debug category (optional)
+    Centralized debug configuration for CalypsoPy
     """
-    if DEBUG_ENABLED and DEBUG_CATEGORIES.get(category, True):
-        print(f"DEBUG[{category.upper()}]: {message}")
 
+    def __init__(self):
+        """Initialize debug configuration"""
+        # Default settings
+        self.enabled = True
+        self.level = DebugLevel.INFO
+        self.log_to_file = True
+        self.log_to_console = True
+        self.timestamp_format = '%Y-%m-%d %H:%M:%S.%f'
 
-def debug_error(message, category='general'):
-    """Print error debug message (always shown if DEBUG_ENABLED)"""
-    if DEBUG_ENABLED:
-        print(f"ERROR[{category.upper()}]: {message}")
+        # Component-specific debug flags
+        self.components = {
+            'main': True,
+            'port_config': True,
+            'host_card': True,
+            'cache_manager': True,
+            'sysinfo_parser': True,
+            'demo_mode': True,
+            'cli_interface': True,
+            'settings': True,
+            'ui_components': True
+        }
 
+        # File logging setup
+        self.log_directory = 'logs'
+        self.log_filename = f'calypsopy_debug_{datetime.now().strftime("%Y%m%d")}.log'
 
-def debug_warning(message, category='general'):
-    """Print warning debug message (always shown if DEBUG_ENABLED)"""
-    if DEBUG_ENABLED:
-        print(f"WARNING[{category.upper()}]: {message}")
+        # Initialize logging
+        self._setup_logging()
 
+        # Load configuration from environment variables
+        self._load_from_environment()
 
-def debug_info(message, category='general'):
-    """Print info debug message"""
-    if DEBUG_ENABLED and DEBUG_CATEGORIES.get(category, True):
-        print(f"INFO[{category.upper()}]: {message}")
+    def _setup_logging(self):
+        """Setup logging configuration"""
+        # Create logs directory if it doesn't exist
+        if self.log_to_file:
+            os.makedirs(self.log_directory, exist_ok=True)
+            log_path = os.path.join(self.log_directory, self.log_filename)
 
+        # Configure logging
+        log_level = logging.DEBUG if self.level.value >= DebugLevel.DEBUG.value else logging.INFO
 
-# ===================================================================
-# 🔍 DEBUG STATUS FUNCTIONS
-# ===================================================================
+        # Create formatter
+        formatter = logging.Formatter(
+            '%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+            datefmt='%H:%M:%S'
+        )
 
-def is_debug_enabled(category='general'):
-    """Check if debug is enabled for a category"""
-    return DEBUG_ENABLED and DEBUG_CATEGORIES.get(category, True)
+        # Setup file logging
+        if self.log_to_file:
+            file_handler = logging.FileHandler(log_path)
+            file_handler.setLevel(log_level)
+            file_handler.setFormatter(formatter)
+            logging.getLogger().addHandler(file_handler)
 
+        # Setup console logging
+        if self.log_to_console:
+            console_handler = logging.StreamHandler(sys.stdout)
+            console_handler.setLevel(log_level)
+            console_handler.setFormatter(formatter)
+            logging.getLogger().addHandler(console_handler)
 
-def get_debug_status():
-    """Get current debug configuration status"""
-    return {
-        'debug_enabled': DEBUG_ENABLED,
-        'active_categories': [cat for cat, enabled in DEBUG_CATEGORIES.items() if enabled],
-        'total_categories': len(DEBUG_CATEGORIES)
-    }
+        logging.getLogger().setLevel(log_level)
 
+    def _load_from_environment(self):
+        """Load debug settings from environment variables"""
+        # Enable/disable debug
+        if 'CALYPSOPY_DEBUG' in os.environ:
+            self.enabled = os.environ['CALYPSOPY_DEBUG'].lower() in ('true', '1', 'yes', 'on')
 
-def print_debug_status():
-    """Print current debug status (useful for startup)"""
-    if DEBUG_ENABLED:
+        # Set debug level
+        if 'CALYPSOPY_DEBUG_LEVEL' in os.environ:
+            level_str = os.environ['CALYPSOPY_DEBUG_LEVEL'].upper()
+            try:
+                self.level = DebugLevel[level_str]
+            except KeyError:
+                print(f"Warning: Invalid debug level '{level_str}', using INFO")
+                self.level = DebugLevel.INFO
+
+        # File logging
+        if 'CALYPSOPY_LOG_FILE' in os.environ:
+            self.log_to_file = os.environ['CALYPSOPY_LOG_FILE'].lower() in ('true', '1', 'yes', 'on')
+
+        # Console logging
+        if 'CALYPSOPY_LOG_CONSOLE' in os.environ:
+            self.log_to_console = os.environ['CALYPSOPY_LOG_CONSOLE'].lower() in ('true', '1', 'yes', 'on')
+
+    def is_enabled(self, component: str = 'main') -> bool:
+        """Check if debug is enabled for a component"""
+        if not self.enabled:
+            return False
+        return self.components.get(component, True)
+
+    def should_log(self, level: DebugLevel, component: str = 'main') -> bool:
+        """Check if message should be logged based on level and component"""
+        return (self.enabled and
+                self.is_enabled(component) and
+                level.value <= self.level.value)
+
+    def log(self, message: str, level: DebugLevel = DebugLevel.INFO,
+            component: str = 'main', prefix: str = '') -> None:
+        """Log a debug message"""
+        if not self.should_log(level, component):
+            return
+
+        timestamp = datetime.now().strftime('%H:%M:%S.%f')[:-3]  # Include milliseconds
+
+        # Create prefix
+        level_prefix = f"[{level.name}]"
+        component_prefix = f"[{component.upper()}]" if component != 'main' else ""
+        custom_prefix = f"[{prefix}]" if prefix else ""
+
+        # Format message
+        formatted_message = f"{timestamp} {level_prefix} {component_prefix} {custom_prefix} {message}"
+
+        # Output based on level
+        if level == DebugLevel.ERROR:
+            logging.error(formatted_message)
+        elif level == DebugLevel.WARNING:
+            logging.warning(formatted_message)
+        elif level == DebugLevel.INFO:
+            logging.info(formatted_message)
+        else:
+            logging.debug(formatted_message)
+
+    def error(self, message: str, component: str = 'main', prefix: str = '') -> None:
+        """Log an error message"""
+        self.log(message, DebugLevel.ERROR, component, prefix)
+
+    def warning(self, message: str, component: str = 'main', prefix: str = '') -> None:
+        """Log a warning message"""
+        self.log(message, DebugLevel.WARNING, component, prefix)
+
+    def info(self, message: str, component: str = 'main', prefix: str = '') -> None:
+        """Log an info message"""
+        self.log(message, DebugLevel.INFO, component, prefix)
+
+    def debug(self, message: str, component: str = 'main', prefix: str = '') -> None:
+        """Log a debug message"""
+        self.log(message, DebugLevel.DEBUG, component, prefix)
+
+    def verbose(self, message: str, component: str = 'main', prefix: str = '') -> None:
+        """Log a verbose message"""
+        self.log(message, DebugLevel.VERBOSE, component, prefix)
+
+    def port_debug(self, message: str, prefix: str = '') -> None:
+        """Debug logging specifically for port configuration"""
+        self.debug(message, 'port_config', prefix)
+
+    def host_debug(self, message: str, prefix: str = '') -> None:
+        """Debug logging specifically for host card info"""
+        self.debug(message, 'host_card', prefix)
+
+    def cache_debug(self, message: str, prefix: str = '') -> None:
+        """Debug logging specifically for cache operations"""
+        self.debug(message, 'cache_manager', prefix)
+
+    def parser_debug(self, message: str, prefix: str = '') -> None:
+        """Debug logging specifically for sysinfo parsing"""
+        self.debug(message, 'sysinfo_parser', prefix)
+
+    def demo_debug(self, message: str, prefix: str = '') -> None:
+        """Debug logging specifically for demo mode"""
+        self.debug(message, 'demo_mode', prefix)
+
+    def cli_debug(self, message: str, prefix: str = '') -> None:
+        """Debug logging specifically for CLI operations"""
+        self.debug(message, 'cli_interface', prefix)
+
+    def enable_component(self, component: str) -> None:
+        """Enable debug for a specific component"""
+        self.components[component] = True
+        self.info(f"Debug enabled for component: {component}")
+
+    def disable_component(self, component: str) -> None:
+        """Disable debug for a specific component"""
+        self.components[component] = False
+        self.info(f"Debug disabled for component: {component}")
+
+    def set_level(self, level: DebugLevel) -> None:
+        """Set the global debug level"""
+        old_level = self.level
+        self.level = level
+        self.info(f"Debug level changed from {old_level.name} to {level.name}")
+
+        # Update logging level
+        log_level = logging.DEBUG if level.value >= DebugLevel.DEBUG.value else logging.INFO
+        logging.getLogger().setLevel(log_level)
+
+    def get_status(self) -> Dict[str, Any]:
+        """Get current debug configuration status"""
+        return {
+            'enabled': self.enabled,
+            'level': self.level.name,
+            'log_to_file': self.log_to_file,
+            'log_to_console': self.log_to_console,
+            'log_directory': self.log_directory,
+            'log_filename': self.log_filename,
+            'components': self.components.copy()
+        }
+
+    def print_status(self) -> None:
+        """Print current debug configuration status"""
+        status = self.get_status()
+        print("\n" + "=" * 50)
+        print("CalypsoPy Debug Configuration")
         print("=" * 50)
-        print("🔧 DEBUG CONFIGURATION")
-        print("=" * 50)
-        print(f"Main Debug: {'ENABLED' if DEBUG_ENABLED else 'DISABLED'}")
-        print(f"Active Categories: {len([c for c in DEBUG_CATEGORIES.values() if c])}/{len(DEBUG_CATEGORIES)}")
+        print(f"Enabled: {status['enabled']}")
+        print(f"Level: {status['level']}")
+        print(f"Log to File: {status['log_to_file']}")
+        print(f"Log to Console: {status['log_to_console']}")
 
-        if DEBUG_ENABLED:
-            print("\nActive Debug Categories:")
-            for category, enabled in DEBUG_CATEGORIES.items():
-                status = "✅" if enabled else "❌"
-                print(f"  {status} {category}")
+        if status['log_to_file']:
+            log_path = os.path.join(status['log_directory'], status['log_filename'])
+            print(f"Log File: {log_path}")
 
-        print("=" * 50)
-        print("To disable debug: Set DEBUG_ENABLED = False in debug_config.py")
-        print("=" * 50)
-    else:
-        print("DEBUG: Disabled (Enable in debug_config.py)")
+        print("\nComponent Status:")
+        for component, enabled in status['components'].items():
+            status_str = "✅ ENABLED" if enabled else "❌ DISABLED"
+            print(f"  {component:15}: {status_str}")
+        print("=" * 50 + "\n")
 
 
-# ===================================================================
-# 🎛️ RUNTIME DEBUG CONTROL (optional advanced features)
-# ===================================================================
-
-def enable_debug():
-    """Enable debug at runtime"""
-    global DEBUG_ENABLED
-    DEBUG_ENABLED = True
-    print("DEBUG: Enabled at runtime")
+# Global debug instance
+debug = DebugConfig()
 
 
-def disable_debug():
-    """Disable debug at runtime"""
-    global DEBUG_ENABLED
-    DEBUG_ENABLED = False
-    print("DEBUG: Disabled at runtime")
+# Convenience functions for easy access
+def debug_enabled(component: str = 'main') -> bool:
+    """Check if debug is enabled"""
+    return debug.is_enabled(component)
 
 
-def toggle_debug():
-    """Toggle debug state"""
-    global DEBUG_ENABLED
-    DEBUG_ENABLED = not DEBUG_ENABLED
-    print(f"DEBUG: {'Enabled' if DEBUG_ENABLED else 'Disabled'}")
+def log_error(message: str, component: str = 'main', prefix: str = '') -> None:
+    """Log error message"""
+    debug.error(message, component, prefix)
 
 
-def enable_category(category):
-    """Enable debug for specific category"""
-    if category in DEBUG_CATEGORIES:
-        DEBUG_CATEGORIES[category] = True
-        debug_print(f"Category '{category}' enabled", 'config')
+def log_warning(message: str, component: str = 'main', prefix: str = '') -> None:
+    """Log warning message"""
+    debug.warning(message, component, prefix)
 
 
-def disable_category(category):
-    """Disable debug for specific category"""
-    if category in DEBUG_CATEGORIES:
-        DEBUG_CATEGORIES[category] = False
-        debug_print(f"Category '{category}' disabled", 'config')
+def log_info(message: str, component: str = 'main', prefix: str = '') -> None:
+    """Log info message"""
+    debug.info(message, component, prefix)
 
 
-# ===================================================================
-# 📝 USAGE EXAMPLES
-# ===================================================================
+def log_debug(message: str, component: str = 'main', prefix: str = '') -> None:
+    """Log debug message"""
+    debug.debug(message, component, prefix)
 
-"""
-USAGE EXAMPLES:
 
-1. Basic usage in any file:
-   from debug_config import debug_print, debug_error
-   debug_print("This is a debug message")
-   debug_error("This is an error message")
+def log_verbose(message: str, component: str = 'main', prefix: str = '') -> None:
+    """Log verbose message"""
+    debug.verbose(message, component, prefix)
 
-2. Category-specific usage:
-   debug_print("Response received", 'response_handler')
-   debug_print("Cache hit", 'cache_manager')
-   debug_print("Serial data", 'serial_cli')
 
-3. Check if debug is enabled:
-   if is_debug_enabled('cache_manager'):
-       # Do expensive debug operations only if needed
-       debug_print(f"Complex debug data: {expensive_operation()}", 'cache_manager')
+# Component-specific convenience functions
+def port_debug(message: str, prefix: str = '') -> None:
+    """Port configuration debug logging"""
+    debug.port_debug(message, prefix)
 
-4. Runtime control (in your UI or advanced dashboard):
-   toggle_debug()  # Toggle debug on/off
-   enable_category('response_handler')  # Enable specific category
-"""
 
-# Initialize debug status on import
-if __name__ != "__main__":
-    print_debug_status()
+def host_debug(message: str, prefix: str = '') -> None:
+    """Host card debug logging"""
+    debug.host_debug(message, prefix)
 
-# Module test
+
+def cache_debug(message: str, prefix: str = '') -> None:
+    """Cache manager debug logging"""
+    debug.cache_debug(message, prefix)
+
+
+def parser_debug(message: str, prefix: str = '') -> None:
+    """Parser debug logging"""
+    debug.parser_debug(message, prefix)
+
+
+def demo_debug(message: str, prefix: str = '') -> None:
+    """Demo mode debug logging"""
+    debug.demo_debug(message, prefix)
+
+
+def cli_debug(message: str, prefix: str = '') -> None:
+    """CLI debug logging"""
+    debug.cli_debug(message, prefix)
+
+
+# Environment variable configuration examples:
+# export CALYPSOPY_DEBUG=true
+# export CALYPSOPY_DEBUG_LEVEL=DEBUG
+# export CALYPSOPY_LOG_FILE=true
+# export CALYPSOPY_LOG_CONSOLE=true
+
+
 if __name__ == "__main__":
-    print("Testing debug_config.py")
-    print("=" * 40)
+    # Test the debug configuration
+    print("Testing Debug Configuration...")
 
-    # Test basic functions
-    debug_print("Test message")
-    debug_error("Test error")
-    debug_warning("Test warning")
-    debug_info("Test info")
+    debug.print_status()
 
-    # Test categories
-    debug_print("Response handler test", 'response_handler')
-    debug_print("Cache test", 'cache_manager')
+    # Test different log levels
+    debug.error("This is an error message", "test")
+    debug.warning("This is a warning message", "test")
+    debug.info("This is an info message", "test")
+    debug.debug("This is a debug message", "test")
+    debug.verbose("This is a verbose message", "test")
 
-    # Test status
-    print("\nDebug Status:")
-    print(get_debug_status())
+    # Test component-specific logging
+    port_debug("Testing port configuration debug")
+    host_debug("Testing host card debug")
+    cache_debug("Testing cache debug")
 
-    # Test runtime controls
-    print("\nTesting runtime controls...")
-    disable_debug()
-    debug_print("This should not print")
-    enable_debug()
-    debug_print("This should print again")
-
-    print("\nDebug config test complete!")
+    print("Debug configuration test completed!")

@@ -76,7 +76,7 @@ from Dashboards.port_status_dashboard import PortStatusManager, PortStatusDashbo
 from Dashboards.firmware_dashboard import FirmwareDashboard
 from Dashboards.resets_dashboard import ResetsDashboard
 from Admin.advanced_response_handler import AdvancedResponseHandler
-from Admin.debug_config import debug_print, debug_error, debug_warning, debug_info, is_debug_enabled
+from Admin.debug_config import debug, port_debug, host_debug, cache_debug, log_info, log_error, log_debug
 import Admin.settings_ui as settings_ui
 
 try:
@@ -1598,30 +1598,190 @@ class DashboardApp:
                 self.show_loading_message("Loading link status...")
 
     def create_port_dashboard(self):
-        """Create properly centered port configuration dashboard"""
+        """Create port configuration dashboard with real device data"""
+        port_debug("Creating port configuration dashboard", "DASHBOARD_INIT")
 
-        # Create main container that centers both horizontally and vertically
-        main_container = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
-        main_container.pack(fill='both', expand=True)
+        # Get cached showport JSON data
+        showport_json = self.sysinfo_parser.get_showport_status_json()
 
-        # Create centered content frame with proper positioning
-        content_frame = ttk.Frame(main_container, style='Content.TFrame')
-        content_frame.place(relx=0.5, rely=0.5, anchor='center')
+        if showport_json and showport_json.get('data_fresh', False):
+            port_debug("Using cached showport data for port dashboard", "DATA_SOURCE")
+            log_info(f"Port data sections: {list(showport_json.get('sections', {}).keys())}", "port_config")
 
-        # Current Port Mode Section
-        self.create_port_mode_status(content_frame)
+            # Display port status section
+            self.create_port_status_section(showport_json)
 
-        # Change Host Card Mode Section
-        self.create_mode_change_controls(content_frame)
+            # Display port configuration controls
+            self.create_port_configuration_controls()
 
-        # Mode Configuration Diagram Section
-        self.create_mode_diagram_section(content_frame)
+            # Display link speed and width information
+            self.create_link_details_section(showport_json)
 
-        # Warning Section
-        self.create_mode_warning_section(content_frame)
+            # Add last updated info
+            last_updated = showport_json.get('last_updated', 'Unknown')
+            self.create_refresh_info(last_updated, True)
 
-        # Refresh Controls
-        self.create_port_refresh_controls(content_frame)
+            port_debug("Port dashboard created successfully", "DASHBOARD_COMPLETE")
+
+        else:
+            # Show loading and request fresh data
+            port_debug("No fresh port data available, requesting sysinfo", "DATA_REQUEST")
+            self.show_loading_message("Loading port configuration...")
+            self.send_sysinfo_command()
+
+    def create_port_status_section(self, showport_json):
+        """Create port status display section with debug logging"""
+        port_debug("Creating port status section", "STATUS_SECTION")
+
+        ports_data = showport_json.get('sections', {}).get('port_status', {})
+        port_debug(f"Port status data contains {len(ports_data.get('items', []))} items", "DATA_ANALYSIS")
+
+        # Create port status card
+        port_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame',
+                               relief='solid', borderwidth=1)
+        port_frame.pack(fill='x', pady=10)
+
+        # Header
+        header_frame = ttk.Frame(port_frame, style='Content.TFrame')
+        header_frame.pack(fill='x', padx=15, pady=(15, 10))
+
+        ttk.Label(header_frame, text="🔌 Port Status Overview",
+                  style='Dashboard.TLabel', font=('Arial', 12, 'bold')).pack(anchor='w')
+
+        # Content
+        content_frame = ttk.Frame(port_frame, style='Content.TFrame')
+        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
+
+        # Display port items
+        items = ports_data.get('items', [])
+        if items:
+            port_debug(f"Displaying {len(items)} port items", "UI_CREATION")
+            for i, item in enumerate(items):
+                label = item.get('label', 'Unknown Port')
+                value = item.get('value', 'Unknown')
+                details = item.get('details', '')
+
+                port_debug(f"Port {i + 1}: {label} = {value}", "PORT_ITEM")
+
+                # Create port row
+                port_row_frame = ttk.Frame(content_frame, style='Content.TFrame')
+                port_row_frame.pack(fill='x', pady=3)
+
+                # Port name and status
+                ttk.Label(port_row_frame, text=f"{label}:",
+                          style='Info.TLabel', font=('Arial', 10, 'bold')).pack(side='left')
+
+                # Status with color coding
+                status_color = self.get_port_status_color(value)
+                port_debug(f"Port {label} color: {status_color}", "COLOR_CODING")
+
+                if status_color != '#cccccc':
+                    style_name = f"PortStatus_{label.replace(' ', '_')}.TLabel"
+                    style = ttk.Style()
+                    style.configure(style_name, background='#1e1e1e',
+                                    foreground=status_color, font=('Arial', 10))
+                    status_label = ttk.Label(port_row_frame, text=value, style=style_name)
+                else:
+                    status_label = ttk.Label(port_row_frame, text=value, style='Info.TLabel')
+
+                status_label.pack(side='right')
+
+                # Details on separate line if available
+                if details:
+                    detail_frame = ttk.Frame(content_frame, style='Content.TFrame')
+                    detail_frame.pack(fill='x', pady=(0, 5))
+                    ttk.Label(detail_frame, text=f"    {details}",
+                              style='Info.TLabel', font=('Arial', 9)).pack(anchor='w')
+                    port_debug(f"Port {label} details: {details}", "PORT_DETAILS")
+        else:
+            port_debug("No port data available for display", "NO_DATA")
+            ttk.Label(content_frame, text="No port data available",
+                      style='Info.TLabel', font=('Arial', 10, 'italic')).pack(anchor='w')
+
+        port_debug("Port status section created", "SECTION_COMPLETE")
+
+    def create_port_configuration_controls(self):
+        """Create port configuration controls with debug logging"""
+        port_debug("Creating port configuration controls", "CONFIG_CONTROLS")
+
+        config_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame',
+                                 relief='solid', borderwidth=1)
+        config_frame.pack(fill='x', pady=20)
+
+        # Header
+        header_frame = ttk.Frame(config_frame, style='Content.TFrame')
+        header_frame.pack(fill='x', padx=15, pady=(15, 10))
+
+        ttk.Label(header_frame, text="⚙️ Port Configuration",
+                  style='Dashboard.TLabel', font=('Arial', 12, 'bold')).pack(anchor='w')
+
+        # Content
+        content_frame = ttk.Frame(config_frame, style='Content.TFrame')
+        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
+
+        # Port selection
+        port_select_frame = ttk.Frame(content_frame, style='Content.TFrame')
+        port_select_frame.pack(fill='x', pady=10)
+
+        ttk.Label(port_select_frame, text="Select Port:",
+                  style='Info.TLabel', font=('Arial', 10, 'bold')).pack(side='left')
+
+        self.selected_port = tk.StringVar()
+        port_values = ['Port 80', 'Port 112', 'Port 128', 'Golden Finger']
+        port_combo = ttk.Combobox(port_select_frame, textvariable=self.selected_port,
+                                  values=port_values, state='readonly', width=15)
+        port_combo.pack(side='right')
+        port_combo.set('Port 80')  # Default selection
+
+        port_debug(f"Port selection dropdown created with values: {port_values}", "UI_CONTROLS")
+
+        # Port mode configuration
+        mode_frame = ttk.Frame(content_frame, style='Content.TFrame')
+        mode_frame.pack(fill='x', pady=10)
+
+        ttk.Label(mode_frame, text="Port Mode:",
+                  style='Info.TLabel', font=('Arial', 10, 'bold')).pack(side='left')
+
+        self.port_mode = tk.StringVar()
+        mode_values = ['Auto', 'Forced Speed 1', 'Forced Speed 2', 'Forced Speed 3',
+                       'Forced Speed 4', 'Forced Speed 5', 'Forced Speed 6', 'Disabled']
+        mode_combo = ttk.Combobox(mode_frame, textvariable=self.port_mode,
+                                  values=mode_values, width=15)
+        mode_combo.pack(side='right')
+        mode_combo.set('Auto')  # Default mode
+
+        port_debug(f"Port mode dropdown created with values: {mode_values}", "UI_CONTROLS")
+
+        # Width configuration
+        width_frame = ttk.Frame(content_frame, style='Content.TFrame')
+        width_frame.pack(fill='x', pady=10)
+
+        ttk.Label(width_frame, text="Link Width:",
+                  style='Info.TLabel', font=('Arial', 10, 'bold')).pack(side='left')
+
+        self.link_width = tk.StringVar()
+        width_values = ['Auto', 'x1', 'x2', 'x4', 'x8', 'x16']
+        width_combo = ttk.Combobox(width_frame, textvariable=self.link_width,
+                                   values=width_values, width=15)
+        width_combo.pack(side='right')
+        width_combo.set('Auto')  # Default width
+
+        port_debug(f"Link width dropdown created with values: {width_values}", "UI_CONTROLS")
+
+        # Action buttons
+        button_frame = ttk.Frame(content_frame, style='Content.TFrame')
+        button_frame.pack(fill='x', pady=15)
+
+        ttk.Button(button_frame, text="🔍 Query Current Mode",
+                   command=self.get_current_port_mode).pack(side='left', padx=(0, 10))
+
+        ttk.Button(button_frame, text="🔧 Apply Configuration",
+                   command=self.apply_port_configuration).pack(side='left', padx=10)
+
+        ttk.Button(button_frame, text="🔄 Reset Port",
+                   command=self.reset_port).pack(side='left', padx=10)
+
+        port_debug("Port configuration controls created successfully", "CONTROLS_COMPLETE")
 
     def create_port_mode_status(self, parent):
         """Create current port mode status section with fixed width"""
@@ -1870,22 +2030,91 @@ class DashboardApp:
                                  style='Info.TLabel', font=('Arial', 9))
         update_label.pack(anchor='center', pady=(10, 0))
 
-    def get_current_port_mode(self):
-        """Get current port mode data (replace with actual device query)"""
-        if self.is_demo_mode:
-            return {
-                "Current SBR Mode": "SBR0",
-                "Mode Number": "0",
-                "Last Updated": "2025-08-14 19:44:01"
-            }
+    def create_link_details_section(self, showport_json):
+        """Create detailed link information section - FIXED VERSION"""
+        port_debug("Creating link details section", "LINK_DETAILS")
+
+        details_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame',
+                                  relief='solid', borderwidth=1)
+        details_frame.pack(fill='x', pady=20)
+
+        # Header
+        header_frame = ttk.Frame(details_frame, style='Content.TFrame')
+        header_frame.pack(fill='x', padx=15, pady=(15, 10))
+
+        ttk.Label(header_frame, text="📊 Link Details",
+                  style='Dashboard.TLabel', font=('Arial', 12, 'bold')).pack(anchor='w')
+
+        # Content
+        content_frame = ttk.Frame(details_frame, style='Content.TFrame')
+        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
+
+        # Parse and display detailed port information
+        sections = showport_json.get('sections', {})
+        port_section = sections.get('port_status', {})
+        items = port_section.get('items', [])
+
+        port_debug(f"Processing {len(items)} items for link details", "LINK_PROCESSING")
+
+        if items:
+            # Create a table-like display
+            for item in items:
+                label = item.get('label', 'Unknown')
+                value = item.get('value', 'Unknown')
+                details = item.get('details', '')
+
+                port_debug(f"Processing link details for {label}", "LINK_ITEM")
+
+                # Extract speed and width from details if available
+                if details:
+                    speed_match = re.search(r'Speed: Level (\w+)', details)
+                    width_match = re.search(r'Width: (\w+)', details)
+
+                    if speed_match or width_match:
+                        detail_row_frame = ttk.Frame(content_frame, style='Content.TFrame')
+                        detail_row_frame.pack(fill='x', pady=5)
+
+                        # Port name
+                        ttk.Label(detail_row_frame, text=label,
+                                  style='Info.TLabel', font=('Arial', 10, 'bold')).pack(anchor='w')
+
+                        # Speed and width in sub-frame
+                        sub_frame = ttk.Frame(detail_row_frame, style='Content.TFrame')
+                        sub_frame.pack(anchor='w', padx=(20, 0))
+
+                        if speed_match:
+                            speed_level = speed_match.group(1)
+                            speed_text = f"PCIe Gen {self.convert_speed_level(speed_level)}"
+                            ttk.Label(sub_frame, text=f"Speed: {speed_text}",
+                                      style='Info.TLabel').pack(anchor='w')
+                            port_debug(f"{label} speed: {speed_text}", "LINK_SPEED")
+
+                        if width_match:
+                            width_value = width_match.group(1)
+                            if width_value == '00':
+                                width_text = "Inactive"
+                            else:
+                                try:
+                                    # Fixed the width parsing logic
+                                    if len(width_value) <= 2:
+                                        width_num = int(width_value, 16)
+                                    else:
+                                        width_num = int(width_value)
+                                    width_text = f"x{width_num}"
+                                except Exception as e:
+                                    # Fixed exception handling
+                                    port_debug(f"Width parsing error for {width_value}: {e}", "WIDTH_ERROR")
+                                    width_text = f"x{width_value}"
+
+                            ttk.Label(sub_frame, text=f"Width: {width_text}",
+                                      style='Info.TLabel').pack(anchor='w')
+                            port_debug(f"{label} width: {width_text}", "LINK_WIDTH")
         else:
-            # TODO: Implement actual device query
-            # This should query the device for current mode
-            return {
-                "Current SBR Mode": "Unknown",
-                "Mode Number": "Unknown",
-                "Last Updated": "Not available"
-            }
+            port_debug("No link details available", "NO_LINK_DATA")
+            ttk.Label(content_frame, text="No detailed link information available",
+                      style='Info.TLabel', font=('Arial', 10, 'italic')).pack(anchor='w')
+
+        port_debug("Link details section created", "LINK_COMPLETE")
 
     def change_host_card_mode(self):
         """Change the host card mode"""

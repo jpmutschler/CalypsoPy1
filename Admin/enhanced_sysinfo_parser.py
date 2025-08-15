@@ -6,7 +6,9 @@ All command responses are cached and retrieved through the cache manager
 
 import re
 from datetime import datetime
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
+from debug_config import debug, parser_debug, cache_debug, log_info, log_error, log_debug
+
 
 
 class EnhancedSystemInfoParser:
@@ -98,6 +100,58 @@ class EnhancedSystemInfoParser:
 
         return None
 
+    def get_showport_status_json(self) -> Optional[Dict[str, Any]]:
+        """
+        Get JSON object for Port Configuration dashboard with debug logging
+
+        Returns:
+            JSON object with structured showport data or None if not available
+        """
+        parser_debug("Retrieving showport status JSON for port configuration", "SHOWPORT_GET")
+
+        # Try to get existing link status JSON (which contains showport data)
+        link_json = self.cache.get('link_status_json')
+
+        if link_json:
+            parser_debug("Found link_status_json in cache", "CACHE_HIT")
+
+            # Convert link status to port configuration format
+            port_config_json = {
+                'dashboard_type': 'port_configuration',
+                'data_source': link_json.get('data_source', 'unknown'),
+                'last_updated': link_json.get('last_updated', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+                'sections': {
+                    'port_status': link_json.get('sections', {}).get('port_status', {})
+                },
+                'data_fresh': link_json.get('data_fresh', False)
+            }
+
+            # Debug the content
+            sections = port_config_json.get('sections', {})
+            port_status = sections.get('port_status', {})
+            items = port_status.get('items', [])
+
+            parser_debug(f"Port configuration JSON created with {len(items)} port items", "JSON_CREATED")
+
+            for i, item in enumerate(items):
+                label = item.get('label', 'Unknown')
+                value = item.get('value', 'Unknown')
+                parser_debug(f"Port {i + 1}: {label} = {value}", "PORT_ITEM")
+
+            parser_debug("Retrieved port configuration JSON from cache successfully", "SHOWPORT_SUCCESS")
+            return port_config_json
+        else:
+            parser_debug("No link_status_json found in cache", "CACHE_MISS")
+
+            # Check if we have any cached sysinfo data
+            cached_sysinfo = self.cache.get('complete_sysinfo')
+            if cached_sysinfo:
+                parser_debug("Found complete_sysinfo in cache, but no processed link_status_json", "PARTIAL_DATA")
+            else:
+                parser_debug("No cached sysinfo data available", "NO_DATA")
+
+            return None
+
     def get_host_info_for_display(self) -> Dict[str, Any]:
         """Get formatted host information with cache-first approach"""
         return self.get_cached_data('host_display_data', self._get_default_host_display_data)
@@ -153,25 +207,95 @@ class EnhancedSystemInfoParser:
         return self.cache.get('complete_sysinfo')
 
     def invalidate_all_data(self):
-        """Invalidate all cached data"""
+        """ENHANCED: Invalidate all cached data with debug logging"""
+        parser_debug("Invalidating all cached data", "CACHE_INVALIDATE")
+
         cache_keys = [
             'complete_sysinfo', 'ver_data', 'lsd_data', 'showport_data',
-            'host_card_info', 'link_status_info', 'host_display_data', 'link_display_data'
+            'host_card_info', 'link_status_info', 'host_display_data', 'link_display_data',
+            'host_card_json', 'link_status_json'  # Add the new JSON keys
         ]
 
+        invalidated_count = 0
         for key in cache_keys:
-            self.cache.invalidate(key)
+            if self.cache.invalidate(key):
+                invalidated_count += 1
+                cache_debug(f"Invalidated cache key: {key}", "KEY_INVALIDATED")
+
+        parser_debug(f"Invalidated {invalidated_count} cache entries", "INVALIDATE_COMPLETE")
 
     def is_data_fresh(self, max_age_seconds: int = 300) -> bool:
-        """Check if cached data is fresh enough"""
+        """ENHANCED: Check if cached data is fresh enough with debug logging"""
+        parser_debug(f"Checking data freshness (max age: {max_age_seconds}s)", "FRESH_CHECK")
+
         complete_data = self.cache.get_with_metadata('complete_sysinfo')
         if complete_data:
-            return complete_data['age_seconds'] < max_age_seconds
-        return False
+            age = complete_data['age_seconds']
+            is_fresh = age < max_age_seconds
+            parser_debug(f"Data age: {age:.1f}s, fresh: {is_fresh}", "FRESH_RESULT")
+            return is_fresh
+        else:
+            parser_debug("No complete_sysinfo data in cache", "NO_DATA")
+            return False
 
     def force_refresh_needed(self) -> bool:
-        """Check if a force refresh is needed (no data or data too old)"""
-        return not self.is_data_fresh(300)  # 5 minutes
+        """ENHANCED: Check if a force refresh is needed with debug logging"""
+        needed = not self.is_data_fresh(300)  # 5 minutes
+        parser_debug(f"Force refresh needed: {needed}", "REFRESH_CHECK")
+        return needed
+
+    def debug_cache_contents(self):
+        """Debug method to show current cache contents"""
+        parser_debug("=== CACHE CONTENTS DEBUG ===", "CACHE_DEBUG")
+
+        if not self.cache:
+            parser_debug("No cache manager available", "NO_CACHE")
+            return
+
+        # Get cache statistics
+        stats = self.cache.get_stats()
+        parser_debug(f"Cache stats: {stats}", "CACHE_STATS")
+
+        # Check for key cache entries
+        key_entries = [
+            'complete_sysinfo',
+            'host_card_json',
+            'link_status_json',
+            'ver_data',
+            'lsd_data',
+            'showport_data'
+        ]
+
+        for key in key_entries:
+            entry = self.cache.get_with_metadata(key)
+            if entry:
+                age = entry['age_seconds']
+                parser_debug(f"Cache key '{key}': age={age:.1f}s", "CACHE_ENTRY")
+            else:
+                parser_debug(f"Cache key '{key}': NOT FOUND", "CACHE_MISSING")
+
+        parser_debug("=== END CACHE DEBUG ===", "CACHE_DEBUG")
+
+    def debug_parsing_results(self, parsed_data: Dict[str, Any]):
+        """Debug method to show parsing results"""
+        parser_debug("=== PARSING RESULTS DEBUG ===", "PARSE_DEBUG")
+
+        # Show basic info
+        source = parsed_data.get('data_source', 'unknown')
+        success = parsed_data.get('unified_parsing', False)
+        parser_debug(f"Source: {source}, Success: {success}", "PARSE_INFO")
+
+        # Show section contents
+        sections = ['ver_section', 'lsd_section', 'showport_section']
+        for section in sections:
+            data = parsed_data.get(section, {})
+            parser_debug(f"{section}: {len(data)} items", "SECTION_INFO")
+
+            # Show first few items from each section
+            for key, value in list(data.items())[:3]:
+                parser_debug(f"  {key}: {value}", "SECTION_ITEM")
+
+        parser_debug("=== END PARSING DEBUG ===", "PARSE_DEBUG")
 
     # Parsing methods remain the same but with added caching
     def _parse_ver_section(self, output: str) -> Dict[str, Any]:
@@ -254,7 +378,11 @@ class EnhancedSystemInfoParser:
         return lsd_data
 
     def _parse_showport_section(self, output: str) -> Dict[str, Any]:
-        """Parse the showport section from sysinfo output"""
+        """
+        ENHANCED: Parse the showport section from sysinfo output with debug logging
+        """
+        parser_debug("Parsing showport section", "SHOWPORT_PARSE")
+
         showport_data = {
             'ports': {},
             'golden_finger': {}
@@ -263,6 +391,8 @@ class EnhancedSystemInfoParser:
         # Extract individual port information
         port_pattern = r'Port(\d+)\s*:\s*speed\s+(\w+),\s*width\s+(\w+),\s*max_speed(\w+),\s*max_width(\d+)'
         port_matches = re.findall(port_pattern, output, re.IGNORECASE)
+
+        parser_debug(f"Found {len(port_matches)} port matches in showport data", "PORT_MATCHES")
 
         for match in port_matches:
             port_num, speed, width, max_speed, max_width = match
@@ -275,17 +405,36 @@ class EnhancedSystemInfoParser:
                 'status': 'Active' if speed != '00' else 'Inactive'
             }
 
+            status = 'Active' if speed != '00' else 'Inactive'
+            parser_debug(f"Parsed Port {port_num}: speed={speed}, width={width}, status={status}", "PORT_PARSED")
+
         # Extract Golden Finger information
-        golden_match = re.search(r'Golden finger:\s*speed\s+(\w+),\s*width\s+(\w+),\s*max_width\s*=\s*(\d+)', output,
-                                 re.IGNORECASE)
+        golden_patterns = [
+            r'Golden finger:\s*speed\s+(\w+),\s*width\s+(\w+),\s*max_width\s*=\s*(\d+)',
+            r'Golden\s+finger\s*:\s*speed\s+(\w+),\s*width\s+(\w+),\s*max_width\s*=\s*(\d+)'
+        ]
+
+        golden_match = None
+        for pattern in golden_patterns:
+            golden_match = re.search(pattern, output, re.IGNORECASE)
+            if golden_match:
+                break
+
         if golden_match:
+            speed, width, max_width = golden_match.groups()
             showport_data['golden_finger'] = {
-                'speed': golden_match.group(1),
-                'width': golden_match.group(2),
-                'max_width': int(golden_match.group(3)),
-                'status': 'Active' if golden_match.group(1) != '00' else 'Inactive'
+                'speed': speed,
+                'width': width,
+                'max_width': int(max_width),
+                'status': 'Active' if speed != '00' else 'Inactive'
             }
 
+            status = 'Active' if speed != '00' else 'Inactive'
+            parser_debug(f"Parsed Golden Finger: speed={speed}, width={width}, status={status}", "GOLDEN_PARSED")
+        else:
+            parser_debug("No Golden Finger data found in showport section", "NO_GOLDEN")
+
+        parser_debug("Showport section parsing completed", "SHOWPORT_COMPLETE")
         return showport_data
 
     def _format_host_data(self, host_info: Dict[str, Any]) -> Dict[str, Any]:
@@ -675,75 +824,135 @@ class EnhancedSystemInfoParser:
         for key in cache_keys:
             self.cache.invalidate(key)
 
-    def parse_unified_sysinfo_with_showmode(self, sysinfo_output: str, showmode_output: str = None, source="device") -> \
-    Dict[str, Any]:
+    def parse_unified_sysinfo(self, sysinfo_output: str, source="device") -> Dict[str, Any]:
         """
-        Enhanced unified parsing that includes showmode data
-
-        Args:
-            sysinfo_output: Raw sysinfo response
-            showmode_output: Optional raw showmode response
-            source: "device" or "demo" for tracking data source
-
-        Returns:
-            Combined parsed data dictionary
+        ENHANCED: UNIFIED parsing method with debug logging
         """
-        print(f"DEBUG: Unified parser with showmode processing {source} data")
+        parser_debug(f"Starting unified sysinfo parsing from {source}", "PARSE_START")
+        parser_debug(f"Input data size: {len(sysinfo_output)} characters", "INPUT_SIZE")
 
         try:
-            # Parse sysinfo data using existing method
-            parsed_data = self.parse_unified_sysinfo(sysinfo_output, source)
+            # Use your existing parse_complete_sysinfo method as the base
+            parsed_data = self.parse_complete_sysinfo(sysinfo_output)
 
-            # If showmode data provided, parse and add it
-            if showmode_output:
-                showmode_data = self.parse_showmode_response(showmode_output)
-                parsed_data['showmode_section'] = showmode_data
-                print(f"DEBUG: Added showmode data - mode: SBR{showmode_data['current_mode']}")
+            # Add source tracking and enhanced metadata
+            parsed_data['data_source'] = source
+            parsed_data['unified_parsing'] = True
+            parsed_data['processed_at'] = datetime.now().isoformat()
 
+            parser_debug(f"Base parsing completed", "BASE_COMPLETE")
+            parser_debug(f"Ver section: {len(parsed_data.get('ver_section', {}))} fields", "VER_FIELDS")
+            parser_debug(f"LSD section: {len(parsed_data.get('lsd_section', {}))} fields", "LSD_FIELDS")
+            parser_debug(f"Showport section: {len(parsed_data.get('showport_section', {}))} fields", "SHOWPORT_FIELDS")
+
+            # Create and cache JSON objects for dashboards
+            self._create_and_cache_json_objects(parsed_data)
+
+            parser_debug(f"Unified parsing successful for {source} data", "PARSE_SUCCESS")
             return parsed_data
 
         except Exception as e:
-            print(f"ERROR: Unified parsing with showmode failed: {e}")
+            parser_debug(f"Unified parsing failed for {source} data: {e}", "PARSE_ERROR")
+            log_error(f"Unified parsing failed: {e}", "sysinfo_parser")
+            import traceback
+            traceback.print_exc()
+
+            # Return minimal data structure on error
             return {
                 'data_source': source,
                 'unified_parsing': False,
                 'error': str(e),
-                'processed_at': datetime.now().isoformat()
+                'processed_at': datetime.now().isoformat(),
+                'ver_section': {},
+                'lsd_section': {},
+                'showport_section': {}
             }
 
-    def _create_and_cache_json_objects_with_showmode(self, parsed_data: Dict[str, Any]):
+    def _create_and_cache_json_objects(self, parsed_data: Dict[str, Any]):
         """
-        Enhanced version that includes showmode data in JSON objects
+        ENHANCED: Create JSON objects for each dashboard and cache them with debug logging
         """
         ttl = 300  # 5 minutes cache TTL
 
-        print("DEBUG: Creating JSON objects with showmode data...")
+        parser_debug("Creating JSON objects for dashboards", "JSON_START")
 
         try:
-            # Create existing JSON objects
-            self._create_and_cache_json_objects(parsed_data)
+            # Create HOST CARD JSON (combines ver + lsd data)
+            host_card_json = {
+                'dashboard_type': 'host_card_information',
+                'data_source': parsed_data.get('data_source', 'unknown'),
+                'last_updated': parsed_data.get('last_updated', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+                'sections': {
+                    'device_info': {
+                        'title': 'Device Information',
+                        'icon': '💻',
+                        'fields': self._extract_device_fields(parsed_data.get('ver_section', {}))
+                    },
+                    'thermal_info': {
+                        'title': 'Thermal Status',
+                        'icon': '🌡️',
+                        'fields': self._extract_thermal_fields(parsed_data.get('lsd_section', {}))
+                    },
+                    'fan_info': {
+                        'title': 'Fan Status',
+                        'icon': '🌀',
+                        'fields': self._extract_fan_fields(parsed_data.get('lsd_section', {}))
+                    },
+                    'power_info': {
+                        'title': 'Power Status',
+                        'icon': '⚡',
+                        'fields': self._extract_power_fields(parsed_data.get('lsd_section', {}))
+                    },
+                    'error_info': {
+                        'title': 'Error Status',
+                        'icon': '🚨',
+                        'fields': self._extract_error_fields(parsed_data.get('lsd_section', {}))
+                    }
+                },
+                'data_fresh': True
+            }
 
-            # Create PORT STATUS JSON if showmode data exists
-            if 'showmode_section' in parsed_data:
-                showmode_data = parsed_data['showmode_section']
+            # Create LINK STATUS JSON (showport data only)
+            link_status_json = {
+                'dashboard_type': 'link_status',
+                'data_source': parsed_data.get('data_source', 'unknown'),
+                'last_updated': parsed_data.get('last_updated', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+                'sections': {
+                    'port_status': {
+                        'title': 'Port and Link Status',
+                        'icon': '🔗',
+                        'items': self._extract_link_items(parsed_data.get('showport_section', {}))
+                    }
+                },
+                'data_fresh': True
+            }
 
-                port_status_json = {
-                    'dashboard_type': 'port_status',
-                    'data_source': parsed_data.get('data_source', 'unknown'),
-                    'last_updated': showmode_data.get('last_updated', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
-                    'current_mode': showmode_data.get('current_mode', 0),
-                    'mode_name': showmode_data.get('mode_name', 'SBR0'),
-                    'image_filename': f"SBR{showmode_data.get('current_mode', 0)}.png",
-                    'raw_response': showmode_data.get('raw_output', ''),
-                    'data_fresh': True
-                }
+            # Debug the created objects
+            host_sections = len(host_card_json['sections'])
+            link_items = len(link_status_json['sections']['port_status']['items'])
 
-                # Cache the port status JSON object
-                self.cache.set('port_status_json', port_status_json, 'port_status', ttl)
-                print(f"DEBUG: Port status JSON cached - mode: {port_status_json['mode_name']}")
+            parser_debug(f"Host card JSON: {host_sections} sections created", "HOST_JSON")
+            parser_debug(f"Link status JSON: {link_items} items created", "LINK_JSON")
+
+            # Cache the JSON objects
+            cache_debug("Caching host_card_json", "CACHE_HOST")
+            self.cache.set('host_card_json', host_card_json, 'host_card', ttl)
+
+            cache_debug("Caching link_status_json", "CACHE_LINK")
+            self.cache.set('link_status_json', link_status_json, 'link_status', ttl)
+
+            parser_debug(f"JSON objects created and cached successfully", "JSON_SUCCESS")
+
+            # Also cache individual sections for backwards compatibility
+            cache_debug("Caching backwards compatibility objects", "CACHE_COMPAT")
+            self.cache.set('host_display_data', host_card_json, 'host_display', ttl)
+            self.cache.set('link_display_data', link_status_json, 'link_display', ttl)
 
         except Exception as e:
-            print(f"ERROR: Failed to create JSON objects with showmode: {e}")
+            parser_debug(f"Failed to create JSON objects: {e}", "JSON_ERROR")
+            log_error(f"JSON object creation failed: {e}", "sysinfo_parser")
+            import traceback
+            traceback.print_exc()
 
     def get_port_status_json(self) -> Optional[Dict[str, Any]]:
         """
@@ -949,43 +1158,44 @@ class EnhancedSystemInfoParser:
 
     def _extract_device_fields(self, ver_data: Dict) -> Dict[str, str]:
         """
-        Extract device information fields for host card JSON
+        ENHANCED: Extract device information fields with debug logging
         """
+        parser_debug("Extracting device fields from ver data", "DEVICE_EXTRACT")
+
         fields = {}
 
         # Extract fields with fallbacks
-        if ver_data.get('serial_number'):
-            fields['Serial Number'] = ver_data['serial_number']
+        field_mappings = [
+            ('serial_number', 'Serial Number'),
+            ('company', 'Company'),
+            ('model', 'Model'),
+            ('version', 'Firmware Version'),
+            ('build_date', 'Build Date'),
+            ('sbr_version', 'SBR Version')
+        ]
 
-        if ver_data.get('company'):
-            fields['Company'] = ver_data['company']
+        for ver_key, display_name in field_mappings:
+            if ver_data.get(ver_key):
+                fields[display_name] = ver_data[ver_key]
+                parser_debug(f"Extracted device field: {display_name} = {ver_data[ver_key]}", "DEVICE_FIELD")
 
-        if ver_data.get('model'):
-            fields['Model'] = ver_data['model']
-
-        if ver_data.get('version'):
-            fields['Firmware Version'] = ver_data['version']
-
-        if ver_data.get('build_date'):
-            fields['Build Date'] = ver_data['build_date']
-
-        if ver_data.get('sbr_version'):
-            fields['SBR Version'] = ver_data['sbr_version']
-
-        print(f"DEBUG: Extracted {len(fields)} device fields")
+        parser_debug(f"Extracted {len(fields)} device fields", "DEVICE_COMPLETE")
         return fields
 
     def _extract_thermal_fields(self, lsd_data: Dict) -> Dict[str, str]:
         """
-        Extract thermal fields for host card JSON
+        ENHANCED: Extract thermal fields with debug logging
         """
+        parser_debug("Extracting thermal fields from lsd data", "THERMAL_EXTRACT")
+
         fields = {}
 
         if lsd_data.get('board_temperature') is not None:
             temp = lsd_data['board_temperature']
             fields['Board Temperature'] = f"{temp}°C"
+            parser_debug(f"Extracted thermal field: Board Temperature = {temp}°C", "THERMAL_FIELD")
 
-        print(f"DEBUG: Extracted {len(fields)} thermal fields")
+        parser_debug(f"Extracted {len(fields)} thermal fields", "THERMAL_COMPLETE")
         return fields
 
     def _extract_fan_fields(self, lsd_data: Dict) -> Dict[str, str]:
@@ -1003,8 +1213,10 @@ class EnhancedSystemInfoParser:
 
     def _extract_power_fields(self, lsd_data: Dict) -> Dict[str, str]:
         """
-        Extract power fields for host card JSON
+        ENHANCED: Extract power fields with debug logging
         """
+        parser_debug("Extracting power fields from lsd data", "POWER_EXTRACT")
+
         fields = {}
 
         # Voltage rails
@@ -1019,13 +1231,15 @@ class EnhancedSystemInfoParser:
             if lsd_data.get(field_key) is not None:
                 voltage = lsd_data[field_key]
                 fields[display_name] = f"{voltage} mV"
+                parser_debug(f"Extracted power field: {display_name} = {voltage} mV", "POWER_FIELD")
 
         # Current draw
         if lsd_data.get('current_draw') is not None:
             current = lsd_data['current_draw']
             fields['Current Draw'] = f"{current} mA"
+            parser_debug(f"Extracted power field: Current Draw = {current} mA", "POWER_FIELD")
 
-        print(f"DEBUG: Extracted {len(fields)} power fields")
+        parser_debug(f"Extracted {len(fields)} power fields", "POWER_COMPLETE")
         return fields
 
     def _extract_error_fields(self, lsd_data: Dict) -> Dict[str, str]:
@@ -1052,12 +1266,16 @@ class EnhancedSystemInfoParser:
 
     def _extract_link_items(self, showport_data: Dict) -> List[Dict]:
         """
-        Extract link items for link status JSON
+        ENHANCED: Extract link items for link status JSON with debug logging
         """
+        parser_debug("Extracting link items from showport data", "LINK_EXTRACT")
+
         items = []
 
         # Process individual ports
         ports = showport_data.get('ports', {})
+        parser_debug(f"Processing {len(ports)} individual ports", "PORT_COUNT")
+
         for port_key, port_info in ports.items():
             status_text = "✅ Active" if port_info.get('status') == 'Active' else "❌ Inactive"
 
@@ -1068,9 +1286,13 @@ class EnhancedSystemInfoParser:
             }
             items.append(item)
 
+            parser_debug(f"Added port item: {item['label']} = {item['value']}", "PORT_ITEM")
+
         # Process golden finger
         golden_finger = showport_data.get('golden_finger', {})
         if golden_finger:
+            parser_debug("Processing golden finger", "GOLDEN_FINGER")
+
             status_text = "✅ Active" if golden_finger.get('status') == 'Active' else "❌ Inactive"
 
             item = {
@@ -1080,37 +1302,42 @@ class EnhancedSystemInfoParser:
             }
             items.append(item)
 
-        print(f"DEBUG: Extracted {len(items)} link items")
+            parser_debug(f"Added golden finger: {item['value']}", "GOLDEN_ITEM")
+        else:
+            parser_debug("No golden finger data found", "NO_GOLDEN")
+
+        parser_debug(f"Extracted {len(items)} total link items", "EXTRACT_COMPLETE")
         return items
 
     def get_host_card_json(self) -> Optional[Dict[str, Any]]:
         """
-        Get JSON object for Host Card Information dashboard
-
-        Returns:
-            JSON object with structured host card data or None if not available
+        ENHANCED: Get JSON object for Host Card Information dashboard with debug logging
         """
+        parser_debug("Retrieving host card JSON", "HOST_GET")
+
         host_json = self.cache.get('host_card_json')
         if host_json:
-            print("DEBUG: Retrieved host card JSON from cache")
+            sections = len(host_json.get('sections', {}))
+            parser_debug(f"Retrieved host card JSON with {sections} sections", "HOST_SUCCESS")
             return host_json
         else:
-            print("DEBUG: No host card JSON in cache")
+            parser_debug("No host card JSON found in cache", "HOST_MISS")
             return None
 
     def get_link_status_json(self) -> Optional[Dict[str, Any]]:
         """
-        Get JSON object for Link Status dashboard
-
-        Returns:
-            JSON object with structured link status data or None if not available
+        ENHANCED: Get JSON object for Link Status dashboard with debug logging
         """
+        parser_debug("Retrieving link status JSON", "LINK_GET")
+
         link_json = self.cache.get('link_status_json')
         if link_json:
-            print("DEBUG: Retrieved link status JSON from cache")
+            sections = link_json.get('sections', {})
+            items = sections.get('port_status', {}).get('items', [])
+            parser_debug(f"Retrieved link status JSON with {len(items)} items", "LINK_SUCCESS")
             return link_json
         else:
-            print("DEBUG: No link status JSON in cache")
+            parser_debug("No link status JSON found in cache", "LINK_MISS")
             return None
 
     def is_unified_data_available(self) -> bool:
