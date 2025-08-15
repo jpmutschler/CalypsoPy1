@@ -1598,78 +1598,342 @@ class DashboardApp:
                 self.show_loading_message("Loading link status...")
 
     def create_port_dashboard(self):
-        """Create port status dashboard with showmode integration"""
-        if self.is_demo_mode:
-            # For demo mode, use existing showmode.txt or generate response
-            print("DEBUG: Demo mode - creating port dashboard with simulated data")
+        """Create properly centered port configuration dashboard"""
 
+        # Create main container that centers both horizontally and vertically
+        main_container = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+        main_container.pack(fill='both', expand=True)
+
+        # Create centered content frame with proper positioning
+        content_frame = ttk.Frame(main_container, style='Content.TFrame')
+        content_frame.place(relx=0.5, rely=0.5, anchor='center')
+
+        # Current Port Mode Section
+        self.create_port_mode_status(content_frame)
+
+        # Change Host Card Mode Section
+        self.create_mode_change_controls(content_frame)
+
+        # Mode Configuration Diagram Section
+        self.create_mode_diagram_section(content_frame)
+
+        # Warning Section
+        self.create_mode_warning_section(content_frame)
+
+        # Refresh Controls
+        self.create_port_refresh_controls(content_frame)
+
+    def create_port_mode_status(self, parent):
+        """Create current port mode status section with fixed width"""
+        status_frame = ttk.Frame(parent, style='Content.TFrame',
+                                 relief='solid', borderwidth=1)
+        status_frame.pack(pady=10)
+        status_frame.configure(width=600)  # Fixed width
+
+        # Header
+        header_frame = ttk.Frame(status_frame, style='Content.TFrame')
+        header_frame.pack(fill='x', padx=15, pady=(15, 10))
+
+        ttk.Label(header_frame, text="⚡ Current Port Mode",
+                  style='Dashboard.TLabel', font=('Arial', 12, 'bold')).pack(anchor='w')
+
+        # Content
+        content_frame = ttk.Frame(status_frame, style='Content.TFrame')
+        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
+
+        # Get current mode data
+        current_mode_data = self.get_current_port_mode()
+
+        # Display current mode information
+        for field_name, value in current_mode_data.items():
+            self.create_data_row(content_frame, field_name, value)
+
+    def create_mode_change_controls(self, parent):
+        """Create mode change controls section with fixed width"""
+        control_frame = ttk.Frame(parent, style='Content.TFrame',
+                                  relief='solid', borderwidth=1)
+        control_frame.pack(pady=10)
+        control_frame.configure(width=600)  # Fixed width
+
+        # Header
+        header_frame = ttk.Frame(control_frame, style='Content.TFrame')
+        header_frame.pack(fill='x', padx=15, pady=(15, 10))
+
+        ttk.Label(header_frame, text="⚙️ Change Host Card Mode",
+                  style='Dashboard.TLabel', font=('Arial', 12, 'bold')).pack(anchor='w')
+
+        # Content
+        content_frame = ttk.Frame(control_frame, style='Content.TFrame')
+        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
+
+        # Mode selection - centered within fixed width
+        mode_select_frame = ttk.Frame(content_frame, style='Content.TFrame')
+        mode_select_frame.pack(fill='x', pady=10)
+
+        ttk.Label(mode_select_frame, text="Select SBR Mode:",
+                  style='Info.TLabel', font=('Arial', 10, 'bold')).pack(side='left')
+
+        self.sbr_mode_var = tk.StringVar(value="SBR0")
+        mode_combo = ttk.Combobox(mode_select_frame, textvariable=self.sbr_mode_var,
+                                  values=["SBR0", "SBR1", "SBR2", "SBR3", "SBR4", "SBR5", "SBR6"],
+                                  state='readonly', width=15)
+        mode_combo.pack(side='right')
+
+        # Change button - centered
+        button_frame = ttk.Frame(content_frame, style='Content.TFrame')
+        button_frame.pack(fill='x', pady=15)
+
+        change_btn = ttk.Button(button_frame, text="Change Host Card Mode",
+                                command=self.change_host_card_mode)
+        change_btn.pack(anchor='center')
+
+    def create_mode_diagram_section(self, parent):
+        """Create mode configuration diagram section with fixed width"""
+        diagram_frame = ttk.Frame(parent, style='Content.TFrame',
+                                  relief='solid', borderwidth=1)
+        diagram_frame.pack(pady=10)
+        diagram_frame.configure(width=600)  # Fixed width
+
+        # Header
+        header_frame = ttk.Frame(diagram_frame, style='Content.TFrame')
+        header_frame.pack(fill='x', padx=15, pady=(15, 10))
+
+        ttk.Label(header_frame, text="📊 Mode Configuration Diagram",
+                  style='Dashboard.TLabel', font=('Arial', 12, 'bold')).pack(anchor='w')
+
+        # Content with image - centered within fixed width
+        content_frame = ttk.Frame(diagram_frame, style='Content.TFrame')
+        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
+
+        # Try to load and display the configuration image
+        self.load_configuration_image(content_frame)
+
+    def load_configuration_image(self, parent_frame):
+        """Load configuration diagram image from Images directory"""
+        import tkinter as tk
+        from PIL import Image, ImageTk
+
+        # Define possible image paths
+        image_paths = [
+            "Images/SBR0.png",
+            "Images/SBR1.png",
+            "Images/SBR2.png",
+            "Images/SBR3.png",
+            "Images/SBR4.png",
+            "Images/SBR5.png",
+            "Images/SBR6.png"
+        ]
+
+        image_loaded = False
+
+        for image_path in image_paths:
             try:
-                # Try to load showmode.txt first
-                demo_showmode_content = None
-                showmode_paths = ["showmode.txt", "DemoData/showmode.txt", "./showmode.txt"]
+                if os.path.exists(image_path):
+                    print(f"DEBUG: Found image at {image_path}")
 
-                for path in showmode_paths:
-                    if os.path.exists(path):
-                        try:
-                            with open(path, 'r', encoding='utf-8') as f:
-                                demo_showmode_content = f.read()
-                            print(f"DEBUG: Loaded showmode.txt from {path}")
-                            break
-                        except Exception as e:
-                            print(f"DEBUG: Error loading {path}: {e}")
-                            continue
+                    # Load and resize image
+                    pil_image = Image.open(image_path)
 
-                if demo_showmode_content:
-                    # Parse mode from file content
-                    import re
-                    mode_match = re.search(r'SBR\s*mode\s*:\s*(\d+)', demo_showmode_content, re.IGNORECASE)
-                    if mode_match:
-                        try:
-                            mode_num = int(mode_match.group(1))
-                            if 0 <= mode_num <= 6:
-                                self.demo_device_state['current_mode'] = mode_num
-                        except ValueError:
-                            pass
+                    # Resize image to fit in fixed width dashboard (max 500x350)
+                    max_width, max_height = 500, 350
+                    pil_image.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
 
-                    demo_response = demo_showmode_content
-                else:
-                    # Generate demo response using existing function
-                    demo_response = get_demo_showmode_response(self.demo_device_state)
-                    print("DEBUG: Generated demo showmode response")
+                    # Convert to Tkinter format
+                    self.config_image = ImageTk.PhotoImage(pil_image)
 
-                # Parse the demo response using existing parser
-                port_info = self.port_status_manager.parser.parse_showmode_response(demo_response)
-                port_info.raw_showmode_response = demo_response
+                    # Create image label - centered
+                    image_label = ttk.Label(parent_frame, image=self.config_image)
+                    image_label.pack(anchor='center', pady=10)
 
-                # Cache the demo info
-                self.port_status_manager.cached_info = port_info
-                self.port_status_manager.last_refresh = datetime.now()
+                    # Add image info - centered
+                    image_info = f"📏 Image: {pil_image.size[0]}x{pil_image.size[1]} pixels"
+                    ttk.Label(parent_frame, text=image_info,
+                              style='Info.TLabel', font=('Arial', 8)).pack(anchor='center')
 
-                # Create the port dashboard UI
-                self.port_status_ui.create_port_dashboard()
-
-                # Log demo data loading
-                timestamp = datetime.now().strftime('%H:%M:%S')
-                self.log_data.append(f"[{timestamp}] Port status demo data loaded - SBR{port_info.current_mode}")
+                    image_loaded = True
+                    print(f"DEBUG: Successfully loaded image from {image_path}")
+                    break
 
             except Exception as e:
-                print(f"ERROR: Demo mode port dashboard failed: {e}")
-                self.show_loading_message(f"Demo port status error: {e}")
+                print(f"DEBUG: Failed to load image from {image_path}: {e}")
+                continue
 
+        if not image_loaded:
+            # Show centered placeholder if no image found
+            self.show_image_placeholder(parent_frame, image_paths)
+
+    def show_image_placeholder(self, parent_frame, attempted_paths):
+        """Show centered placeholder when image cannot be loaded"""
+        # Placeholder content - all centered
+        ttk.Label(parent_frame, text="📊 SBR0 Configuration",
+                  style='Info.TLabel', font=('Arial', 14, 'bold')).pack(anchor='center', pady=5)
+
+        ttk.Label(parent_frame, text="(Configuration diagram not available)",
+                  style='Info.TLabel', font=('Arial', 10, 'italic')).pack(anchor='center', pady=5)
+
+        # Show browse button for demo mode - centered
+        if self.is_demo_mode:
+            ttk.Button(parent_frame, text="📁 Browse for Image",
+                       command=self.browse_for_config_image).pack(anchor='center', pady=15)
+
+    def show_pil_not_available(self, parent_frame):
+        """Show message when PIL is not available"""
+        ttk.Label(parent_frame, text="📊 Configuration Diagram",
+                  style='Info.TLabel', font=('Arial', 14, 'bold')).pack(anchor='center', pady=5)
+
+        ttk.Label(parent_frame, text="Image support requires Pillow",
+                  style='Info.TLabel', font=('Arial', 10, 'italic')).pack(anchor='center', pady=5)
+
+        ttk.Label(parent_frame, text="Install with: pip install Pillow",
+                  style='Info.TLabel', font=('Arial', 9)).pack(anchor='center', pady=5)
+
+    def browse_for_config_image(self):
+        """Allow user to browse for configuration image"""
+        from tkinter import filedialog
+
+        filename = filedialog.askopenfilename(
+            title="Select Configuration Diagram",
+            filetypes=[
+                ("Image files", "*.png *.jpg *.jpeg *.gif *.bmp"),
+                ("PNG files", "*.png"),
+                ("All files", "*.*")
+            ]
+        )
+
+        if filename:
+            try:
+                # Copy image to Images directory
+                import shutil
+                os.makedirs("Images", exist_ok=True)
+                dest_path = os.path.join("Images", "port_config.png")
+                shutil.copy2(filename, dest_path)
+
+                # Refresh the dashboard
+                self.update_content_area()
+
+                messagebox.showinfo("Image Loaded",
+                                    f"Configuration image loaded successfully!\nSaved to: {dest_path}")
+
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to load image: {e}")
+
+    def create_mode_warning_section(self, parent):
+        """Create warning section about power cycling with fixed width"""
+        warning_frame = ttk.Frame(parent, style='Content.TFrame')
+        warning_frame.pack(pady=10)
+        warning_frame.configure(width=600)  # Fixed width
+
+        # Create warning box with yellow background
+        warning_box = tk.Frame(warning_frame, bg='#fff3cd', relief='solid', borderwidth=1)
+        warning_box.pack(fill='x', padx=5, pady=5)
+
+        # Warning header
+        header_frame = tk.Frame(warning_box, bg='#fff3cd')
+        header_frame.pack(fill='x', padx=15, pady=(10, 5))
+
+        warning_label = tk.Label(header_frame, text="⚠️ WARNING ⚠️",
+                                 bg='#fff3cd', fg='#856404',
+                                 font=('Arial', 12, 'bold'))
+        warning_label.pack()
+
+        # Warning text
+        text_frame = tk.Frame(warning_box, bg='#fff3cd')
+        text_frame.pack(fill='x', padx=15, pady=(0, 10))
+
+        warning_text = ("The host card must be power cycled after changing the SBR mode.\n"
+                        "The new mode will not take effect until the card is restarted.")
+
+        text_label = tk.Label(text_frame, text=warning_text,
+                              bg='#fff3cd', fg='#856404',
+                              font=('Arial', 10), justify='center')
+        text_label.pack()
+
+    def create_port_refresh_controls(self, parent):
+        """Create refresh controls for port configuration with fixed width"""
+        controls_frame = ttk.Frame(parent, style='Content.TFrame')
+        controls_frame.pack(pady=15)
+        controls_frame.configure(width=600)  # Fixed width
+
+        # Create container for centered controls
+        controls_container = ttk.Frame(controls_frame, style='Content.TFrame')
+        controls_container.pack(fill='x')
+
+        # Refresh button - centered
+        refresh_btn = ttk.Button(controls_container, text="🔄 Refresh Port Status",
+                                 command=self.refresh_port_configuration)
+        refresh_btn.pack(anchor='center')
+
+        # Last update time - centered
+        last_updated = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        update_label = ttk.Label(controls_container,
+                                 text=f"Last updated: {last_updated}",
+                                 style='Info.TLabel', font=('Arial', 9))
+        update_label.pack(anchor='center', pady=(10, 0))
+
+    def get_current_port_mode(self):
+        """Get current port mode data (replace with actual device query)"""
+        if self.is_demo_mode:
+            return {
+                "Current SBR Mode": "SBR0",
+                "Mode Number": "0",
+                "Last Updated": "2025-08-14 19:44:01"
+            }
         else:
-            # Real device mode
-            print("DEBUG: Real device mode - requesting showmode data")
+            # TODO: Implement actual device query
+            # This should query the device for current mode
+            return {
+                "Current SBR Mode": "Unknown",
+                "Mode Number": "Unknown",
+                "Last Updated": "Not available"
+            }
 
-            # Check if we have cached showmode data
-            port_info = self.port_status_manager.get_port_status_info()
+    def change_host_card_mode(self):
+        """Change the host card mode"""
+        selected_mode = self.sbr_mode_var.get()
 
-            if port_info and port_info.mode_name and port_info.mode_name != "Unknown":
-                print("DEBUG: Using cached port status data")
-                self.port_status_ui.create_port_dashboard()
+        # Confirm the change
+        result = messagebox.askyesno(
+            "Confirm Mode Change",
+            f"Change host card mode to {selected_mode}?\n\n"
+            "⚠️ WARNING: The card must be power cycled after this change.\n"
+            "The new mode will not take effect until restart."
+        )
+
+        if result:
+            if self.is_demo_mode:
+                # Demo mode - simulate the change
+                self.log_data.append(f"[{datetime.now().strftime('%H:%M:%S')}] DEMO: Changed mode to {selected_mode}")
+                messagebox.showinfo("Mode Changed",
+                                    f"Demo: Host card mode changed to {selected_mode}\n"
+                                    "Remember to power cycle the card!")
             else:
-                print("DEBUG: No cached data, requesting showmode...")
-                self.send_showmode_command()
-                self.show_loading_message("Loading port status information...")
+                # Real mode - send command to device
+                command = f"set_sbr_mode {selected_mode.lower()}"
+                self.send_command(command)
+                self.log_data.append(f"[{datetime.now().strftime('%H:%M:%S')}] Sent: {command}")
+                messagebox.showinfo("Command Sent",
+                                    f"Mode change command sent: {selected_mode}\n"
+                                    "Remember to power cycle the card!")
+
+    def refresh_port_configuration(self):
+        """Refresh port configuration data"""
+        if self.is_demo_mode:
+            # Demo mode refresh
+            self.log_data.append(f"[{datetime.now().strftime('%H:%M:%S')}] DEMO: Refreshed port configuration")
+            self.update_content_area()
+        else:
+            # Real mode - query device
+            self.send_command("get_port_config")
+            self.log_data.append(f"[{datetime.now().strftime('%H:%M:%S')}] Queried port configuration")
+
+    # Add this import at the top of main.py if not already present
+    try:
+        from PIL import Image, ImageTk
+        PIL_AVAILABLE = True
+    except ImportError:
+        PIL_AVAILABLE = False
+        print("WARNING: PIL (Pillow) not available. Images will not be displayed.")
+        print("Install with: pip install Pillow")
 
     def send_showmode_command(self):
         """Send showmode command to get current SBR mode"""

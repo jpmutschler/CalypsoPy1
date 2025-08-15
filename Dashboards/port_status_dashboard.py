@@ -223,7 +223,7 @@ class PortStatusDashboardUI:
         """Create section showing current SBR mode"""
         section_frame = ttk.Frame(self.app.scrollable_frame, style='Content.TFrame',
                                   relief='solid', borderwidth=1)
-        section_frame.pack(fill='both', expand=True, padx=650, pady=15)
+        section_frame.pack(fill='both', expand=True, padx=50, pady=15)
 
         # Section header
         header_frame = ttk.Frame(section_frame, style='Content.TFrame')
@@ -250,7 +250,7 @@ class PortStatusDashboardUI:
     def create_centered_data_row(self, parent, field_name, value):
         """Create a centered data row with field name and value"""
         row_frame = ttk.Frame(parent, style='Content.TFrame')
-        row_frame.pack(pady=8, padx=20)
+        row_frame.pack(pady=8, padx=650)
 
         # Create a frame to hold both labels and center them
         data_frame = ttk.Frame(row_frame, style='Content.TFrame')
