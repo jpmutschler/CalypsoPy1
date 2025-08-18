@@ -4,9 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="788c075a-584d-4f65-912f-d1e30ca41428" name="Changes" comment="Parsing Engine Updates">
+    <list default="true" id="788c075a-584d-4f65-912f-d1e30ca41428" name="Changes" comment="Cache Manager Updates">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Admin/cache_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/Admin/cache_manager.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Admin/debug_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/Admin/debug_config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Admin/enhanced_sysinfo_parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/Admin/enhanced_sysinfo_parser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboards/demo_mode_integration.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboards/demo_mode_integration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,6 +52,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.debug_config.executor": "Run",
     "Python.demo_mode_integration.executor": "Run",
     "Python.host_card_info.executor": "Run",
     "Python.link_status_dashboard.executor": "Run",
@@ -132,7 +136,7 @@
       <updated>1754689470994</updated>
       <workItem from="1754689482253" duration="75159000" />
       <workItem from="1755106413475" duration="120000" />
-      <workItem from="1755106580546" duration="28744000" />
+      <workItem from="1755106580546" duration="34404000" />
     </task>
     <task id="LOCAL-00001" summary="Normal code updates">
       <option name="closed" value="true" />
@@ -398,7 +402,15 @@
       <option name="project" value="LOCAL" />
       <updated>1755232156544</updated>
     </task>
-    <option name="localTasksCounter" value="34" />
+    <task id="LOCAL-00034" summary="Cache Manager Updates">
+      <option name="closed" value="true" />
+      <created>1755232702864</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1755232702864</updated>
+    </task>
+    <option name="localTasksCounter" value="35" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -446,16 +458,18 @@
     <MESSAGE value="Port Refresh added" />
     <MESSAGE value="Port Status Changes" />
     <MESSAGE value="Parsing Engine Updates" />
-    <option name="LAST_COMMIT_MESSAGE" value="Parsing Engine Updates" />
+    <MESSAGE value="Cache Manager Updates" />
+    <option name="LAST_COMMIT_MESSAGE" value="Cache Manager Updates" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/CalypsoPy$resets_dashboard.coverage" NAME="resets_dashboard Coverage Results" MODIFIED="1755135289728" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Dashboards" />
     <SUITE FILE_PATH="coverage/CalypsoPy$host_card_info.coverage" NAME="host_card_info Coverage Results" MODIFIED="1754763199598" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$test_step2.coverage" NAME="test_step2 Coverage Results" MODIFIED="1754766140226" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$demo_mode_integration.coverage" NAME="demo_mode_integration Coverage Results" MODIFIED="1754775976264" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/CalypsoPy$main.coverage" NAME="main Coverage Results" MODIFIED="1755225443135" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/CalypsoPy$main.coverage" NAME="main Coverage Results" MODIFIED="1755552866420" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$test_version_script.coverage" NAME="test_version_script Coverage Results" MODIFIED="1755214515854" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$port_status_dashboard.coverage" NAME="port_status_dashboard Coverage Results" MODIFIED="1755021474107" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/CalypsoPy$debug_config.coverage" NAME="debug_config Coverage Results" MODIFIED="1755552851587" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Admin" />
     <SUITE FILE_PATH="coverage/CalypsoPy$link_status_dashboard.coverage" NAME="link_status_dashboard Coverage Results" MODIFIED="1754937742874" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$version_bump.coverage" NAME="version_bump Coverage Results" MODIFIED="1755219794287" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$settings_ui.coverage" NAME="settings_ui Coverage Results" MODIFIED="1754754241481" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

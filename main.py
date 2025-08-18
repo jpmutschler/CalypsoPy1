@@ -86,28 +86,26 @@ except ImportError:
     PIL_AVAILABLE = False
     print("WARNING: PIL not available. SBR mode images will not be displayed.")
 
-def load_demo_sysinfo_file():
+
+def load_demo_sysinfo_file(self):
     """Load sysinfo.txt from DemoData directory"""
-    demo_paths = [
-        "DemoData/sysinfo.txt",
-        "./DemoData/sysinfo.txt",
-        "../DemoData/sysinfo.txt",
-        os.path.join(os.path.dirname(__file__), "DemoData", "sysinfo.txt")
-    ]
+    debug_print("Loading demo sysinfo file...", "DEMO")
 
-    for path in demo_paths:
-        if os.path.exists(path):
-            try:
-                with open(path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                print(f"DEBUG: Loaded sysinfo.txt from {path} ({len(content)} chars)")
-                return content
-            except Exception as e:
-                print(f"DEBUG: Error reading {path}: {e}")
+    # Load from DemoData directory where all sample TXT files are located
+    sysinfo_path = "DemoData/sysinfo.txt"
 
-    print("DEBUG: sysinfo.txt not found in DemoData directory")
-    return None
-
+    if os.path.exists(sysinfo_path):
+        try:
+            with open(sysinfo_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            debug_print(f"✓ Loaded DemoData/sysinfo.txt ({len(content)} chars)", "DEMO")
+            return content
+        except Exception as e:
+            debug_print(f"✗ Error reading DemoData/sysinfo.txt: {e}", "DEMO")
+            return None
+    else:
+        debug_print("✗ DemoData/sysinfo.txt not found", "DEMO")
+        return None
 
 def parse_demo_sysinfo_simple(sysinfo_content):
     """Simple parser for demo sysinfo content"""
@@ -1275,62 +1273,100 @@ class DashboardApp:
             self.log_data.append(f"[{timestamp}] Error processing sysinfo: {e}")
 
     def create_host_dashboard(self):
-        """FIXED: Create host card information dashboard"""
-        print("DEBUG: Creating host dashboard...")
+        """
+        FIXED: Create host card dashboard using ver + lsd parsed data
+        Replace your existing create_host_dashboard method with this
+        """
+        debug_print("Creating host card dashboard...", "UI")
 
-        if self.is_demo_mode:
-            # For demo mode, try to use data directly from CLI
-            print("DEBUG: Demo mode - loading data directly")
-
-            try:
-                demo_content = getattr(self.cli, 'demo_sysinfo_content', None)
-
-                if demo_content and len(demo_content) > 100:
-                    print(f"DEBUG: Using demo content directly ({len(demo_content)} chars)")
-
-                    # Parse immediately
-                    parsed_data = self.sysinfo_parser.parse_unified_sysinfo(demo_content, "demo")
-                    print("DEBUG: Demo data parsed successfully")
-
-                    # Check for cached JSON data
-                    host_json = self.sysinfo_parser.get_host_card_json()
-
-                    if host_json:
-                        sections = host_json.get('sections', {})
-
-                        for section_key, section_data in sections.items():
-                            icon = section_data.get('icon', '📄')
-                            title = section_data.get('title', section_key)
-                            fields = section_data.get('fields', {})
-
-                            # Convert dict to list of tuples for display
-                            field_items = list(fields.items())
-                            self.create_host_info_section(icon, title, field_items)
-
-                        # Add last updated info
-                        last_updated = host_json.get('last_updated', 'Unknown')
-                        self.create_refresh_info(last_updated, True)
-                    else:
-                        self.show_demo_fallback()
-                else:
-                    print("DEBUG: No demo content, showing fallback")
-                    self.show_demo_fallback()
-
-            except Exception as e:
-                print(f"ERROR: Demo mode failed: {e}")
-                self.show_demo_fallback()
-        else:
-            # Real device mode - existing logic
-            cached_data = self.sysinfo_parser.get_complete_sysinfo()
-
-            if cached_data and self.sysinfo_parser.is_data_fresh(300):
-                print("DEBUG: Using fresh cached data for host dashboard")
-                host_info = self.sysinfo_parser.get_host_info_for_display()
-                # Create sections from host_info...
+        try:
+            # Get cached data
+            if self.is_demo_mode:
+                complete_data = self.cache_manager.get('demo_sysinfo_complete')
             else:
-                print("DEBUG: No fresh cached data, requesting sysinfo...")
-                self.send_sysinfo_command()
+                complete_data = self.sysinfo_parser.get_complete_sysinfo()
+
+            if complete_data:
+                ver_section = complete_data.get('ver_section', {})
+                lsd_section = complete_data.get('lsd_section', {})
+
+                debug_print(f"Host data: ver={len(ver_section)}, lsd={len(lsd_section)}", "UI")
+
+                # Device Information (from ver section)
+                if ver_section:
+                    device_fields = []
+                    if ver_section.get('serial_number'):
+                        device_fields.append(('Serial Number', ver_section['serial_number']))
+                    if ver_section.get('company'):
+                        device_fields.append(('Company', ver_section['company']))
+                    if ver_section.get('model'):
+                        device_fields.append(('Model', ver_section['model']))
+                    if ver_section.get('version'):
+                        device_fields.append(('Firmware Version', ver_section['version']))
+                    if ver_section.get('build_date'):
+                        device_fields.append(('Build Date', ver_section['build_date']))
+                    if ver_section.get('sbr_version'):
+                        device_fields.append(('SBR Version', ver_section['sbr_version']))
+
+                    if device_fields:
+                        self.create_host_info_section("💻", "Device Information", device_fields)
+
+                # Thermal Status (from lsd section)
+                if lsd_section.get('board_temperature'):
+                    thermal_fields = [('Board Temperature', f"{lsd_section['board_temperature']}°C")]
+                    self.create_host_info_section("🌡️", "Thermal Status", thermal_fields)
+
+                # Fan Status (from lsd section)
+                if lsd_section.get('switch_fan_speed'):
+                    fan_fields = [('Switch Fan Speed', f"{lsd_section['switch_fan_speed']} rpm")]
+                    self.create_host_info_section("🌀", "Fan Status", fan_fields)
+
+                # Power Status (from lsd section)
+                power_fields = []
+                voltage_mappings = {
+                    'voltage_0_8v': '0.8V Rail',
+                    'voltage_0_89v': '0.89V Rail',
+                    'voltage_1_2v': '1.2V Rail',
+                    'voltage_1_5v': '1.5V Rail'
+                }
+
+                for field_key, display_name in voltage_mappings.items():
+                    if lsd_section.get(field_key):
+                        power_fields.append((display_name, f"{lsd_section[field_key]} mV"))
+
+                if lsd_section.get('current_draw'):
+                    power_fields.append(('Current Draw', f"{lsd_section['current_draw']} mA"))
+
+                if power_fields:
+                    self.create_host_info_section("⚡", "Power Status", power_fields)
+
+                # Error Status (from lsd section)
+                error_fields = []
+                error_mappings = {
+                    'voltage_0_8v_errors': '0.8V Rail Errors',
+                    'voltage_0_89v_errors': '0.89V Rail Errors',
+                    'voltage_1_2v_errors': '1.2V Rail Errors',
+                    'voltage_1_5v_errors': '1.5V Rail Errors'
+                }
+
+                for field_key, display_name in error_mappings.items():
+                    if field_key in lsd_section:
+                        error_fields.append((display_name, str(lsd_section[field_key])))
+
+                if error_fields:
+                    self.create_host_info_section("🚨", "Error Status", error_fields)
+
+                debug_print("Host dashboard created successfully", "UI")
+
+            else:
+                debug_print("No data available for host dashboard", "UI")
                 self.show_loading_message("Loading host card information...")
+                if not self.is_demo_mode:
+                    self.send_sysinfo_command()
+
+        except Exception as e:
+            debug_print(f"Error creating host dashboard: {e}", "ERROR")
+            self.show_loading_message(f"Host dashboard error: {e}")
 
     def show_demo_fallback(self):
         """Show demo fallback data"""
@@ -1544,58 +1580,86 @@ class DashboardApp:
                    command=self.refresh_current_dashboard).pack(side='right')
 
     def create_link_dashboard(self):
-        """Create link status dashboard using the new Link Status module"""
-        print("DEBUG: Creating link dashboard using new module...")
+        """
+        FIXED: Create link status dashboard using showport parsed data
+        Replace your existing create_link_dashboard method with this
+        """
+        debug_print("Creating link status dashboard...", "UI")
 
-        if self.is_demo_mode:
-            # For demo mode, load demo showport data
-            print("DEBUG: Demo mode - loading showport data")
-
-            try:
-                from Dashboards.link_status_dashboard import load_demo_showport_file
-                demo_content = load_demo_showport_file()
-
-                if demo_content:
-                    print(f"DEBUG: Using demo showport content ({len(demo_content)} chars)")
-
-                    # Parse and cache the showport data
-                    link_info = self.link_status_ui.link_status_manager.parser.parse_showport_response(demo_content)
-                    self.link_status_ui.link_status_manager.cached_info = link_info
-                    self.link_status_ui.link_status_manager.last_refresh = datetime.now()
-
-                    # Also parse using enhanced parser for caching
-                    if hasattr(self, 'sysinfo_parser'):
-                        self.sysinfo_parser.parse_showport_command(demo_content)
-
-                    # Create the dashboard UI
-                    self.link_status_ui.create_link_dashboard()
-
-                    print("DEBUG: Demo link dashboard created successfully")
-                else:
-                    print("DEBUG: No demo showport content, showing fallback")
-                    self.show_loading_message("Demo showport data not available - check DemoData/showport.txt")
-
-            except Exception as e:
-                print(f"ERROR: Demo link dashboard failed: {e}")
-                import traceback
-                traceback.print_exc()
-                self.show_loading_message(f"Demo error: {e}")
-        else:
-            # Real device mode - check for cached data first
-            cached_link_data = None
-            if hasattr(self, 'sysinfo_parser'):
-                cached_link_data = self.sysinfo_parser.get_cached_showport_data()
-
-            if cached_link_data and self.sysinfo_parser.is_showport_data_fresh(300):
-                print("DEBUG: Using fresh cached showport data")
-                # Convert cached data to LinkStatusInfo format
-                link_info = self._convert_cached_to_link_info(cached_link_data)
-                self.link_status_ui.link_status_manager.cached_info = link_info
-                self.link_status_ui.create_link_dashboard()
+        try:
+            # Get cached data
+            if self.is_demo_mode:
+                complete_data = self.cache_manager.get('demo_sysinfo_complete')
             else:
-                print("DEBUG: Real device mode - sending showport command")
-                self.send_showport_command()
+                complete_data = self.sysinfo_parser.get_complete_sysinfo()
+
+            if complete_data:
+                showport_section = complete_data.get('showport_section', {})
+                debug_print(f"Link data: showport={len(showport_section)}", "UI")
+
+                def link_content(frame):
+                    if not showport_section:
+                        ttk.Label(frame, text="No port/link data available",
+                                  style='Info.TLabel', font=('Arial', 10, 'italic')).pack(anchor='w')
+                        return
+
+                    # Display ports
+                    ports = showport_section.get('ports', {})
+                    for port_key, port_info in ports.items():
+                        port_num = port_info.get('port_number', '?')
+                        status = port_info.get('status', 'Unknown')
+                        speed = port_info.get('speed', '00')
+                        width = port_info.get('width', '00')
+
+                        # Port status row
+                        row_frame = ttk.Frame(frame, style='Content.TFrame')
+                        row_frame.pack(fill='x', pady=2)
+
+                        status_text = "✅ Active" if status == 'Active' else "❌ Inactive"
+
+                        ttk.Label(row_frame, text=f"Port {port_num}:", style='Info.TLabel',
+                                  font=('Arial', 10, 'bold')).pack(side='left')
+                        ttk.Label(row_frame, text=status_text, style='Info.TLabel').pack(side='right')
+
+                        # Port details
+                        detail_frame = ttk.Frame(frame, style='Content.TFrame')
+                        detail_frame.pack(fill='x', pady=(0, 5))
+                        ttk.Label(detail_frame, text=f"    Speed: Level {speed}, Width: {width}",
+                                  style='Info.TLabel', font=('Arial', 9)).pack(anchor='w')
+
+                    # Display golden finger
+                    golden = showport_section.get('golden_finger', {})
+                    if golden:
+                        speed = golden.get('speed', '00')
+                        width = golden.get('width', '00')
+                        status = golden.get('status', 'Unknown')
+
+                        row_frame = ttk.Frame(frame, style='Content.TFrame')
+                        row_frame.pack(fill='x', pady=2)
+
+                        status_text = "✅ Active" if status == 'Active' else "❌ Inactive"
+
+                        ttk.Label(row_frame, text="Golden Finger:", style='Info.TLabel',
+                                  font=('Arial', 10, 'bold')).pack(side='left')
+                        ttk.Label(row_frame, text=status_text, style='Info.TLabel').pack(side='right')
+
+                        detail_frame = ttk.Frame(frame, style='Content.TFrame')
+                        detail_frame.pack(fill='x', pady=(0, 5))
+                        ttk.Label(detail_frame, text=f"    Speed: Level {speed}, Width: {width}",
+                                  style='Info.TLabel', font=('Arial', 9)).pack(anchor='w')
+
+                self.create_info_card(self.scrollable_frame, "🔗 Port and Link Status", link_content)
+                debug_print("Link dashboard created successfully", "UI")
+
+            else:
+                debug_print("No data available for link dashboard", "UI")
                 self.show_loading_message("Loading link status...")
+                if not self.is_demo_mode:
+                    self.send_sysinfo_command()
+
+        except Exception as e:
+            debug_print(f"Error creating link dashboard: {e}", "ERROR")
+            self.show_loading_message(f"Link dashboard error: {e}")
 
     def create_port_dashboard(self):
         """Create port configuration dashboard with real device data"""
@@ -2853,58 +2917,71 @@ NEW FEATURES:
                    command=self.export_logs).pack(anchor='w')
 
     def connect_device(self):
-        """Connect to device with immediate demo data loading - COMPLETE VERSION"""
-        print(f"DEBUG: Connecting to device (Demo mode: {self.is_demo_mode})")
+        """
+        FIXED: Connect to device with proper demo data loading
+        Replace your existing connect_device method with this
+        """
+        debug_print(f"Connecting to device (Demo mode: {self.is_demo_mode})", "CONNECTION")
 
         if self.cli.connect():
-            print("DEBUG: CLI connected successfully")
+            debug_print("CLI connected successfully", "CONNECTION")
 
             if self.is_demo_mode:
                 self.connection_label.config(foreground='#ff9500')
-                self.log_data.append(f"[{datetime.now().strftime('%H:%M:%S')}] Demo mode started")
+                timestamp = datetime.now().strftime('%H:%M:%S')
+                self.log_data.append(f"[{timestamp}] Demo mode started")
 
-                # IMMEDIATE FIX: Load demo data directly without threading
-                try:
-                    # Access the demo content directly from the UnifiedDemoSerialCLI object
-                    demo_content = self.cli.demo_sysinfo_content
-                    if demo_content:
-                        print(f"DEBUG: Using demo content directly ({len(demo_content)} chars)")
+                # Load and parse demo data
+                demo_content = self.load_demo_sysinfo_file()
 
-                        # Parse immediately using the enhanced parser
+                if demo_content:
+                    debug_print("Demo content loaded, parsing with enhanced_sysinfo_parser...", "DEMO")
+
+                    try:
+                        # Parse using your existing Admin.enhanced_sysinfo_parser
                         parsed_data = self.sysinfo_parser.parse_unified_sysinfo(demo_content, "demo")
-                        print("DEBUG: Demo data parsed successfully")
 
-                        # Update UI immediately
-                        self.root.after_idle(self.update_content_area)
-                        self.update_cache_status("Demo data loaded")
+                        if parsed_data and not parsed_data.get('error'):
+                            debug_print("Demo data parsed successfully", "PARSER")
 
-                        # Log success
-                        timestamp = datetime.now().strftime('%H:%M:%S')
-                        self.log_data.append(f"[{timestamp}] Demo data loaded directly")
+                            # Cache the parsed data using your existing Admin.cache_manager
+                            self.cache_manager.set('demo_sysinfo_complete', parsed_data, 'demo', 600)
+                            debug_print("Demo data cached", "CACHE")
 
-                    else:
-                        print("ERROR: No demo content available")
-                        self.show_loading_message("Demo data not available")
+                            # Update UI
+                            self.root.after_idle(self.update_content_area)
+                            self.update_cache_status("Demo data loaded")
 
-                except Exception as e:
-                    print(f"ERROR: Failed to load demo data: {e}")
-                    import traceback
-                    traceback.print_exc()
-                    self.show_loading_message(f"Demo error: {e}")
+                            timestamp = datetime.now().strftime('%H:%M:%S')
+                            self.log_data.append(f"[{timestamp}] Demo data loaded successfully")
+
+                        else:
+                            error_msg = parsed_data.get('error',
+                                                        'Parsing failed') if parsed_data else 'No data returned'
+                            debug_print(f"Demo parsing failed: {error_msg}", "ERROR")
+                            self.show_loading_message(f"Demo parsing error: {error_msg}")
+
+                    except Exception as e:
+                        debug_print(f"Demo parsing exception: {e}", "ERROR")
+                        self.show_loading_message(f"Demo error: {e}")
+
+                else:
+                    debug_print("No demo content available", "ERROR")
+                    self.show_loading_message("Demo data not available")
 
             else:
-                # Real device mode
+                # Real device mode (keep your existing real device logic)
                 self.connection_label.config(foreground='#00ff00')
-                self.log_data.append(f"[{datetime.now().strftime('%H:%M:%S')}] Connected to {self.port}")
+                timestamp = datetime.now().strftime('%H:%M:%S')
+                self.log_data.append(f"[{timestamp}] Connected to {self.port}")
 
-                # Start background threads for real devices
                 self.start_background_threads()
                 self.root.after(500, self.send_sysinfo_command)
 
         else:
             self.connection_label.config(foreground='#ff0000')
             error_msg = "Failed to start demo mode" if self.is_demo_mode else f"Failed to connect to {self.port}"
-            print(f"DEBUG: Connection failed: {error_msg}")
+            debug_print(f"Connection failed: {error_msg}", "ERROR")
             messagebox.showerror("Connection Error", error_msg)
 
     def start_background_threads(self):

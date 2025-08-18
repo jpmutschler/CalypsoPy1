@@ -30,6 +30,65 @@ class DebugConfig:
     Centralized debug configuration for CalypsoPy
     """
 
+    # Add these functions to the end of your Admin/debug_config.py file
+    # (before the "if __name__ == '__main__':" section)
+
+    def debug_print(message: str, component: str = 'main', prefix: str = '') -> None:
+        """
+        Standard debug_print function used throughout CalypsoPy
+        This provides backward compatibility for existing code
+        """
+        debug.debug(message, component, prefix)
+
+    def debug_error(message: str, component: str = 'main', prefix: str = '') -> None:
+        """
+        Standard debug_error function used throughout CalypsoPy
+        This provides backward compatibility for existing code
+        """
+        debug.error(message, component, prefix)
+
+    def debug_warning(message: str, component: str = 'main', prefix: str = '') -> None:
+        """
+        Standard debug_warning function used throughout CalypsoPy
+        This provides backward compatibility for existing code
+        """
+        debug.warning(message, component, prefix)
+
+    def debug_info(message: str, component: str = 'main', prefix: str = '') -> None:
+        """
+        Standard debug_info function used throughout CalypsoPy
+        This provides backward compatibility for existing code
+        """
+        debug.info(message, component, prefix)
+
+    def is_debug_enabled(component: str = 'main') -> bool:
+        """
+        Check if debug is enabled for a component
+        This provides backward compatibility for existing code
+        """
+        return debug.is_enabled(component)
+
+    def get_debug_status() -> Dict[str, Any]:
+        """Get current debug status"""
+        return debug.get_status()
+
+    def toggle_debug(component: str = 'main') -> bool:
+        """Toggle debug for a component"""
+        if debug.is_enabled(component):
+            debug.disable_component(component)
+            return False
+        else:
+            debug.enable_component(component)
+            return True
+
+    def enable_debug(component: str = 'main') -> None:
+        """Enable debug for a component"""
+        debug.enable_component(component)
+
+    def disable_debug(component: str = 'main') -> None:
+        """Disable debug for a component"""
+        debug.disable_component(component)
+
     def __init__(self):
         """Initialize debug configuration"""
         # Default settings
@@ -251,7 +310,6 @@ class DebugConfig:
             status_str = "✅ ENABLED" if enabled else "❌ DISABLED"
             print(f"  {component:15}: {status_str}")
         print("=" * 50 + "\n")
-
 
 # Global debug instance
 debug = DebugConfig()

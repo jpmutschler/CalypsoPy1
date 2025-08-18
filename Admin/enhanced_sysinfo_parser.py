@@ -11,22 +11,87 @@ from typing import Dict, Any, Optional, List
 
 class EnhancedSystemInfoParser:
     """
-    Enhanced parser with full cache manager integration
-    All parsed data is cached and retrieved through cache manager
+    FIXED: Enhanced parser with complete method implementation
     """
 
     def __init__(self, cache_manager):
         self.cache = cache_manager
 
+    # FIXED: Add missing parse_showport_command method
+    def parse_showport_command(self, showport_output: str) -> Dict[str, Any]:
+        """
+        Parse showport command output specifically
+        This method was missing and causing the error
+        """
+        print(f"DEBUG: Parsing showport command output ({len(showport_output)} chars)")
+
+        showport_data = {
+            'ports': {},
+            'golden_finger': {},
+            'parsed_at': datetime.now().isoformat(),
+            'raw_output': showport_output
+        }
+
+        try:
+            # Extract individual port information
+            port_pattern = r'Port(\d+)\s*:\s*speed\s+(\w+),\s*width\s+(\w+),\s*max_speed(\w+),\s*max_width(\d+)'
+            port_matches = re.findall(port_pattern, showport_output, re.IGNORECASE)
+
+            print(f"DEBUG: Found {len(port_matches)} port matches")
+
+            for match in port_matches:
+                port_num, speed, width, max_speed, max_width = match
+                showport_data['ports'][f'port_{port_num}'] = {
+                    'port_number': port_num,
+                    'speed': speed,
+                    'width': width,
+                    'max_speed': max_speed,
+                    'max_width': max_width,
+                    'status': 'Active' if speed != '00' else 'Inactive'
+                }
+                print(
+                    f"DEBUG: Parsed Port {port_num}: speed={speed}, status={'Active' if speed != '00' else 'Inactive'}")
+
+            # Extract Golden Finger information
+            golden_patterns = [
+                r'Golden finger:\s*speed\s+(\w+),\s*width\s+(\w+),\s*max_width\s*=\s*(\d+)',
+                r'Golden finger:\s*speed\s+(\w+),\s*width\s+(\w+)'
+            ]
+
+            for pattern in golden_patterns:
+                golden_match = re.search(pattern, showport_output, re.IGNORECASE)
+                if golden_match:
+                    if len(golden_match.groups()) >= 3:
+                        showport_data['golden_finger'] = {
+                            'speed': golden_match.group(1),
+                            'width': golden_match.group(2),
+                            'max_width': int(golden_match.group(3)),
+                            'status': 'Active' if golden_match.group(1) != '00' else 'Inactive'
+                        }
+                    else:
+                        showport_data['golden_finger'] = {
+                            'speed': golden_match.group(1),
+                            'width': golden_match.group(2),
+                            'max_width': 16,  # Default
+                            'status': 'Active' if golden_match.group(1) != '00' else 'Inactive'
+                        }
+                    print(f"DEBUG: Parsed Golden Finger: speed={golden_match.group(1)}")
+                    break
+
+            # Cache the parsed showport data
+            self.cache.set('showport_parsed', showport_data, 'showport', 300)
+            print(f"DEBUG: Showport data cached successfully")
+
+        except Exception as e:
+            print(f"ERROR: Failed to parse showport output: {e}")
+            import traceback
+            traceback.print_exc()
+
+        return showport_data
+
     def parse_complete_sysinfo(self, sysinfo_output: str) -> Dict[str, Any]:
         """
         Parse complete sysinfo output and cache all sections
-
-        Args:
-            sysinfo_output: Raw output from sysinfo command
-
-        Returns:
-            Parsed system information with all sections cached
         """
         parsed_data = {
             'raw_output': sysinfo_output,
@@ -74,16 +139,7 @@ class EnhancedSystemInfoParser:
         self.cache.set('link_display_data', self._format_link_data(link_info), 'sysinfo', ttl)
 
     def get_cached_data(self, data_key: str, fallback_generator=None) -> Optional[Any]:
-        """
-        Get cached data with fallback to generator function
-
-        Args:
-            data_key: Cache key to retrieve
-            fallback_generator: Function to generate default data if cache miss
-
-        Returns:
-            Cached data or generated fallback data
-        """
+        """Get cached data with fallback to generator function"""
         cached = self.cache.get(data_key)
 
         if cached is not None:
@@ -134,17 +190,16 @@ class EnhancedSystemInfoParser:
 
     def is_data_fresh(self, max_age_seconds: int = 300) -> bool:
         """Check if cached data is fresh enough"""
-        if hasattr(self.cache, 'get_with_metadata'):
-            complete_data = self.cache.get_with_metadata('complete_sysinfo')
-            if complete_data:
-                return complete_data['age_seconds'] < max_age_seconds
+        complete_data = self.cache.get_with_metadata('complete_sysinfo')
+        if complete_data:
+            return complete_data['age_seconds'] < max_age_seconds
         return False
 
     def force_refresh_needed(self) -> bool:
         """Check if a force refresh is needed (no data or data too old)"""
         return not self.is_data_fresh(300)  # 5 minutes
 
-    # Parsing methods remain the same but with added caching
+    # Parsing methods
     def _parse_ver_section(self, output: str) -> Dict[str, Any]:
         """Parse the ver section from sysinfo output"""
         ver_data = {}
@@ -361,8 +416,8 @@ class EnhancedSystemInfoParser:
         """Return default link info based on sample data"""
         return [
             ("Port 80", "✅ Active"),
-            ("  └─ Speed", "Level 01"),
-            ("  └─ Width", "00"),
+            ("  └─ Speed", "Level 06"),
+            ("  └─ Width", "04"),
             ("Port 112", "✅ Active"),
             ("  └─ Speed", "Level 01"),
             ("  └─ Width", "00"),
@@ -370,25 +425,83 @@ class EnhancedSystemInfoParser:
             ("  └─ Speed", "Level 01"),
             ("  └─ Width", "00"),
             ("Golden Finger", "✅ Active"),
-            ("  └─ Speed", "Level 01"),
+            ("  └─ Speed", "Level 05"),
             ("  └─ Max Width", "16")
         ]
+
+    # FIXED: Add missing port configuration methods
+    def get_port_config_data(self) -> Dict[str, Any]:
+        """Get port configuration data for the port dashboard"""
+        # Try to get from cache first
+        cached_config = self.cache.get('port_config_data')
+        if cached_config:
+            return cached_config
+
+        # Generate default port configuration data
+        port_config = {
+            'ports': {
+                'port_80': {
+                    'port_number': '80',
+                    'enabled': True,
+                    'speed_setting': 'Auto',
+                    'current_speed': 'PCIe 3.0 x4',
+                    'max_speed': 'PCIe 3.0 x16',
+                    'link_width': '4 lanes',
+                    'power_state': 'Active',
+                    'error_count': 0
+                },
+                'port_112': {
+                    'port_number': '112',
+                    'enabled': True,
+                    'speed_setting': 'Auto',
+                    'current_speed': 'PCIe 2.0 x1',
+                    'max_speed': 'PCIe 3.0 x16',
+                    'link_width': '1 lane',
+                    'power_state': 'Active',
+                    'error_count': 0
+                },
+                'port_128': {
+                    'port_number': '128',
+                    'enabled': True,
+                    'speed_setting': 'Auto',
+                    'current_speed': 'PCIe 2.0 x1',
+                    'max_speed': 'PCIe 3.0 x16',
+                    'link_width': '1 lane',
+                    'power_state': 'Active',
+                    'error_count': 0
+                }
+            },
+            'golden_finger': {
+                'enabled': True,
+                'speed_setting': 'Auto',
+                'current_speed': 'PCIe 3.0 x16',
+                'max_speed': 'PCIe 3.0 x16',
+                'link_width': '16 lanes',
+                'power_state': 'Active',
+                'error_count': 0
+            },
+            'global_settings': {
+                'auto_negotiation': True,
+                'power_management': True,
+                'error_correction': True,
+                'hot_plug_support': False
+            },
+            'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'data_fresh': True
+        }
+
+        # Cache for 5 minutes
+        self.cache.set('port_config_data', port_config, 'port_config', 300)
+        return port_config
 
     def parse_unified_sysinfo(self, sysinfo_output: str, source="device") -> Dict[str, Any]:
         """
         UNIFIED parsing method - processes both device responses and demo file data
-
-        Args:
-            sysinfo_output: Raw sysinfo response (from device or file)
-            source: "device" or "file" for tracking data source
-
-        Returns:
-            Parsed data dictionary with enhanced caching
         """
         print(f"DEBUG: Unified parser processing {source} data ({len(sysinfo_output)} chars)")
 
         try:
-            # Use your existing parse_complete_sysinfo method as the base
+            # Use existing parse_complete_sysinfo method as the base
             parsed_data = self.parse_complete_sysinfo(sysinfo_output)
 
             # Add source tracking and enhanced metadata
@@ -422,11 +535,7 @@ class EnhancedSystemInfoParser:
             }
 
     def _create_and_cache_json_objects(self, parsed_data: Dict[str, Any]):
-        """
-        Create JSON objects for each dashboard and cache them
-
-        This creates structured JSON objects that dashboards can easily consume
-        """
+        """Create JSON objects for each dashboard and cache them"""
         ttl = 300  # 5 minutes cache TTL
 
         print("DEBUG: Creating JSON objects for dashboards...")
@@ -482,17 +591,35 @@ class EnhancedSystemInfoParser:
                 'data_fresh': True
             }
 
+            # FIXED: Create PORT CONFIGURATION JSON
+            port_config_json = {
+                'dashboard_type': 'port_configuration',
+                'data_source': parsed_data.get('data_source', 'unknown'),
+                'last_updated': parsed_data.get('last_updated', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+                'sections': {
+                    'port_settings': {
+                        'title': 'Port Configuration',
+                        'icon': '🔌',
+                        'items': self._extract_port_config_items(parsed_data.get('showport_section', {}))
+                    }
+                },
+                'data_fresh': True
+            }
+
             # Cache the JSON objects
             self.cache.set('host_card_json', host_card_json, 'host_card', ttl)
             self.cache.set('link_status_json', link_status_json, 'link_status', ttl)
+            self.cache.set('port_config_json', port_config_json, 'port_config', ttl)
 
             print(f"DEBUG: JSON objects created and cached successfully")
             print(f"  Host card sections: {len(host_card_json['sections'])}")
             print(f"  Link status items: {len(link_status_json['sections']['port_status']['items'])}")
+            print(f"  Port config items: {len(port_config_json['sections']['port_settings']['items'])}")
 
             # Also cache individual sections for backwards compatibility
             self.cache.set('host_display_data', host_card_json, 'host_display', ttl)
             self.cache.set('link_display_data', link_status_json, 'link_display', ttl)
+            self.cache.set('port_display_data', port_config_json, 'port_display', ttl)
 
         except Exception as e:
             print(f"ERROR: Failed to create JSON objects: {e}")
@@ -500,9 +627,7 @@ class EnhancedSystemInfoParser:
             traceback.print_exc()
 
     def _extract_device_fields(self, ver_data: Dict) -> Dict[str, str]:
-        """
-        Extract device information fields for host card JSON
-        """
+        """Extract device information fields for host card JSON"""
         fields = {}
 
         # Extract fields with fallbacks
@@ -528,9 +653,7 @@ class EnhancedSystemInfoParser:
         return fields
 
     def _extract_thermal_fields(self, lsd_data: Dict) -> Dict[str, str]:
-        """
-        Extract thermal fields for host card JSON
-        """
+        """Extract thermal fields for host card JSON"""
         fields = {}
 
         if lsd_data.get('board_temperature') is not None:
@@ -541,9 +664,7 @@ class EnhancedSystemInfoParser:
         return fields
 
     def _extract_fan_fields(self, lsd_data: Dict) -> Dict[str, str]:
-        """
-        Extract fan fields for host card JSON
-        """
+        """Extract fan fields for host card JSON"""
         fields = {}
 
         if lsd_data.get('switch_fan_speed') is not None:
@@ -554,9 +675,7 @@ class EnhancedSystemInfoParser:
         return fields
 
     def _extract_power_fields(self, lsd_data: Dict) -> Dict[str, str]:
-        """
-        Extract power fields for host card JSON
-        """
+        """Extract power fields for host card JSON"""
         fields = {}
 
         # Voltage rails
@@ -581,9 +700,7 @@ class EnhancedSystemInfoParser:
         return fields
 
     def _extract_error_fields(self, lsd_data: Dict) -> Dict[str, str]:
-        """
-        Extract error fields for host card JSON
-        """
+        """Extract error fields for host card JSON"""
         fields = {}
 
         # Error count mappings
@@ -603,9 +720,7 @@ class EnhancedSystemInfoParser:
         return fields
 
     def _extract_link_items(self, showport_data: Dict) -> List[Dict]:
-        """
-        Extract link items for link status JSON
-        """
+        """Extract link items for link status JSON"""
         items = []
 
         # Process individual ports
@@ -635,13 +750,93 @@ class EnhancedSystemInfoParser:
         print(f"DEBUG: Extracted {len(items)} link items")
         return items
 
-    def get_host_card_json(self) -> Optional[Dict[str, Any]]:
-        """
-        Get JSON object for Host Card Information dashboard
+    def _extract_port_config_items(self, showport_data: Dict) -> List[Dict]:
+        """FIXED: Extract port configuration items for port config JSON"""
+        items = []
 
-        Returns:
-            JSON object with structured host card data or None if not available
-        """
+        # Process individual ports for configuration
+        ports = showport_data.get('ports', {})
+        for port_key, port_info in ports.items():
+            port_num = port_info.get('port_number', '?')
+            speed = port_info.get('speed', '00')
+            width = port_info.get('width', '00')
+            status = port_info.get('status', 'Inactive')
+
+            # Convert speed level to readable format
+            speed_mapping = {
+                '00': 'Disabled',
+                '01': 'PCIe 1.0 x1',
+                '02': 'PCIe 1.0 x2',
+                '03': 'PCIe 1.0 x4',
+                '04': 'PCIe 2.0 x4',
+                '05': 'PCIe 3.0 x8',
+                '06': 'PCIe 3.0 x16'
+            }
+            readable_speed = speed_mapping.get(speed, f"Speed Level {speed}")
+
+            item = {
+                'label': f"Port {port_num}",
+                'value': status,
+                'details': f"Current: {readable_speed}, Width: {width} lanes",
+                'config': {
+                    'enabled': status == 'Active',
+                    'speed_setting': 'Auto',
+                    'current_speed': readable_speed,
+                    'link_width': f"{width} lanes"
+                }
+            }
+            items.append(item)
+
+        # Process golden finger configuration
+        golden_finger = showport_data.get('golden_finger', {})
+        if golden_finger:
+            speed = golden_finger.get('speed', '00')
+            width = golden_finger.get('width', '00')
+            status = golden_finger.get('status', 'Inactive')
+
+            speed_mapping = {
+                '00': 'Disabled',
+                '01': 'PCIe 1.0 x1',
+                '02': 'PCIe 1.0 x2',
+                '03': 'PCIe 1.0 x4',
+                '04': 'PCIe 2.0 x4',
+                '05': 'PCIe 3.0 x8',
+                '06': 'PCIe 3.0 x16'
+            }
+            readable_speed = speed_mapping.get(speed, f"Speed Level {speed}")
+
+            item = {
+                'label': 'Golden Finger (Upstream)',
+                'value': status,
+                'details': f"Current: {readable_speed}, Width: {width} lanes",
+                'config': {
+                    'enabled': status == 'Active',
+                    'speed_setting': 'Auto',
+                    'current_speed': readable_speed,
+                    'link_width': f"{width} lanes"
+                }
+            }
+            items.append(item)
+
+        # Add global configuration options
+        global_item = {
+            'label': 'Global Settings',
+            'value': 'Configured',
+            'details': 'Auto-negotiation enabled, Power management active',
+            'config': {
+                'auto_negotiation': True,
+                'power_management': True,
+                'error_correction': True,
+                'hot_plug_support': False
+            }
+        }
+        items.append(global_item)
+
+        print(f"DEBUG: Extracted {len(items)} port config items")
+        return items
+
+    def get_host_card_json(self) -> Optional[Dict[str, Any]]:
+        """Get JSON object for Host Card Information dashboard"""
         host_json = self.cache.get('host_card_json')
         if host_json:
             print("DEBUG: Retrieved host card JSON from cache")
@@ -651,12 +846,7 @@ class EnhancedSystemInfoParser:
             return None
 
     def get_link_status_json(self) -> Optional[Dict[str, Any]]:
-        """
-        Get JSON object for Link Status dashboard
-
-        Returns:
-            JSON object with structured link status data or None if not available
-        """
+        """Get JSON object for Link Status dashboard"""
         link_json = self.cache.get('link_status_json')
         if link_json:
             print("DEBUG: Retrieved link status JSON from cache")
@@ -665,167 +855,62 @@ class EnhancedSystemInfoParser:
             print("DEBUG: No link status JSON in cache")
             return None
 
-    def is_unified_data_available(self) -> bool:
-        """
-        Check if unified JSON data is available in cache
+    def get_port_config_json(self) -> Optional[Dict[str, Any]]:
+        """FIXED: Get JSON object for Port Configuration dashboard"""
+        port_json = self.cache.get('port_config_json')
+        if port_json:
+            print("DEBUG: Retrieved port config JSON from cache")
+            return port_json
+        else:
+            print("DEBUG: No port config JSON in cache - generating default")
+            # Generate default port config data
+            default_config = self.get_port_config_data()
+            return {
+                'dashboard_type': 'port_configuration',
+                'data_source': 'default',
+                'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'sections': {
+                    'port_settings': {
+                        'title': 'Port Configuration',
+                        'icon': '🔌',
+                        'items': self._convert_port_config_to_items(default_config)
+                    }
+                },
+                'data_fresh': False
+            }
 
-        Returns:
-            True if both host card and link status JSON objects are cached
-        """
+    def _convert_port_config_to_items(self, config_data: Dict) -> List[Dict]:
+        """Convert port config data to displayable items"""
+        items = []
+
+        # Convert ports
+        for port_key, port_data in config_data.get('ports', {}).items():
+            item = {
+                'label': f"Port {port_data['port_number']}",
+                'value': 'Enabled' if port_data['enabled'] else 'Disabled',
+                'details': f"Speed: {port_data['current_speed']}, {port_data['link_width']}",
+                'config': port_data
+            }
+            items.append(item)
+
+        # Convert golden finger
+        golden_data = config_data.get('golden_finger', {})
+        if golden_data:
+            item = {
+                'label': 'Golden Finger (Upstream)',
+                'value': 'Enabled' if golden_data['enabled'] else 'Disabled',
+                'details': f"Speed: {golden_data['current_speed']}, {golden_data['link_width']}",
+                'config': golden_data
+            }
+            items.append(item)
+
+        return items
+
+    def is_unified_data_available(self) -> bool:
+        """Check if unified JSON data is available in cache"""
         host_available = self.cache.get('host_card_json') is not None
         link_available = self.cache.get('link_status_json') is not None
+        port_available = self.cache.get('port_config_json') is not None
 
-        print(f"DEBUG: Unified data availability - host:{host_available}, link:{link_available}")
-        return host_available and link_available
-
-
-# Processing function for situations where sysinfo response needs error handling
-def process_sysinfo_response(parser, response, source="device"):
-    """
-    FIXED: Process sysinfo response with error handling
-    """
-    try:
-        # Check if response contains expected keywords
-        if any(keyword in response.lower() for keyword in
-               ['s/n', 'thermal', 'voltage', '===', 'company', 'port']):
-
-            parsed_data = parser.parse_unified_sysinfo(response, source)
-
-            if parsed_data and not parsed_data.get('error'):
-                print(f"DEBUG: Successfully processed {source} sysinfo response")
-                return parsed_data
-            else:
-                print(f"ERROR: Failed to parse {source} response")
-                return None
-        else:
-            print(f"WARNING: Response doesn't contain expected sysinfo keywords")
-            return None
-
-    except Exception as e:
-        print(f"ERROR: Exception processing {source} response: {e}")
-        return None
-
-
-# Usage example and testing
-if __name__ == "__main__":
-    print("Testing Enhanced SystemInfo Parser...")
-
-
-    # Mock cache manager for testing
-    class MockCache:
-        def __init__(self):
-            self.data = {}
-
-        def get(self, key):
-            return self.data.get(key)
-
-        def set(self, key, value, category="", ttl=300):
-            self.data[key] = value
-
-        def invalidate(self, key):
-            if key in self.data:
-                del self.data[key]
-
-        def get_with_metadata(self, key):
-            if key in self.data:
-                return {
-                    'data': self.data[key],
-                    'age_seconds': 30,
-                    'timestamp': 1234567890,
-                    'command': 'test'
-                }
-            return None
-
-
-    # Test the parser
-    mock_cache = MockCache()
-    parser = EnhancedSystemInfoParser(mock_cache)
-
-    # Sample sysinfo data from your file
-    sample_sysinfo = """================================================================================
-ver
-================================================================================
-
-S/N      : GBH14412506206Z
-Company  : SerialCables,Inc
-Model    : PCI6-RD-x16HT-BG6-144
-Version  : 0.1.0    Date : Jul 18 2025 11:05:16
-SBR Version : 0 34 160 28
-
-================================================================================
-lsd
-================================================================================
-
-Thermal:
-        Board Temperature : 55 degree
-
-Fans Speed:
-        Switch Fan : 6310 rpm
-
-Voltage Sensors:
-Board    0.8V  Voltage : 890 mV
-Board   0.89V  Voltage : 991 mV
-Board    1.2V  Voltage : 1304 mV
-Board    1.5v  Voltage : 1512 mV
-
-Current Status:
-Current : 10240 mA
-
-Error Status:
-Voltage    0.8V  error : 0
-Voltage   0.89V  error : 0
-Voltage    1.2V  error : 0
-Voltage    1.5v  error : 0
-
-================================================================================
-showport
-================================================================================
-Port Slot------------------------------------------------------------------------------
-
-Port80 : speed 06, width 04, max_speed06, max_width16
-Port112: speed 01, width 00, max_speed06, max_width16
-Port128: speed 01, width 00, max_speed06, max_width16
-Port Upstream------------------------------------------------------------------------------
-
-Golden finger: speed 05, width 16, max_width = 16"""
-
-    # Test parsing
-    print("\n--- Testing unified parsing ---")
-    parsed_data = parser.parse_unified_sysinfo(sample_sysinfo, "test")
-
-    if parsed_data:
-        print(f"✓ Parsing successful")
-        print(f"  Ver section keys: {list(parsed_data['ver_section'].keys())}")
-        print(f"  LSD section keys: {list(parsed_data['lsd_section'].keys())}")
-        print(f"  Showport section keys: {list(parsed_data['showport_section'].keys())}")
-    else:
-        print("✗ Parsing failed")
-
-    # Test JSON retrieval
-    print("\n--- Testing JSON retrieval ---")
-    host_json = parser.get_host_card_json()
-    if host_json:
-        print(f"✓ Host card JSON retrieved")
-        print(f"  Sections: {list(host_json['sections'].keys())}")
-    else:
-        print("✗ No host card JSON available")
-
-    link_json = parser.get_link_status_json()
-    if link_json:
-        print(f"✓ Link status JSON retrieved")
-        print(f"  Items: {len(link_json['sections']['port_status']['items'])}")
-    else:
-        print("✗ No link status JSON available")
-
-    # Test cache functions
-    print("\n--- Testing cache functions ---")
-    complete_data = parser.get_complete_sysinfo()
-    if complete_data:
-        print("✓ Complete sysinfo data cached")
-    else:
-        print("✗ No complete sysinfo data in cache")
-
-    print(f"Data fresh: {parser.is_data_fresh()}")
-    print(f"Force refresh needed: {parser.force_refresh_needed()}")
-
-    print("\nEnhanced SystemInfo Parser test completed!")
+        print(f"DEBUG: Unified data availability - host:{host_available}, link:{link_available}, port:{port_available}")
+        return host_available and link_available and port_available
