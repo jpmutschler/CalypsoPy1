@@ -17,7 +17,7 @@ CLEANED VERSION: Link Status methods moved to dedicated dashboard module
 
 # Application Information
 APP_NAME = "CalypsoPy"
-APP_VERSION = "1.5.0"  # Updated version to reflect refactoring
+APP_VERSION = "1.5.1"  # Updated version to reflect refactoring
 APP_BUILD = "20250820-001"  # Updated build
 APP_DESCRIPTION = "Serial Cables Atlas 3 Serial UI for CLI Interface"
 APP_AUTHOR = "Serial Cables, LLC"
