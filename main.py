@@ -1067,9 +1067,13 @@ class DashboardApp:
         except:
             print("DEBUG: Window maximize not supported on this platform")
 
+    # ==============================================================================
+    # COMBINED SOLUTION: Fixed Header + Centered Content Area
+    # ==============================================================================
+
     def create_layout(self):
-        """Create layout with centered content area"""
-        print("DEBUG: Creating layout with centered content")
+        """Combined layout: Fixed header at top + centered content below"""
+        print("DEBUG: Creating combined layout with fixed header and centered content")
 
         # Main container
         main_frame = ttk.Frame(self.root)
@@ -1077,26 +1081,128 @@ class DashboardApp:
 
         # Sidebar (fixed width on left)
         self.sidebar = ttk.Frame(main_frame, style='Sidebar.TFrame', width=200)
-        self.sidebar.pack(side='left', fill='y', padx=(0, 1))
+        self.sidebar.pack(side='left', fill='y')
         self.sidebar.pack_propagate(False)
+        print("DEBUG: Sidebar created")
 
-        # Content area container (takes remaining space)
-        content_container = ttk.Frame(main_frame, style='Content.TFrame')
-        content_container.pack(side='left', fill='both', expand=True)
+        # Right side container (everything to the right of sidebar)
+        right_container = ttk.Frame(main_frame, style='Content.TFrame')
+        right_container.pack(side='left', fill='both', expand=True)
+        print("DEBUG: Right container created")
 
-        # CENTERING MAGIC: Create the actual content frame inside the container
-        # This will be centered with percentage-based margins
+        # FIXED HEADER - Always visible at top of right container
+        self.header_frame = ttk.Frame(right_container, style='Content.TFrame')
+        self.header_frame.pack(fill='x', padx=15, pady=10)
+        print("DEBUG: Fixed header created")
+
+        # Create header elements (title, buttons, cache status)
+        self.create_header_elements()
+
+        # CONTENT CONTAINER - Space below header for centering
+        content_container = ttk.Frame(right_container, style='Content.TFrame')
+        content_container.pack(fill='both', expand=True)
+        print("DEBUG: Content container for centering created")
+
+        # CENTERED CONTENT FRAME - This is where your dashboard content goes
         self.content_frame = ttk.Frame(content_container, style='Content.TFrame')
-
-        # Center the content frame with percentage-based padding
-        # Adjust these percentages to control centering (10% margin = 80% content width)
         self.content_frame.place(relx=0.35, rely=0.05, relwidth=0.8, relheight=0.9)
-
-        print("DEBUG: Content frame centered with place geometry manager")
+        print("DEBUG: Content frame centered within container")
 
         # Initialize content
         self.create_sidebar()
-        self.create_content_area()
+        self.create_content_area_centered()
+
+        print("DEBUG: Combined layout creation completed")
+
+    def create_header_elements(self):
+        """Create the fixed header elements (title, buttons, cache status)"""
+        print("DEBUG: Creating fixed header elements")
+
+        # Left side: Dashboard title
+        self.content_title = ttk.Label(self.header_frame, text="Host Card Information",
+                                       style='Dashboard.TLabel')
+        self.content_title.pack(side='left')
+        print("DEBUG: Content title created")
+
+        # Right side: Button group
+        button_group = ttk.Frame(self.header_frame, style='Content.TFrame')
+        button_group.pack(side='right')
+
+        # Cache status indicator (between title and buttons)
+        self.cache_status_label = ttk.Label(self.header_frame, text="",
+                                            style='Info.TLabel', font=('Arial', 8))
+        self.cache_status_label.pack(side='right', padx=(20, 15))
+        print("DEBUG: Cache status label created")
+
+        # Settings button
+        self.settings_btn = ttk.Button(button_group, text="⚙️", width=3,
+                                       command=self.open_settings)
+        self.settings_btn.pack(side='right', padx=(5, 0))
+
+        # Refresh button
+        self.refresh_btn = ttk.Button(button_group, text="🔄", width=3,
+                                      command=self.refresh_current_dashboard)
+        self.refresh_btn.pack(side='right')
+
+        print("DEBUG: Header buttons created and positioned")
+
+    def create_content_area_centered(self):
+        """Create the centered content area (no header - header is separate)"""
+        print("DEBUG: Creating centered content area without header")
+
+        try:
+            # Since header is separate, content_frame contains only the scrollable content
+            # Create canvas and scrollbar directly in the centered content_frame
+
+            canvas = tk.Canvas(self.content_frame, bg='#1e1e1e', highlightthickness=0)
+            scrollbar = ttk.Scrollbar(self.content_frame, orient='vertical', command=canvas.yview)
+
+            # Create the scrollable frame
+            self.scrollable_frame = ttk.Frame(canvas, style='Content.TFrame')
+
+            # Configure scrolling
+            self.scrollable_frame.bind('<Configure>',
+                                       lambda e: canvas.configure(scrollregion=canvas.bbox('all')))
+
+            canvas.create_window((0, 0), window=self.scrollable_frame, anchor='nw')
+            canvas.configure(yscrollcommand=scrollbar.set)
+
+            # Pack canvas and scrollbar within the centered content frame
+            canvas.pack(side='left', fill='both', expand=True, padx=10, pady=10)
+            scrollbar.pack(side='right', fill='y', pady=10)
+
+            print("DEBUG: Canvas and scrollbar created within centered frame")
+
+            # Store canvas reference
+            self.content_canvas = canvas
+
+            # Load the dashboard content
+            self.update_content_area()
+            print("DEBUG: Centered content area creation completed")
+
+        except Exception as e:
+            print(f"ERROR: Exception in create_content_area_centered: {e}")
+            import traceback
+            traceback.print_exc()
+
+    def create_content_area_no_header(self):
+        """Create content area without header (header is separate)"""
+        # Just the scrollable content, no header
+        canvas = tk.Canvas(self.content_frame, bg='#1e1e1e', highlightthickness=0)
+        scrollbar = ttk.Scrollbar(self.content_frame, orient='vertical', command=canvas.yview)
+        self.scrollable_frame = ttk.Frame(canvas, style='Content.TFrame')
+
+        self.scrollable_frame.bind('<Configure>',
+                                   lambda e: canvas.configure(scrollregion=canvas.bbox('all')))
+
+        canvas.create_window((0, 0), window=self.scrollable_frame, anchor='nw')
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side='left', fill='both', expand=True, padx=5, pady=5)
+        scrollbar.pack(side='right', fill='y', pady=5)
+
+        self.content_canvas = canvas
+        self.update_content_area()
 
     def create_sidebar(self):
         """Create the sidebar with dashboard tiles - FIXED VERSION"""
