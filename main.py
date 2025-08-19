@@ -902,6 +902,12 @@ class DashboardApp:
         # Initialize the advanced response handler
         self.init_advanced_response_handler()
 
+        # NOW CREATE THE UI (after all attributes are initialized)
+        self.setup_window()
+        self.create_layout()  # This creates self.sidebar
+        self.connect_device()
+        self.start_background_threads()
+
         # Initialize dashboard components
         self.host_card_manager = HostCardInfoManager(self.cli)
         self.host_card_ui = HostCardDashboardUI(self)
@@ -934,12 +940,6 @@ class DashboardApp:
         self.background_tasks_enabled = True
         self.sysinfo_requested = False
         self.showport_requested = False
-
-        # NOW CREATE THE UI (after all attributes are initialized)
-        self.setup_window()
-        self.create_layout()  # This creates self.sidebar
-        self.connect_device()
-        self.start_background_threads()
 
         if self.auto_refresh_enabled:
             self.start_auto_refresh()
@@ -1074,23 +1074,22 @@ class DashboardApp:
         self.create_content_area()
 
     def create_sidebar(self):
-        """Create the sidebar with dashboard tiles - SAFE VERSION"""
-        # Safety check - make sure sidebar exists
-        if not hasattr(self, 'sidebar') or self.sidebar is None:
-            print("ERROR: create_sidebar called but sidebar not initialized")
-            return
+        """Create the sidebar with dashboard tiles - FIXED STYLING"""
+        print("DEBUG: Creating sidebar")
 
-        # Header - simplified without settings gear
+        # Header - fix the styling issue with ttk.Label
         header_frame = ttk.Frame(self.sidebar, style='Sidebar.TFrame')
         header_frame.pack(fill='x', padx=10, pady=10)
 
-        # Use style instead of direct color setting for better compatibility
-        header_label = ttk.Label(header_frame, text="📊 Dashboards",
-                                 style='Dashboard.TLabel',
-                                 font=('Arial', 12, 'bold'))
+        # Use tk.Label instead of ttk.Label for better color control
+        header_label = tk.Label(header_frame,
+                                text="📊 Dashboards",
+                                bg='#2d2d2d',
+                                fg='#ffffff',
+                                font=('Arial', 12, 'bold'))
         header_label.pack()
 
-        # Dashboard tiles
+        # Dashboard tiles (existing code stays the same)
         self.dashboards = [
             ("host", "💻", "Host Card Information"),
             ("link", "🔗", "Link Status"),
@@ -1103,10 +1102,7 @@ class DashboardApp:
             ("help", "❓", "Help")
         ]
 
-        # Initialize tile_frames if not already done
-        if not hasattr(self, 'tile_frames'):
-            self.tile_frames = {}
-
+        self.tile_frames = {}
         for dashboard_id, icon, title in self.dashboards:
             self.create_dashboard_tile(dashboard_id, icon, title)
 
@@ -1122,25 +1118,32 @@ class DashboardApp:
             status_text = f"🔌 {self.port}"
             status_color = '#00ff00'  # Green for real connection
 
-        self.connection_label = ttk.Label(status_frame,
-                                          text=status_text,
-                                          style='Info.TLabel',
-                                          font=('Arial', 9, 'bold'))
+        # Use tk.Label instead of ttk.Label for color control
+        self.connection_label = tk.Label(status_frame,
+                                         text=status_text,
+                                         bg='#2d2d2d',
+                                         fg=status_color,
+                                         font=('Arial', 9, 'bold'))
         self.connection_label.pack()
-
-        # Try to set color (may not work with all themes)
-        try:
-            self.connection_label.configure(foreground=status_color)
-        except:
-            pass  # Ignore color setting errors
 
         # *** ADD DEMO MODE INFO ***
         if self.is_demo_mode:
-            demo_info_label = ttk.Label(status_frame,
-                                        text="Training Environment",
-                                        style='Info.TLabel',
-                                        font=('Arial', 8))
+            demo_info_label = tk.Label(status_frame,
+                                       text="Training Environment",
+                                       bg='#2d2d2d',
+                                       fg='#cccccc',
+                                       font=('Arial', 8))
             demo_info_label.pack()
+
+            # Add settings access hint
+            hint_label = tk.Label(status_frame,
+                                  text="Settings: ⚙️ (top right)",
+                                  bg='#2d2d2d',
+                                  fg='#888888',
+                                  font=('Arial', 7))
+            hint_label.pack(pady=(5, 0))
+
+        print("DEBUG: Sidebar creation completed")
 
     def create_content_area(self):
         """Create the main content display area"""
