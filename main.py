@@ -1068,30 +1068,37 @@ class DashboardApp:
             print("DEBUG: Window maximize not supported on this platform")
 
     def create_layout(self):
-        """Create the main dashboard layout"""
-        # Configure grid weights
-        self.root.grid_rowconfigure(0, weight=1)
-        self.root.grid_columnconfigure(1, weight=1)
+        """Create the main application layout - DEBUG VERSION"""
+        print("DEBUG: create_layout called")
 
-        # Create sidebar and content area
+        # Main container
+        main_frame = ttk.Frame(self.root)
+        main_frame.pack(fill='both', expand=True)
+
+        # Sidebar for dashboard navigation
+        self.sidebar = ttk.Frame(main_frame, style='Sidebar.TFrame', width=200)
+        self.sidebar.pack(side='left', fill='y', padx=(0, 1))
+        self.sidebar.pack_propagate(False)
+        print("DEBUG: Sidebar widget created")
+
+        # Content area
+        self.content_frame = ttk.Frame(main_frame, style='Content.TFrame')
+        self.content_frame.pack(side='right', fill='both', expand=True)
+        print("DEBUG: Content frame created")
+
+        # Call sidebar creation
+        print("DEBUG: About to call create_sidebar()")
         self.create_sidebar()
+
+        # Call content area creation
+        print("DEBUG: About to call create_content_area()")
         self.create_content_area()
+
+        print("DEBUG: create_layout completed")
 
     def create_sidebar(self):
         """Create the sidebar with dashboard tiles - FIXED VERSION"""
         print("DEBUG: Starting sidebar creation...")
-
-        # Verify sidebar widget exists
-        if not hasattr(self, 'sidebar'):
-            print("ERROR: sidebar attribute does not exist - create_layout must be called first")
-            return
-
-        try:
-            self.sidebar.winfo_exists()
-            print("DEBUG: Sidebar widget verified as valid")
-        except (AttributeError, tk.TclError):
-            print("ERROR: sidebar widget is not properly initialized")
-            return
 
         # Header - simplified without settings gear
         header_frame = ttk.Frame(self.sidebar, style='Sidebar.TFrame')
@@ -1101,7 +1108,7 @@ class DashboardApp:
                   background='#2d2d2d', foreground='#ffffff',
                   font=('Arial', 12, 'bold')).pack()
 
-        # Dashboard tiles (existing code stays the same)
+        # Dashboard tiles
         self.dashboards = [
             ("host", "💻", "Host Card Information"),
             ("link", "🔗", "Link Status"),
@@ -1114,43 +1121,30 @@ class DashboardApp:
             ("help", "❓", "Help")
         ]
 
-        # CRITICAL FIX: Initialize tile_frames dictionary first
+        # CRITICAL FIX: Initialize tile_frames dictionary BEFORE creating tiles
         self.tile_frames = {}
         print("DEBUG: tile_frames dictionary initialized")
 
-        # Create all tiles first without setting active state
+        # Create all tiles first (without setting active state)
         for dashboard_id, icon, title in self.dashboards:
             print(f"DEBUG: Creating tile for {dashboard_id}")
+            self.create_dashboard_tile(dashboard_id, icon, title)
+
+        # CRITICAL FIX: Set the active tile AFTER all tiles are created
+        print("DEBUG: All tiles created, setting active state...")
+        if hasattr(self, 'current_dashboard') and self.current_dashboard in self.tile_frames:
             try:
-                self.create_dashboard_tile(dashboard_id, icon, title)
-                print(f"DEBUG: Successfully created tile for {dashboard_id}")
+                self.set_tile_active(self.current_dashboard, True)
+                print(f"DEBUG: Set {self.current_dashboard} as active")
             except Exception as e:
-                print(f"ERROR: Failed to create tile for {dashboard_id}: {e}")
-                import traceback
-                traceback.print_exc()
-
-        # CRITICAL FIX: Set active state AFTER all tiles are created
-        print("DEBUG: All tiles created, now setting active states...")
-        print(f"DEBUG: Available tiles: {list(self.tile_frames.keys())}")
-        print(f"DEBUG: Current dashboard: {getattr(self, 'current_dashboard', 'NOT SET')}")
-
-        if hasattr(self, 'current_dashboard') and self.current_dashboard:
-            if self.current_dashboard in self.tile_frames:
-                try:
-                    self.set_tile_active(self.current_dashboard, True)
-                    print(f"DEBUG: Set {self.current_dashboard} tile as active")
-                except Exception as e:
-                    print(f"ERROR: Failed to set active tile for {self.current_dashboard}: {e}")
-            else:
-                print(f"WARNING: current_dashboard '{self.current_dashboard}' not found in tile_frames")
-                print(f"DEBUG: Available tiles: {list(self.tile_frames.keys())}")
+                print(f"ERROR: Failed to set active tile: {e}")
         else:
-            # Set default to host if no current_dashboard is set
-            self.current_dashboard = "host"
-            if "host" in self.tile_frames:
+            # Default to host if not set
+            if 'host' in self.tile_frames:
                 try:
-                    self.set_tile_active("host", True)
-                    print("DEBUG: Set default host tile as active")
+                    self.current_dashboard = 'host'
+                    self.set_tile_active('host', True)
+                    print("DEBUG: Set host as default active tile")
                 except Exception as e:
                     print(f"ERROR: Failed to set default active tile: {e}")
 
@@ -1380,26 +1374,11 @@ class DashboardApp:
             self.show_dashboard_error(self.current_dashboard, e)
 
     def create_dashboard_tile(self, dashboard_id, icon, title):
-        """Create an individual dashboard tile with improved error handling"""
+        """Create an individual dashboard tile - FIXED VERSION"""
         print(f"DEBUG: create_dashboard_tile called for {dashboard_id}")
 
-        # FIXED: Proper sidebar existence check - Tkinter widgets can be falsy but still exist
-        if not hasattr(self, 'sidebar'):
-            print(f"ERROR: Cannot create tile for {dashboard_id} - sidebar attribute not initialized")
-            return
-
-        # Check if sidebar widget actually exists and is valid
-        try:
-            # Try to access a widget property to verify it's a valid widget
-            self.sidebar.winfo_exists()
-        except (AttributeError, tk.TclError):
-            print(f"ERROR: Cannot create tile for {dashboard_id} - sidebar widget not properly initialized")
-            return
-
-        # Ensure tile_frames exists
-        if not hasattr(self, 'tile_frames'):
-            self.tile_frames = {}
-            print("DEBUG: tile_frames dictionary created in create_dashboard_tile")
+        # CRITICAL FIX: Don't try to set active state during tile creation
+        # This prevents the "sidebar not initialized" error
 
         try:
             tile_frame = ttk.Frame(self.sidebar, style='Tile.TFrame', cursor='hand2')
@@ -1429,7 +1408,11 @@ class DashboardApp:
             for widget in [tile_frame, content_frame, icon_label, title_label]:
                 widget.bind('<Button-1>', lambda e, d=dashboard_id: self.switch_dashboard(d))
 
-            print(f"DEBUG: Successfully created and stored tile for {dashboard_id}")
+            print(f"DEBUG: Successfully created tile for {dashboard_id}")
+
+            # REMOVED THE PROBLEMATIC LINE:
+            # if dashboard_id == self.current_dashboard:
+            #     self.set_tile_active(dashboard_id, True)
 
         except Exception as e:
             print(f"ERROR: Exception creating tile for {dashboard_id}: {e}")
@@ -1437,20 +1420,20 @@ class DashboardApp:
             traceback.print_exc()
 
     def set_tile_active(self, dashboard_id, active):
-        """Set tile active/inactive appearance with comprehensive error checking"""
+        """Set tile active/inactive appearance - FIXED VERSION"""
         print(f"DEBUG: set_tile_active called for {dashboard_id}, active={active}")
 
-        # Safety checks
+        # CRITICAL FIX: Add comprehensive safety checks
         if not hasattr(self, 'tile_frames'):
-            print(f"ERROR: Cannot set tile active for {dashboard_id} - tile_frames not initialized")
+            print(f"ERROR: tile_frames not initialized")
             return
 
         if not self.tile_frames:
-            print(f"ERROR: Cannot set tile active for {dashboard_id} - tile_frames is empty")
+            print(f"ERROR: tile_frames is empty")
             return
 
         if dashboard_id not in self.tile_frames:
-            print(f"ERROR: Cannot set tile active for {dashboard_id} - not found in tile_frames")
+            print(f"ERROR: {dashboard_id} not found in tile_frames")
             print(f"DEBUG: Available tiles: {list(self.tile_frames.keys())}")
             return
 
@@ -1458,29 +1441,20 @@ class DashboardApp:
             tile = self.tile_frames[dashboard_id]
             style_prefix = 'ActiveTile' if active else 'Tile'
 
-            # Verify tile dictionary has expected keys
-            if not isinstance(tile, dict):
-                print(f"ERROR: tile_frames[{dashboard_id}] is not a dictionary: {type(tile)}")
-                return
-
+            # Update frame styles
             for widget_name in ['frame', 'content']:
                 if widget_name in tile and tile[widget_name]:
-                    try:
-                        tile[widget_name].configure(style=f'{style_prefix}.TFrame')
-                    except Exception as e:
-                        print(f"ERROR: Failed to configure {widget_name} for {dashboard_id}: {e}")
+                    tile[widget_name].configure(style=f'{style_prefix}.TFrame')
 
+            # Update label styles
             for widget_name in ['icon', 'title']:
                 if widget_name in tile and tile[widget_name]:
-                    try:
-                        tile[widget_name].configure(style=f'{style_prefix}.TLabel')
-                    except Exception as e:
-                        print(f"ERROR: Failed to configure {widget_name} for {dashboard_id}: {e}")
+                    tile[widget_name].configure(style=f'{style_prefix}.TLabel')
 
-            print(f"DEBUG: Successfully set {dashboard_id} tile active={active}")
+            print(f"DEBUG: Successfully set {dashboard_id} active={active}")
 
         except Exception as e:
-            print(f"ERROR: Exception setting tile active for {dashboard_id}: {e}")
+            print(f"ERROR: Failed to set tile active for {dashboard_id}: {e}")
             import traceback
             traceback.print_exc()
 
