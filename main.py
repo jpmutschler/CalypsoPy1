@@ -857,22 +857,29 @@ class DashboardApp:
     """
 
     def __init__(self, root, port, settings_manager):
+        """Initialize DashboardApp with proper attribute initialization order"""
+        print("DEBUG: DashboardApp.__init__ starting...")
+
         self.root = root
         self.port = port
         self.settings_mgr = settings_manager
         self.is_demo_mode = (port == "DEMO")
 
-        # Initialize UI references to None first (IMPORTANT!)
-        self.sidebar = None
-        self.content_frame = None
-        self.scrollable_frame = None
-        self.tile_frames = {}
+        # CRITICAL: Initialize all required attributes FIRST
+        self.log_data = []  # MISSING ATTRIBUTE FIX
         self.current_dashboard = "host"
+        self.background_tasks_enabled = True  # MISSING ATTRIBUTE FIX
+        self.sysinfo_requested = False
+        self.showport_requested = False
+        self.tile_frames = {}  # Initialize early to prevent errors
+
+        print("DEBUG: Basic attributes initialized")
 
         # Initialize cache manager first
         cache_dir = self.settings_mgr.get('cache', 'cache_directory', '')
         cache_ttl = self.settings_mgr.get('cache', 'default_ttl_seconds', 300)
         self.cache_manager = DeviceDataCache(cache_dir or None, cache_ttl)
+        print("DEBUG: Cache manager initialized")
 
         # Initialize CLI based on mode
         if self.is_demo_mode:
@@ -885,66 +892,63 @@ class DashboardApp:
 
         # Initialize parser with cache manager
         self.sysinfo_parser = EnhancedSystemInfoParser(self.cache_manager)
-
-        # PRELOAD DEMO DATA (if in demo mode)
-        if self.is_demo_mode:
-            print("DEBUG: Demo mode detected - preloading demo data")
-            try:
-                demo_content = getattr(self.cli, 'demo_sysinfo_content', None)
-                if demo_content:
-                    parsed_data = self.sysinfo_parser.parse_unified_sysinfo(demo_content, "demo")
-                    print(f"DEBUG: Demo data preloaded and cached")
-                else:
-                    print("DEBUG: No demo content available for preloading")
-            except Exception as e:
-                print(f"ERROR: Failed to preload demo data: {e}")
+        print("DEBUG: Sysinfo parser initialized")
 
         # Initialize the advanced response handler
         self.init_advanced_response_handler()
 
-        # NOW CREATE THE UI (after all attributes are initialized)
-        self.setup_window()
-        self.create_layout()  # This creates self.sidebar
-        self.connect_device()
-        self.start_background_threads()
-
-        # Initialize dashboard components
+        # Initialize Host Card Info components
         self.host_card_manager = HostCardInfoManager(self.cli)
-        self.host_card_ui = HostCardDashboardUI(self)
+        self.host_card_ui = HostCardDashboardUI(self)  # MISSING ATTRIBUTE FIX
+        print("DEBUG: Host card components initialized")
 
         # Initialize Link Status components
         self.link_status_ui = LinkStatusDashboardUI(self)
+        print("DEBUG: Link status components initialized")
 
         # Initialize Port Status components
         self.port_status_manager = PortStatusManager(self.cli)
         self.port_status_ui = PortStatusDashboardUI(self)
+        print("DEBUG: Port status components initialized")
 
         # Initialize Resets Dashboard components
         self.resets_dashboard = ResetsDashboard(self)
+        print("DEBUG: Resets dashboard initialized")
 
         # Initialize Firmware Dashboard
         self.firmware_dashboard = FirmwareDashboard(self)
+        print("DEBUG: Firmware dashboard initialized")
 
         # Demo device state for port status (if demo mode)
         self.demo_device_state = {'current_mode': 0}
-
-        # Rest of initialization...
-        self.log_data = []
 
         # Auto-refresh setup
         self.auto_refresh_enabled = self.settings_mgr.get('refresh', 'enabled', False)
         self.auto_refresh_interval = self.settings_mgr.get('refresh', 'interval_seconds', 30)
         self.auto_refresh_timer = None
+        print("DEBUG: Auto-refresh settings loaded")
 
-        # Background task control
-        self.background_tasks_enabled = True
-        self.sysinfo_requested = False
-        self.showport_requested = False
+        # UI Setup - CRITICAL ORDER
+        print("DEBUG: Starting UI setup...")
+        self.setup_window()
+        print("DEBUG: Window setup complete")
+
+        self.create_layout()  # This creates self.sidebar
+        print("DEBUG: Layout creation complete")
+
+        # Connect device and start background tasks
+        self.connect_device()
+        print("DEBUG: Device connection complete")
+
+        self.start_background_threads()
+        print("DEBUG: Background threads started")
 
         if self.auto_refresh_enabled:
             self.start_auto_refresh()
+            print("DEBUG: Auto-refresh started")
 
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        print("DEBUG: DashboardApp initialization complete")
 
     def _init_cache_manager(self):
         """Initialize cache manager"""
@@ -1074,8 +1078,20 @@ class DashboardApp:
         self.create_content_area()
 
     def create_sidebar(self):
-        """Create the sidebar with dashboard tiles"""
+        """Create the sidebar with dashboard tiles - FIXED VERSION"""
         print("DEBUG: Starting sidebar creation...")
+
+        # Verify sidebar widget exists
+        if not hasattr(self, 'sidebar'):
+            print("ERROR: sidebar attribute does not exist - create_layout must be called first")
+            return
+
+        try:
+            self.sidebar.winfo_exists()
+            print("DEBUG: Sidebar widget verified as valid")
+        except (AttributeError, tk.TclError):
+            print("ERROR: sidebar widget is not properly initialized")
+            return
 
         # Header - simplified without settings gear
         header_frame = ttk.Frame(self.sidebar, style='Sidebar.TFrame')
@@ -1110,9 +1126,14 @@ class DashboardApp:
                 print(f"DEBUG: Successfully created tile for {dashboard_id}")
             except Exception as e:
                 print(f"ERROR: Failed to create tile for {dashboard_id}: {e}")
+                import traceback
+                traceback.print_exc()
 
         # CRITICAL FIX: Set active state AFTER all tiles are created
         print("DEBUG: All tiles created, now setting active states...")
+        print(f"DEBUG: Available tiles: {list(self.tile_frames.keys())}")
+        print(f"DEBUG: Current dashboard: {getattr(self, 'current_dashboard', 'NOT SET')}")
+
         if hasattr(self, 'current_dashboard') and self.current_dashboard:
             if self.current_dashboard in self.tile_frames:
                 try:
@@ -1122,6 +1143,7 @@ class DashboardApp:
                     print(f"ERROR: Failed to set active tile for {self.current_dashboard}: {e}")
             else:
                 print(f"WARNING: current_dashboard '{self.current_dashboard}' not found in tile_frames")
+                print(f"DEBUG: Available tiles: {list(self.tile_frames.keys())}")
         else:
             # Set default to host if no current_dashboard is set
             self.current_dashboard = "host"
@@ -1358,12 +1380,20 @@ class DashboardApp:
             self.show_dashboard_error(self.current_dashboard, e)
 
     def create_dashboard_tile(self, dashboard_id, icon, title):
-        """Create an individual dashboard tile"""
+        """Create an individual dashboard tile with improved error handling"""
         print(f"DEBUG: create_dashboard_tile called for {dashboard_id}")
 
-        # Ensure sidebar exists
-        if not hasattr(self, 'sidebar') or self.sidebar is None:
-            print(f"ERROR: Cannot create tile for {dashboard_id} - sidebar not initialized")
+        # FIXED: Proper sidebar existence check - Tkinter widgets can be falsy but still exist
+        if not hasattr(self, 'sidebar'):
+            print(f"ERROR: Cannot create tile for {dashboard_id} - sidebar attribute not initialized")
+            return
+
+        # Check if sidebar widget actually exists and is valid
+        try:
+            # Try to access a widget property to verify it's a valid widget
+            self.sidebar.winfo_exists()
+        except (AttributeError, tk.TclError):
+            print(f"ERROR: Cannot create tile for {dashboard_id} - sidebar widget not properly initialized")
             return
 
         # Ensure tile_frames exists
@@ -1401,20 +1431,22 @@ class DashboardApp:
 
             print(f"DEBUG: Successfully created and stored tile for {dashboard_id}")
 
-            # DO NOT set initial active state here - it will be done after all tiles are created
-
         except Exception as e:
             print(f"ERROR: Exception creating tile for {dashboard_id}: {e}")
             import traceback
             traceback.print_exc()
 
     def set_tile_active(self, dashboard_id, active):
-        """Set tile active/inactive appearance"""
+        """Set tile active/inactive appearance with comprehensive error checking"""
         print(f"DEBUG: set_tile_active called for {dashboard_id}, active={active}")
 
         # Safety checks
         if not hasattr(self, 'tile_frames'):
             print(f"ERROR: Cannot set tile active for {dashboard_id} - tile_frames not initialized")
+            return
+
+        if not self.tile_frames:
+            print(f"ERROR: Cannot set tile active for {dashboard_id} - tile_frames is empty")
             return
 
         if dashboard_id not in self.tile_frames:
@@ -1426,13 +1458,24 @@ class DashboardApp:
             tile = self.tile_frames[dashboard_id]
             style_prefix = 'ActiveTile' if active else 'Tile'
 
+            # Verify tile dictionary has expected keys
+            if not isinstance(tile, dict):
+                print(f"ERROR: tile_frames[{dashboard_id}] is not a dictionary: {type(tile)}")
+                return
+
             for widget_name in ['frame', 'content']:
-                if widget_name in tile:
-                    tile[widget_name].configure(style=f'{style_prefix}.TFrame')
+                if widget_name in tile and tile[widget_name]:
+                    try:
+                        tile[widget_name].configure(style=f'{style_prefix}.TFrame')
+                    except Exception as e:
+                        print(f"ERROR: Failed to configure {widget_name} for {dashboard_id}: {e}")
 
             for widget_name in ['icon', 'title']:
-                if widget_name in tile:
-                    tile[widget_name].configure(style=f'{style_prefix}.TLabel')
+                if widget_name in tile and tile[widget_name]:
+                    try:
+                        tile[widget_name].configure(style=f'{style_prefix}.TLabel')
+                    except Exception as e:
+                        print(f"ERROR: Failed to configure {widget_name} for {dashboard_id}: {e}")
 
             print(f"DEBUG: Successfully set {dashboard_id} tile active={active}")
 
@@ -1442,12 +1485,19 @@ class DashboardApp:
             traceback.print_exc()
 
     def create_host_dashboard(self):
-        """Create host card information dashboard - DEMO MODE COMPATIBLE"""
+        """FIXED: Create host card information dashboard"""
         print("DEBUG: create_host_dashboard called")
 
+        # Verify host_card_ui exists
+        if not hasattr(self, 'host_card_ui'):
+            print("ERROR: host_card_ui not initialized")
+            self.show_loading_message("Host dashboard not properly initialized")
+            return
+
         try:
-            # Always call the UI method - it will handle demo vs real device internally
+            # Call the host card UI to create the dashboard
             self.host_card_ui.create_host_dashboard()
+            print("DEBUG: Host dashboard created successfully")
 
         except Exception as e:
             print(f"ERROR: Failed to create host dashboard: {e}")
@@ -1554,22 +1604,31 @@ class DashboardApp:
             print(f"ERROR: Failed to start background threads: {e}")
 
     def monitor_logs(self):
-        """Monitor log queue and delegate responses to dashboards"""
-        while self.background_tasks_enabled and self.cli and self.cli.is_running:
-            try:
-                log_entry = self.cli.log_queue.get_nowait()
-                timestamp = datetime.now().strftime('%H:%M:%S')
-                self.log_data.append(f"[{timestamp}] {log_entry}")
+        """Monitor logs from CLI with proper attribute checking"""
+        print("DEBUG: Log monitoring thread started")
 
-                # Process log entries and delegate to appropriate dashboards
-                self._process_log_entry(log_entry)
+        try:
+            while getattr(self, 'background_tasks_enabled', False) and self.cli and self.cli.is_running:
+                try:
+                    if hasattr(self.cli, 'log_queue'):
+                        log_message = self.cli.log_queue.get(timeout=1.0)
+                        if log_message and hasattr(self, 'log_data'):
+                            self.log_data.append(log_message)
 
-            except queue.Empty:
-                pass
-            except Exception as e:
-                print(f"ERROR: Error in log monitoring: {e}")
+                            # Keep log size manageable
+                            if len(self.log_data) > 1000:
+                                self.log_data = self.log_data[-500:]
 
-            time.sleep(0.1)
+                except queue.Empty:
+                    continue
+                except Exception as e:
+                    print(f"ERROR: Log monitoring error: {e}")
+                    break
+
+        except Exception as e:
+            print(f"ERROR: Log monitoring thread failed: {e}")
+        finally:
+            print("DEBUG: Log monitoring thread ended")
 
     def _process_log_entry(self, log_entry):
         """Process incoming log entries and delegate to dashboards"""
