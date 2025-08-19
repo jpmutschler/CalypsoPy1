@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="788c075a-584d-4f65-912f-d1e30ca41428" name="Changes" comment="Demo mode fixes">
+    <list default="true" id="788c075a-584d-4f65-912f-d1e30ca41428" name="Changes" comment="Link Status fixes">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Admin/enhanced_sysinfo_parser.py" beforeDir="false" afterPath="$PROJECT_DIR$/Admin/enhanced_sysinfo_parser.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/calypsopy_debug_20250819.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/calypsopy_debug_20250819.log" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
@@ -136,7 +135,7 @@
       <updated>1754689470994</updated>
       <workItem from="1754689482253" duration="75159000" />
       <workItem from="1755106413475" duration="120000" />
-      <workItem from="1755106580546" duration="42333000" />
+      <workItem from="1755106580546" duration="44615000" />
     </task>
     <task id="LOCAL-00001" summary="Normal code updates">
       <option name="closed" value="true" />
@@ -426,7 +425,15 @@
       <option name="project" value="LOCAL" />
       <updated>1755616446889</updated>
     </task>
-    <option name="localTasksCounter" value="37" />
+    <task id="LOCAL-00037" summary="Link Status fixes">
+      <option name="closed" value="true" />
+      <created>1755620388334</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1755620388334</updated>
+    </task>
+    <option name="localTasksCounter" value="38" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -450,7 +457,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="New styling and parsing method for Port Status data" />
     <MESSAGE value="Code Updates" />
     <MESSAGE value="Routine Updates" />
     <MESSAGE value="Commands added" />
@@ -475,7 +481,8 @@
     <MESSAGE value="Cache Manager Updates" />
     <MESSAGE value="Debug" />
     <MESSAGE value="Demo mode fixes" />
-    <option name="LAST_COMMIT_MESSAGE" value="Demo mode fixes" />
+    <MESSAGE value="Link Status fixes" />
+    <option name="LAST_COMMIT_MESSAGE" value="Link Status fixes" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/CalypsoPy$debug_file_structure_check.coverage" NAME="debug_file_structure_check Coverage Results" MODIFIED="1755614470129" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
@@ -483,7 +490,7 @@
     <SUITE FILE_PATH="coverage/CalypsoPy$host_card_info.coverage" NAME="host_card_info Coverage Results" MODIFIED="1754763199598" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$test_step2.coverage" NAME="test_step2 Coverage Results" MODIFIED="1754766140226" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$demo_mode_integration.coverage" NAME="demo_mode_integration Coverage Results" MODIFIED="1754775976264" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/CalypsoPy$main.coverage" NAME="main Coverage Results" MODIFIED="1755617297425" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/CalypsoPy$main.coverage" NAME="main Coverage Results" MODIFIED="1755622195601" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$test_version_script.coverage" NAME="test_version_script Coverage Results" MODIFIED="1755214515854" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$port_status_dashboard.coverage" NAME="port_status_dashboard Coverage Results" MODIFIED="1755021474107" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$debug_config.coverage" NAME="debug_config Coverage Results" MODIFIED="1755552851587" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Admin" />

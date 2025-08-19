@@ -1900,7 +1900,7 @@ class DashboardApp:
 
         # Refresh button
         refresh_btn = ttk.Button(controls_frame, text="🔄 Refresh Link Status",
-                                 command=self.refresh_link_status_enhanced)
+                                 command=self._refresh_link_status)
         refresh_btn.pack(side='left')
 
         # Last update time
@@ -1909,6 +1909,86 @@ class DashboardApp:
                                      text=f"Last updated: {last_updated}",
                                      style='Info.TLabel', font=('Arial', 10))
             update_label.pack(side='right')
+
+    def _refresh_link_status(self):
+        """Refresh link status"""
+        debug_info("Refreshing link status", "LINK_REFRESH")
+
+        try:
+            # Force refresh dashboard
+            self.create_link_dashboard()
+
+            # Log the refresh
+            timestamp = datetime.now().strftime('%H:%M:%S')
+            self.log_data.append(f"[{timestamp}] Link status refreshed")
+
+        except Exception as e:
+            debug_error(f"Link status refresh failed: {e}", "REFRESH_ERROR")
+
+    def _create_demo_link_fallback(self):
+        """Create fallback demo link dashboard"""
+        debug_info("Creating fallback demo link dashboard", "DEMO_FALLBACK")
+
+        # Clear existing content
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+
+        # Create header
+        header_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+        header_frame.pack(fill='x', padx=20, pady=(20, 10))
+
+        header_label = ttk.Label(header_frame, text="🔗 Link Status (Demo Fallback)",
+                                 style='SectionHeader.TLabel',
+                                 font=('Arial', 24, 'bold'))
+        header_label.pack(anchor='w')
+
+        # Create demo ports with proper Gen6/Gen5 formatting
+        demo_ports = [
+            ("Port 80", "Gen6 x4", "#00ff00", True),  # Green for Gen6
+            ("Port 112", "No Link", "#ff4444", False),  # Red for No Link
+            ("Port 128", "Gen5 x16", "#ff9500", True),  # Yellow/Orange for Gen5
+            ("Golden Finger", "Gen6 x16", "#00ff00", True)  # Green for Gen6
+        ]
+
+        for port_name, port_status, color, active in demo_ports:
+            row_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+            row_frame.pack(fill='x', padx=40, pady=8)
+
+            # Port name
+            name_label = ttk.Label(row_frame, text=port_name,
+                                   style='Info.TLabel', font=('Arial', 20, 'bold'))
+            name_label.pack(side='left')
+
+            # Status area
+            status_frame = ttk.Frame(row_frame, style='Content.TFrame')
+            status_frame.pack(side='right')
+
+            # Active indicator
+            if active:
+                active_label = ttk.Label(status_frame, text="✅ Active",
+                                         foreground='#00ff00', background='#1e1e1e',
+                                         font=('Arial', 16, 'bold'))
+                active_label.pack(side='right', padx=(30, 0))
+
+            # Status light and text
+            status_info_frame = ttk.Frame(status_frame, style='Content.TFrame')
+            status_info_frame.pack(side='right', padx=(30, 30))
+
+            # Color circle
+            canvas = tk.Canvas(status_info_frame, width=28, height=28,
+                               bg='#1e1e1e', highlightthickness=0)
+            canvas.pack(side='left', padx=(0, 15))
+            canvas.create_oval(4, 4, 24, 24, fill=color, outline='')
+
+            # Status text
+            status_label = ttk.Label(status_info_frame, text=port_status,
+                                     style='Info.TLabel', font=('Arial', 18, 'bold'))
+            status_label.pack(side='left')
+
+        # Add refresh controls
+        self._create_link_refresh_controls("Demo Fallback Data")
+
+        debug_info("Demo fallback link dashboard created", "FALLBACK_SUCCESS")
 
     def _create_link_dashboard_fallback(self):
         """Create fallback link dashboard with proper Gen6/Gen5 demo data"""
@@ -2319,86 +2399,928 @@ class DashboardApp:
                    command=self.refresh_current_dashboard).pack(side='right')
 
     def create_link_dashboard(self):
-        """
-        FIXED: Create link status dashboard using showport parsed data
-        Replace your existing create_link_dashboard method with this
-        """
-        debug_print("Creating link status dashboard...", "UI")
+        """Create properly formatted link status dashboard matching other dashboard styles"""
+        debug_info("Creating properly formatted link status dashboard", "LINK_DASHBOARD_FORMATTED")
+
+        if self.is_demo_mode:
+            debug_info("Demo mode - creating formatted link dashboard", "DEMO_FORMATTED_MODE")
+
+            try:
+                # Extract and parse showport data
+                demo_content = getattr(self.cli, 'demo_sysinfo_content', None)
+                showport_content = None
+
+                if demo_content:
+                    showport_content = self._extract_showport_from_demo_sysinfo(demo_content)
+
+                if not showport_content:
+                    showport_content = self._load_demo_showport_file_direct()
+
+                if showport_content:
+                    self._create_formatted_link_dashboard_from_showport(showport_content)
+                else:
+                    self._create_formatted_demo_fallback()
+
+            except Exception as e:
+                debug_error(f"Formatted demo link dashboard failed: {e}", "DEMO_FORMATTED_ERROR")
+                self._create_formatted_demo_fallback()
+        else:
+            # Real device mode
+            self.send_showport_command()
+            self.show_loading_message("Loading link status...")
+
+    def _create_formatted_link_dashboard_from_showport(self, showport_content):
+        """Create formatted link dashboard from showport content with proper styling"""
+        debug_info("Creating formatted link dashboard from showport content", "FORMATTED_DASHBOARD")
 
         try:
-            # Get cached data
-            if self.is_demo_mode:
-                complete_data = self.cache_manager.get('demo_sysinfo_complete')
+            # Parse showport content
+            from Dashboards.link_status_dashboard import LinkStatusParser
+            parser = LinkStatusParser()
+            formatted_content = f"Cmd>showport\n\n{showport_content}\n\nOK>"
+            link_info = parser.parse_showport_response(formatted_content)
+
+            debug_info(f"Parsed {len(link_info.ports)} ports for formatted display", "FORMATTED_PARSE")
+
+            # Load HCFront.png image
+            hc_image = self._load_hc_image()
+
+            # Clear existing content
+            for widget in self.scrollable_frame.winfo_children():
+                widget.destroy()
+
+            # Create main centered container
+            main_container = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+            main_container.pack(fill='both', expand=True)
+
+            # Create port status section (upper portion - centered)
+            port_section_frame = ttk.Frame(main_container, style='Content.TFrame')
+            port_section_frame.pack(fill='both', expand=True, pady=(20, 0))
+
+            # Create centered content frame for ports
+            centered_content_frame = ttk.Frame(port_section_frame, style='Content.TFrame')
+            centered_content_frame.pack(anchor='center', expand=True)
+
+            # Create header in centered frame
+            header_frame = ttk.Frame(centered_content_frame, style='Content.TFrame')
+            header_frame.pack(pady=(0, 30))
+
+            header_label = ttk.Label(header_frame, text="🔗 Link Status",
+                                     style='SectionHeader.TLabel',
+                                     font=('Arial', 24, 'bold'))
+            header_label.pack()
+
+            # Create port rows in centered frame
+            ports_container = ttk.Frame(centered_content_frame, style='Content.TFrame')
+            ports_container.pack(pady=(0, 20))
+
+            # Sort ports for consistent display order
+            sorted_ports = sorted(link_info.ports.items(), key=lambda x: x[1].port_number)
+
+            for port_key, port_info in sorted_ports:
+                self._create_formatted_port_row(ports_container, port_info)
+
+            # Add golden finger
+            if link_info.golden_finger and link_info.golden_finger.port_number:
+                self._create_formatted_port_row(ports_container, link_info.golden_finger)
+
+            # Create image section (lower portion - centered)
+            if hc_image:
+                image_section_frame = ttk.Frame(main_container, style='Content.TFrame')
+                image_section_frame.pack(fill='both', expand=True, padx=(150, 150), pady=(20, 0))
+
+                # Center the image
+                image_container = ttk.Frame(image_section_frame, style='Content.TFrame')
+                image_container.pack(anchor='center', expand=True)
+
+                image_label = ttk.Label(image_container, image=hc_image, background='#1e1e1e')
+                image_label.pack()
+
+                # Keep reference to prevent garbage collection
+                image_label.image = hc_image
             else:
-                complete_data = self.sysinfo_parser.get_complete_sysinfo()
+                # Show message if image not found
+                no_image_frame = ttk.Frame(main_container, style='Content.TFrame')
+                no_image_frame.pack(fill='both', expand=True, pady=(20, 0))
 
-            if complete_data:
-                showport_section = complete_data.get('showport_section', {})
-                debug_print(f"Link data: showport={len(showport_section)}", "UI")
+                no_image_label = ttk.Label(no_image_frame,
+                                           text="HCFront.png not found in Images directory",
+                                           style='Info.TLabel', font=('Arial', 12, 'italic'))
+                no_image_label.pack(anchor='center', expand=True)
 
-                def link_content(frame):
-                    if not showport_section:
-                        ttk.Label(frame, text="No port/link data available",
-                                  style='Info.TLabel', font=('Arial', 10, 'italic')).pack(anchor='w')
-                        return
+            # Add refresh controls at the bottom
+            self._create_formatted_refresh_controls(main_container, link_info.last_updated)
 
-                    # Display ports
-                    ports = showport_section.get('ports', {})
-                    for port_key, port_info in ports.items():
-                        port_num = port_info.get('port_number', '?')
-                        status = port_info.get('status', 'Unknown')
-                        speed = port_info.get('speed', '00')
-                        width = port_info.get('width', '00')
-
-                        # Port status row
-                        row_frame = ttk.Frame(frame, style='Content.TFrame')
-                        row_frame.pack(fill='x', pady=2)
-
-                        status_text = "✅ Active" if status == 'Active' else "❌ Inactive"
-
-                        ttk.Label(row_frame, text=f"Port {port_num}:", style='Info.TLabel',
-                                  font=('Arial', 10, 'bold')).pack(side='left')
-                        ttk.Label(row_frame, text=status_text, style='Info.TLabel').pack(side='right')
-
-                        # Port details
-                        detail_frame = ttk.Frame(frame, style='Content.TFrame')
-                        detail_frame.pack(fill='x', pady=(0, 5))
-                        ttk.Label(detail_frame, text=f"    Speed: Level {speed}, Width: {width}",
-                                  style='Info.TLabel', font=('Arial', 9)).pack(anchor='w')
-
-                    # Display golden finger
-                    golden = showport_section.get('golden_finger', {})
-                    if golden:
-                        speed = golden.get('speed', '00')
-                        width = golden.get('width', '00')
-                        status = golden.get('status', 'Unknown')
-
-                        row_frame = ttk.Frame(frame, style='Content.TFrame')
-                        row_frame.pack(fill='x', pady=2)
-
-                        status_text = "✅ Active" if status == 'Active' else "❌ Inactive"
-
-                        ttk.Label(row_frame, text="Golden Finger:", style='Info.TLabel',
-                                  font=('Arial', 10, 'bold')).pack(side='left')
-                        ttk.Label(row_frame, text=status_text, style='Info.TLabel').pack(side='right')
-
-                        detail_frame = ttk.Frame(frame, style='Content.TFrame')
-                        detail_frame.pack(fill='x', pady=(0, 5))
-                        ttk.Label(detail_frame, text=f"    Speed: Level {speed}, Width: {width}",
-                                  style='Info.TLabel', font=('Arial', 9)).pack(anchor='w')
-
-                self.create_info_card(self.scrollable_frame, "🔗 Port and Link Status", link_content)
-                debug_print("Link dashboard created successfully", "UI")
-
-            else:
-                debug_print("No data available for link dashboard", "UI")
-                self.show_loading_message("Loading link status...")
-                if not self.is_demo_mode:
-                    self.send_sysinfo_command()
+            debug_info("Formatted link dashboard created successfully", "FORMATTED_SUCCESS")
 
         except Exception as e:
-            debug_print(f"Error creating link dashboard: {e}", "ERROR")
-            self.show_loading_message(f"Link dashboard error: {e}")
+            debug_error(f"Error creating formatted link dashboard: {e}", "FORMATTED_ERROR")
+            import traceback
+            traceback.print_exc()
+            self._create_formatted_demo_fallback()
+
+    def _create_formatted_port_row(self, parent_frame, port_info):
+        """Create a properly formatted single-row port display"""
+        port_name = f"Port {port_info.port_number}" if port_info.port_number != "Golden Finger" else port_info.port_number
+
+        debug_info(f"Creating formatted row: {port_name} - {port_info.display_speed} {port_info.display_width}",
+                   "FORMATTED_ROW")
+
+        # Create single row frame with consistent spacing
+        row_frame = ttk.Frame(parent_frame, style='Content.TFrame')
+        row_frame.pack(fill='x', pady=8, padx=20)
+
+        # Configure grid columns for consistent alignment
+        row_frame.columnconfigure(0, weight=1, minsize=150)  # Port name
+        row_frame.columnconfigure(1, weight=0, minsize=40)  # Status light
+        row_frame.columnconfigure(2, weight=1, minsize=120)  # Speed/Width
+        row_frame.columnconfigure(3, weight=0, minsize=100)  # Active status
+
+        # Port name (left-aligned)
+        name_label = ttk.Label(row_frame, text=port_name,
+                               style='Info.TLabel', font=('Arial', 20, 'bold'))
+        name_label.grid(row=0, column=0, sticky='w', padx=(0, 20))
+
+        # Status light (centered)
+        status_canvas = tk.Canvas(row_frame, width=28, height=28,
+                                  bg='#1e1e1e', highlightthickness=0)
+        status_canvas.grid(row=0, column=1, padx=10)
+
+        # Draw colored circle with white border
+        status_canvas.create_oval(2, 2, 26, 26, fill=port_info.status_color, outline='#ffffff', width=1)
+
+        # Speed and width (centered)
+        speed_frame = ttk.Frame(row_frame, style='Content.TFrame')
+        speed_frame.grid(row=0, column=2, padx=20)
+
+        if port_info.display_speed == "No Link":
+            speed_label = ttk.Label(speed_frame, text="No Link",
+                                    style='Info.TLabel', font=('Arial', 18, 'bold'),
+                                    foreground='#ff4444')
+            speed_label.pack()
+        else:
+            # Speed and width on same line
+            speed_width_text = f"{port_info.display_speed}"
+            if port_info.display_width:
+                speed_width_text += f" {port_info.display_width}"
+
+            speed_label = ttk.Label(speed_frame, text=speed_width_text,
+                                    style='Info.TLabel', font=('Arial', 18, 'bold'))
+            speed_label.pack()
+
+        # Active status (right-aligned)
+        if port_info.active:
+            active_frame = ttk.Frame(row_frame, style='Content.TFrame')
+            active_frame.grid(row=0, column=3, sticky='e')
+
+            active_var = tk.BooleanVar(value=True)
+            active_check = ttk.Checkbutton(active_frame, variable=active_var, state='disabled')
+            active_check.pack(side='left')
+
+            active_label = ttk.Label(active_frame, text="Active",
+                                     foreground='#00ff00', background='#1e1e1e',
+                                     font=('Arial', 16, 'bold'))
+            active_label.pack(side='left', padx=(5, 0))
+        else:
+            active_var = tk.BooleanVar(value=False)
+            active_check = ttk.Checkbutton(row_frame, text="Active",
+                                           variable=active_var, state='disabled')
+            active_check.grid(row=0, column=3, sticky='e')
+
+    def _load_hc_image(self):
+        """Load HCFront.png image from Images directory using Pillow"""
+        debug_info("Loading HCFront.png image", "LOAD_IMAGE")
+
+        try:
+            # Import PIL for image handling
+            from PIL import Image, ImageTk
+
+            # Possible image paths
+            image_paths = [
+                "Images/HCFront.png",
+                "./Images/HCFront.png",
+                "../Images/HCFront.png",
+                os.path.join(os.path.dirname(__file__), "Images", "HCFront.png"),
+                os.path.join(os.getcwd(), "Images", "HCFront.png")
+            ]
+
+            for i, path in enumerate(image_paths):
+                abs_path = os.path.abspath(path)
+                debug_info(f"Checking image path {i + 1}: {abs_path}", "IMAGE_PATH_CHECK")
+
+                if os.path.exists(path):
+                    try:
+                        # Load and resize image for better display
+                        pil_image = Image.open(path)
+
+                        # Resize image to fit nicely in the dashboard (maintain aspect ratio)
+                        max_width = 1200
+                        max_height = 800
+
+                        # Calculate new size maintaining aspect ratio
+                        img_width, img_height = pil_image.size
+                        ratio = min(max_width / img_width, max_height / img_height)
+                        new_width = int(img_width * ratio)
+                        new_height = int(img_height * ratio)
+
+                        # Resize image
+                        pil_image = pil_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+                        # Convert to Tkinter PhotoImage
+                        tk_image = ImageTk.PhotoImage(pil_image)
+
+                        debug_info(f"Successfully loaded and resized image: {new_width}x{new_height}", "IMAGE_LOADED")
+                        return tk_image
+
+                    except Exception as e:
+                        debug_error(f"Error processing image {path}: {e}", "IMAGE_PROCESS_ERROR")
+                        continue
+                else:
+                    debug_info(f"Image not found: {abs_path}", "IMAGE_NOT_FOUND")
+
+            debug_warning("HCFront.png not found in any location", "IMAGE_MISSING")
+            return None
+
+        except ImportError:
+            debug_error("PIL/Pillow not available for image loading", "PIL_MISSING")
+            return None
+        except Exception as e:
+            debug_error(f"Error loading image: {e}", "IMAGE_ERROR")
+            return None
+
+    def _create_formatted_demo_fallback(self):
+        """Create formatted demo fallback with proper styling"""
+        debug_info("Creating formatted demo fallback", "FORMATTED_FALLBACK")
+
+        # Load image
+        hc_image = self._load_hc_image()
+
+        # Clear existing content
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+
+        # Create main centered container
+        main_container = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+        main_container.pack(fill='both', expand=True)
+
+        # Create port section (upper portion)
+        port_section_frame = ttk.Frame(main_container, style='Content.TFrame')
+        port_section_frame.pack(fill='both', expand=True, pady=(20, 0))
+
+        # Create centered content frame
+        centered_content_frame = ttk.Frame(port_section_frame, style='Content.TFrame')
+        centered_content_frame.pack(anchor='center', expand=True)
+
+        # Header
+        header_frame = ttk.Frame(centered_content_frame, style='Content.TFrame')
+        header_frame.pack(pady=(0, 30))
+
+        header_label = ttk.Label(header_frame, text="🔗 Link Status (Demo)",
+                                 style='SectionHeader.TLabel',
+                                 font=('Arial', 24, 'bold'))
+        header_label.pack()
+
+        # Ports container
+        ports_container = ttk.Frame(centered_content_frame, style='Content.TFrame')
+        ports_container.pack(pady=(0, 20))
+
+        # Demo ports based on DemoData/sysinfo.txt
+        demo_ports_data = [
+            ("Port 80", "06", "04", "Gen6", "x4", "#00ff00", True),
+            ("Port 112", "01", "00", "No Link", "", "#ff4444", False),
+            ("Port 128", "05", "16", "Gen5", "x16", "#ff9500", True),
+            ("Golden Finger", "05", "16", "Gen5", "x16", "#ff9500", True)
+        ]
+
+        for port_name, speed_level, width, display_speed, display_width, color, active in demo_ports_data:
+            self._create_formatted_demo_port_row(ports_container, port_name, display_speed, display_width, color,
+                                                 active)
+
+        # Image section (lower portion)
+        if hc_image:
+            image_section_frame = ttk.Frame(main_container, style='Content.TFrame')
+            image_section_frame.pack(fill='both', expand=True, padx=(150, 150), pady=(20, 0))
+
+            image_container = ttk.Frame(image_section_frame, style='Content.TFrame')
+            image_container.pack(anchor='center', expand=True)
+
+            image_label = ttk.Label(image_container, image=hc_image, background='#1e1e1e')
+            image_label.pack()
+            image_label.image = hc_image  # Keep reference
+        else:
+            no_image_frame = ttk.Frame(main_container, style='Content.TFrame')
+            no_image_frame.pack(fill='both', expand=True, pady=(20, 0))
+
+            no_image_label = ttk.Label(no_image_frame,
+                                       text="HCFront.png not found in Images directory",
+                                       style='Info.TLabel', font=('Arial', 12, 'italic'))
+            no_image_label.pack(anchor='center', expand=True)
+
+        # Refresh controls
+        self._create_formatted_refresh_controls(main_container, "Demo Fallback Data")
+
+        debug_info("Formatted demo fallback created", "FORMATTED_FALLBACK_SUCCESS")
+
+    def _create_formatted_demo_port_row(self, parent_frame, port_name, display_speed, display_width, color, active):
+        """Create formatted demo port row"""
+        # Create single row frame
+        row_frame = ttk.Frame(parent_frame, style='Content.TFrame')
+        row_frame.pack(fill='x', pady=8, padx=20)
+
+        # Configure grid columns
+        row_frame.columnconfigure(0, weight=1, minsize=150)
+        row_frame.columnconfigure(1, weight=0, minsize=40)
+        row_frame.columnconfigure(2, weight=1, minsize=120)
+        row_frame.columnconfigure(3, weight=0, minsize=100)
+
+        # Port name
+        name_label = ttk.Label(row_frame, text=port_name,
+                               style='Info.TLabel', font=('Arial', 20, 'bold'))
+        name_label.grid(row=0, column=0, sticky='w', padx=(0, 20))
+
+        # Status light
+        status_canvas = tk.Canvas(row_frame, width=28, height=28,
+                                  bg='#1e1e1e', highlightthickness=0)
+        status_canvas.grid(row=0, column=1, padx=10)
+        status_canvas.create_oval(2, 2, 26, 26, fill=color, outline='#ffffff', width=1)
+
+        # Speed and width
+        speed_frame = ttk.Frame(row_frame, style='Content.TFrame')
+        speed_frame.grid(row=0, column=2, padx=20)
+
+        if display_speed == "No Link":
+            speed_label = ttk.Label(speed_frame, text="No Link",
+                                    style='Info.TLabel', font=('Arial', 18, 'bold'),
+                                    foreground='#ff4444')
+            speed_label.pack()
+        else:
+            speed_width_text = f"{display_speed}"
+            if display_width:
+                speed_width_text += f" {display_width}"
+
+            speed_label = ttk.Label(speed_frame, text=speed_width_text,
+                                    style='Info.TLabel', font=('Arial', 18, 'bold'))
+            speed_label.pack()
+
+        # Active status
+        if active:
+            active_frame = ttk.Frame(row_frame, style='Content.TFrame')
+            active_frame.grid(row=0, column=3, sticky='e')
+
+            active_var = tk.BooleanVar(value=True)
+            active_check = ttk.Checkbutton(active_frame, variable=active_var, state='disabled')
+            active_check.pack(side='left')
+
+            active_label = ttk.Label(active_frame, text="Active",
+                                     foreground='#00ff00', background='#1e1e1e',
+                                     font=('Arial', 16, 'bold'))
+            active_label.pack(side='left', padx=(5, 0))
+        else:
+            active_var = tk.BooleanVar(value=False)
+            active_check = ttk.Checkbutton(row_frame, text="Active",
+                                           variable=active_var, state='disabled')
+            active_check.grid(row=0, column=3, sticky='e')
+
+    def _create_formatted_refresh_controls(self, parent_frame, last_updated):
+        """Create formatted refresh controls at the bottom"""
+        controls_frame = ttk.Frame(parent_frame, style='Content.TFrame')
+        controls_frame.pack(fill='x', side='bottom', padx=20, pady=20)
+
+        # Refresh button
+        refresh_btn = ttk.Button(controls_frame, text="🔄 Refresh Link Status",
+                                 command=self._refresh_link_status)
+        refresh_btn.pack(side='left')
+
+        # Last update time
+        if last_updated and last_updated != 'Unknown':
+            update_label = ttk.Label(controls_frame,
+                                     text=f"Last updated: {last_updated}",
+                                     style='Info.TLabel', font=('Arial', 10))
+            update_label.pack(side='right')
+
+    def _create_full_link_dashboard_from_showport(self, showport_content):
+        """Create full link dashboard with speed/width data from showport content"""
+        debug_info("Creating full link dashboard from showport content", "FULL_DASHBOARD")
+
+        try:
+            # Import and use the existing Link Status parser
+            from Dashboards.link_status_dashboard import LinkStatusParser
+
+            # Parse the showport content
+            parser = LinkStatusParser()
+
+            # Format content as proper showport response
+            formatted_content = f"Cmd>showport\n\n{showport_content}\n\nOK>"
+            link_info = parser.parse_showport_response(formatted_content)
+
+            debug_info(f"Parsed {len(link_info.ports)} ports with full data", "PARSE_SUCCESS")
+
+            # Clear existing content
+            for widget in self.scrollable_frame.winfo_children():
+                widget.destroy()
+
+            # Create header
+            header_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+            header_frame.pack(fill='x', padx=20, pady=(20, 10))
+
+            header_label = ttk.Label(header_frame, text="🔗 Link Status",
+                                     style='SectionHeader.TLabel',
+                                     font=('Arial', 24, 'bold'))
+            header_label.pack(anchor='w')
+
+            # Create detailed port displays with speed and width
+            for port_key, port_info in link_info.ports.items():
+                debug_info(
+                    f"Creating port: {port_info.port_number} - Speed: {port_info.speed_level} ({port_info.display_speed}), Width: {port_info.width} ({port_info.display_width})",
+                    "PORT_DETAILS")
+                self._create_detailed_port_row(port_info)
+
+            # Create golden finger display
+            if link_info.golden_finger and link_info.golden_finger.port_number:
+                debug_info(
+                    f"Creating golden finger: Speed: {link_info.golden_finger.speed_level} ({link_info.golden_finger.display_speed}), Width: {link_info.golden_finger.width} ({link_info.golden_finger.display_width})",
+                    "GOLDEN_FINGER_DETAILS")
+                self._create_detailed_port_row(link_info.golden_finger)
+
+            # Add refresh controls
+            self._create_link_refresh_controls(link_info.last_updated)
+
+            debug_info("Full link dashboard created successfully", "FULL_DASHBOARD_SUCCESS")
+
+        except Exception as e:
+            debug_error(f"Error creating full link dashboard: {e}", "FULL_DASHBOARD_ERROR")
+            import traceback
+            traceback.print_exc()
+            self._create_enhanced_demo_fallback()
+
+    def _create_detailed_port_row(self, port_info):
+        """Create detailed port row with speed, width, and colored status indicators"""
+        port_name = f"Port {port_info.port_number}" if port_info.port_number != "Golden Finger" else port_info.port_number
+
+        debug_info(
+            f"Creating detailed row for {port_name}: {port_info.display_speed} {port_info.display_width} (Color: {port_info.status_color})",
+            "DETAILED_ROW")
+
+        # Create main row frame with more padding for better spacing
+        row_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+        row_frame.pack(fill='x', padx=40, pady=12)
+
+        # Left side - Port name
+        name_frame = ttk.Frame(row_frame, style='Content.TFrame')
+        name_frame.pack(side='left', fill='x', expand=True)
+
+        name_label = ttk.Label(name_frame, text=port_name,
+                               style='Info.TLabel', font=('Arial', 20, 'bold'))
+        name_label.pack(side='left')
+
+        # Right side - Status indicators
+        status_frame = ttk.Frame(row_frame, style='Content.TFrame')
+        status_frame.pack(side='right')
+
+        # Active checkbox with proper styling (matches existing Link Status dashboard)
+        if port_info.active:
+            checkbox_frame = ttk.Frame(status_frame, style='Content.TFrame')
+            checkbox_frame.pack(side='right', padx=(40, 0))
+
+            active_var = tk.BooleanVar(value=True)
+            active_check = ttk.Checkbutton(checkbox_frame, variable=active_var, state='disabled')
+            active_check.pack(side='left')
+
+            # Green "Active" text for active ports
+            active_label = ttk.Label(checkbox_frame, text="Active",
+                                     foreground='#00ff00', background='#1e1e1e',
+                                     font=('Arial', 16, 'bold'))
+            active_label.pack(side='left', padx=(8, 0))
+        else:
+            active_var = tk.BooleanVar(value=False)
+            active_check = ttk.Checkbutton(status_frame, text="Active",
+                                           variable=active_var, state='disabled')
+            active_check.pack(side='right', padx=(40, 0))
+
+        # Speed and status display
+        speed_status_frame = ttk.Frame(status_frame, style='Content.TFrame')
+        speed_status_frame.pack(side='right', padx=(40, 40))
+
+        # Create colored status light (Gen6=green, Gen5=yellow/orange, No Link=red)
+        status_canvas = tk.Canvas(speed_status_frame, width=32, height=32,
+                                  bg='#1e1e1e', highlightthickness=0)
+        status_canvas.pack(side='left', padx=(0, 20))
+
+        # Draw the colored circle with the appropriate Gen6/Gen5 color
+        status_canvas.create_oval(4, 4, 28, 28, fill=port_info.status_color, outline='#ffffff', width=1)
+
+        # Speed and width text display
+        speed_text_frame = ttk.Frame(speed_status_frame, style='Content.TFrame')
+        speed_text_frame.pack(side='left')
+
+        if port_info.display_speed == "No Link":
+            # For No Link, just show the status
+            speed_label = ttk.Label(speed_text_frame, text="No Link",
+                                    style='Info.TLabel', font=('Arial', 18, 'bold'),
+                                    foreground='#ff4444')
+            speed_label.pack()
+        else:
+            # For active links, show speed and width on separate lines
+            speed_label = ttk.Label(speed_text_frame, text=port_info.display_speed,
+                                    style='Info.TLabel', font=('Arial', 18, 'bold'))
+            speed_label.pack()
+
+            if port_info.display_width:
+                width_label = ttk.Label(speed_text_frame, text=port_info.display_width,
+                                        style='Info.TLabel', font=('Arial', 14))
+                width_label.pack()
+
+    def _create_enhanced_demo_fallback(self):
+        """Create enhanced demo fallback with proper speed/width data"""
+        debug_info("Creating enhanced demo fallback with speed/width data", "ENHANCED_FALLBACK")
+
+        # Clear existing content
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+
+        # Create header
+        header_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+        header_frame.pack(fill='x', padx=20, pady=(20, 10))
+
+        header_label = ttk.Label(header_frame, text="🔗 Link Status (Enhanced Demo)",
+                                 style='SectionHeader.TLabel',
+                                 font=('Arial', 24, 'bold'))
+        header_label.pack(anchor='w')
+
+        # Enhanced demo ports with speed and width data (based on DemoData/sysinfo.txt)
+        enhanced_demo_ports = [
+            {
+                "name": "Port 80",
+                "speed_level": "06",
+                "width": "04",
+                "display_speed": "Gen6",
+                "display_width": "x4",
+                "status_color": "#00ff00",  # Green for Gen6
+                "active": True
+            },
+            {
+                "name": "Port 112",
+                "speed_level": "01",
+                "width": "00",
+                "display_speed": "No Link",
+                "display_width": "",
+                "status_color": "#ff4444",  # Red for No Link
+                "active": False
+            },
+            {
+                "name": "Port 128",
+                "speed_level": "05",
+                "width": "16",
+                "display_speed": "Gen5",
+                "display_width": "x16",
+                "status_color": "#ff9500",  # Yellow/Orange for Gen5
+                "active": True
+            },
+            {
+                "name": "Golden Finger",
+                "speed_level": "05",
+                "width": "16",
+                "display_speed": "Gen5",
+                "display_width": "x16",
+                "status_color": "#ff9500",  # Yellow/Orange for Gen5 (as per sysinfo.txt)
+                "active": True
+            }
+        ]
+
+        # Create each port row with enhanced display
+        for port in enhanced_demo_ports:
+            self._create_enhanced_fallback_port_row(port)
+
+        # Add refresh controls
+        self._create_link_refresh_controls("Enhanced Demo Data - Based on DemoData/sysinfo.txt")
+
+        debug_info("Enhanced demo fallback created with speed/width data", "ENHANCED_FALLBACK_SUCCESS")
+
+    def _create_enhanced_fallback_port_row(self, port):
+        """Create enhanced fallback port row with speed and width"""
+        debug_info(f"Creating enhanced fallback row: {port['name']} - {port['display_speed']} {port['display_width']}",
+                   "FALLBACK_ROW")
+
+        # Create main row frame
+        row_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+        row_frame.pack(fill='x', padx=40, pady=12)
+
+        # Port name (left side)
+        name_frame = ttk.Frame(row_frame, style='Content.TFrame')
+        name_frame.pack(side='left', fill='x', expand=True)
+
+        name_label = ttk.Label(name_frame, text=port["name"],
+                               style='Info.TLabel', font=('Arial', 20, 'bold'))
+        name_label.pack(side='left')
+
+        # Status indicators (right side)
+        status_frame = ttk.Frame(row_frame, style='Content.TFrame')
+        status_frame.pack(side='right')
+
+        # Active checkbox
+        if port["active"]:
+            checkbox_frame = ttk.Frame(status_frame, style='Content.TFrame')
+            checkbox_frame.pack(side='right', padx=(40, 0))
+
+            active_var = tk.BooleanVar(value=True)
+            active_check = ttk.Checkbutton(checkbox_frame, variable=active_var, state='disabled')
+            active_check.pack(side='left')
+
+            # Green "Active" text
+            active_label = ttk.Label(checkbox_frame, text="Active",
+                                     foreground='#00ff00', background='#1e1e1e',
+                                     font=('Arial', 16, 'bold'))
+            active_label.pack(side='left', padx=(8, 0))
+        else:
+            active_var = tk.BooleanVar(value=False)
+            active_check = ttk.Checkbutton(status_frame, text="Active",
+                                           variable=active_var, state='disabled')
+            active_check.pack(side='right', padx=(40, 0))
+
+        # Speed and status display
+        speed_status_frame = ttk.Frame(status_frame, style='Content.TFrame')
+        speed_status_frame.pack(side='right', padx=(40, 40))
+
+        # Colored status light
+        status_canvas = tk.Canvas(speed_status_frame, width=32, height=32,
+                                  bg='#1e1e1e', highlightthickness=0)
+        status_canvas.pack(side='left', padx=(0, 20))
+
+        # Draw colored circle with white border
+        status_canvas.create_oval(4, 4, 28, 28, fill=port["status_color"], outline='#ffffff', width=1)
+
+        # Speed and width text
+        speed_text_frame = ttk.Frame(speed_status_frame, style='Content.TFrame')
+        speed_text_frame.pack(side='left')
+
+        if port["display_speed"] == "No Link":
+            speed_label = ttk.Label(speed_text_frame, text="No Link",
+                                    style='Info.TLabel', font=('Arial', 18, 'bold'),
+                                    foreground='#ff4444')
+            speed_label.pack()
+        else:
+            # Speed on top line
+            speed_label = ttk.Label(speed_text_frame, text=port["display_speed"],
+                                    style='Info.TLabel', font=('Arial', 18, 'bold'))
+            speed_label.pack()
+
+            # Width on bottom line
+            if port["display_width"]:
+                width_label = ttk.Label(speed_text_frame, text=port["display_width"],
+                                        style='Info.TLabel', font=('Arial', 14))
+                width_label.pack()
+
+    def _extract_showport_from_demo_sysinfo(self, sysinfo_content):
+        """Extract showport section from demo sysinfo content"""
+        debug_info("Extracting showport section from sysinfo", "EXTRACT_SHOWPORT")
+
+        try:
+            # Multiple patterns to match showport section
+            patterns = [
+                r'================================================================================\s*showport\s*================================================================================\s*(.*?)(?:\s*================================================================================|$)',
+                r'showport\s*=+\s*(.*?)(?:\s*=+|$)',
+                r'showport\s*-+\s*(.*?)(?:\s*-+|$)'
+            ]
+
+            for i, pattern in enumerate(patterns):
+                debug_info(f"Trying pattern {i + 1} for showport extraction", "PATTERN_TRY")
+                match = re.search(pattern, sysinfo_content, re.DOTALL | re.IGNORECASE)
+
+                if match:
+                    showport_content = match.group(1).strip()
+                    debug_info(f"Pattern {i + 1} matched, extracted {len(showport_content)} chars", "PATTERN_SUCCESS")
+
+                    # Verify the content looks like showport data
+                    if 'port' in showport_content.lower() and (
+                            'speed' in showport_content.lower() or 'width' in showport_content.lower()):
+                        debug_info("Showport content verification passed", "CONTENT_VERIFIED")
+                        return showport_content
+                    else:
+                        debug_warning(f"Pattern {i + 1} matched but content doesn't look like showport",
+                                      "CONTENT_INVALID")
+
+            debug_warning("No showport section found in sysinfo content", "SHOWPORT_NOT_FOUND")
+            return None
+
+        except Exception as e:
+            debug_error(f"Error extracting showport from sysinfo: {e}", "EXTRACT_ERROR")
+            return None
+
+    def _load_demo_showport_file_direct(self):
+        """Load DemoData/showport.txt file directly"""
+        debug_info("Loading DemoData/showport.txt file directly", "LOAD_SHOWPORT_FILE")
+
+        showport_paths = [
+            "DemoData/showport.txt",
+            "./DemoData/showport.txt",
+            "../DemoData/showport.txt",
+            os.path.join(os.path.dirname(__file__), "DemoData", "showport.txt"),
+            os.path.join(os.getcwd(), "DemoData", "showport.txt")
+        ]
+
+        for i, path in enumerate(showport_paths):
+            abs_path = os.path.abspath(path)
+            debug_info(f"Checking showport file path {i + 1}: {abs_path}", "FILE_CHECK")
+
+            if os.path.exists(path):
+                try:
+                    with open(path, 'r', encoding='utf-8') as f:
+                        content = f.read().strip()
+
+                    debug_info(f"Successfully loaded showport file ({len(content)} chars)", "FILE_LOADED")
+
+                    # Verify content
+                    if content and ('port' in content.lower() or 'golden finger' in content.lower()):
+                        debug_info("Showport file content verification passed", "FILE_VERIFIED")
+                        return content
+                    else:
+                        debug_warning("Showport file content verification failed", "FILE_INVALID")
+
+                except Exception as e:
+                    debug_error(f"Error reading showport file {path}: {e}", "FILE_READ_ERROR")
+                    continue
+            else:
+                debug_info(f"Showport file not found: {abs_path}", "FILE_NOT_FOUND")
+
+        debug_error("No valid showport file found", "NO_FILE_FOUND")
+        return None
+
+    def _parse_and_create_link_dashboard(self, showport_content):
+        """Parse showport content and create dashboard"""
+        debug_info("Parsing showport content and creating dashboard", "PARSE_AND_CREATE")
+
+        try:
+            # Import the link status parser
+            from Dashboards.link_status_dashboard import LinkStatusParser
+
+            # Create parser and parse the content
+            parser = LinkStatusParser()
+            link_info = parser.parse_showport_response(f"Cmd>showport\n\n{showport_content}\n\nOK>")
+
+            debug_info(f"Parsed {len(link_info.ports)} ports from showport content", "PARSE_SUCCESS")
+
+            # Clear existing content
+            for widget in self.scrollable_frame.winfo_children():
+                widget.destroy()
+
+            # Create header
+            header_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+            header_frame.pack(fill='x', padx=20, pady=(20, 10))
+
+            header_label = ttk.Label(header_frame, text="🔗 Link Status",
+                                     style='SectionHeader.TLabel',
+                                     font=('Arial', 24, 'bold'))
+            header_label.pack(anchor='w')
+
+            # Create port displays
+            debug_info("Creating port displays", "CREATE_PORTS")
+
+            for port_key, port_info in link_info.ports.items():
+                self._create_link_port_row(port_info)
+
+            # Create golden finger display
+            if link_info.golden_finger and link_info.golden_finger.port_number:
+                debug_info("Creating golden finger display", "CREATE_GOLDEN_FINGER")
+                self._create_link_port_row(link_info.golden_finger)
+
+            # Add refresh controls
+            self._create_link_refresh_controls(link_info.last_updated)
+
+            debug_info("Link dashboard created successfully", "DASHBOARD_SUCCESS")
+
+        except Exception as e:
+            debug_error(f"Error parsing and creating link dashboard: {e}", "PARSE_CREATE_ERROR")
+            import traceback
+            traceback.print_exc()
+            self._create_demo_link_fallback()
+
+    def _create_link_port_row(self, port_info):
+        """Create a port row display with proper Gen6/Gen5 colors"""
+        debug_info(f"Creating port row: {port_info.port_number} - {port_info.display_speed} {port_info.display_width}",
+                   "PORT_ROW")
+
+        # Create main row frame
+        row_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+        row_frame.pack(fill='x', padx=40, pady=8)
+
+        # Port name (left side)
+        name_frame = ttk.Frame(row_frame, style='Content.TFrame')
+        name_frame.pack(side='left', fill='x', expand=True)
+
+        port_name = f"Port {port_info.port_number}" if port_info.port_number != "Golden Finger" else port_info.port_number
+        name_label = ttk.Label(name_frame, text=port_name,
+                               style='Info.TLabel', font=('Arial', 20, 'bold'))
+        name_label.pack(side='left')
+
+        # Status indicators (right side)
+        status_frame = ttk.Frame(row_frame, style='Content.TFrame')
+        status_frame.pack(side='right')
+
+        # Active checkbox (matches existing Link Status dashboard style)
+        if port_info.active:
+            checkbox_frame = ttk.Frame(status_frame, style='Content.TFrame')
+            checkbox_frame.pack(side='right', padx=(30, 0))
+
+            active_var = tk.BooleanVar(value=True)
+            active_check = ttk.Checkbutton(checkbox_frame, variable=active_var, state='disabled')
+            active_check.pack(side='left')
+
+            # Green "Active" text for active ports
+            active_label = ttk.Label(checkbox_frame, text="Active",
+                                     foreground='#00ff00', background='#1e1e1e',
+                                     font=('Arial', 16, 'bold'))
+            active_label.pack(side='left', padx=(8, 0))
+        else:
+            active_var = tk.BooleanVar(value=False)
+            active_check = ttk.Checkbutton(status_frame, text="Active",
+                                           variable=active_var, state='disabled')
+            active_check.pack(side='right', padx=(30, 0))
+
+        # Status light and text
+        status_info_frame = ttk.Frame(status_frame, style='Content.TFrame')
+        status_info_frame.pack(side='right', padx=(30, 30))
+
+        # Create status light (colored circle) with Gen6=green, Gen5=yellow
+        status_canvas = tk.Canvas(status_info_frame, width=28, height=28,
+                                  bg='#1e1e1e', highlightthickness=0)
+        status_canvas.pack(side='left', padx=(0, 15))
+        status_canvas.create_oval(4, 4, 24, 24, fill=port_info.status_color, outline='')
+
+        # Speed and width text
+        if port_info.display_speed == "No Link":
+            status_text = "No Link"
+        else:
+            width_text = f" {port_info.display_width}" if port_info.display_width else ""
+            status_text = f"{port_info.display_speed}{width_text}"
+
+        status_label = ttk.Label(status_info_frame, text=status_text,
+                                 style='Info.TLabel', font=('Arial', 18, 'bold'))
+        status_label.pack(side='left')
+
+    def _create_link_dashboard_from_json(self, link_json):
+        """Create link dashboard from cached JSON data"""
+        debug_info("Creating link dashboard from JSON data", "JSON_DASHBOARD")
+
+        try:
+            # Extract port items from JSON
+            sections = link_json.get('sections', {})
+            port_section = sections.get('port_status', {})
+            items = port_section.get('items', [])
+
+            if not items:
+                debug_warning("No port items in JSON data", "JSON_NO_ITEMS")
+                self._create_demo_link_fallback()
+                return
+
+            # Clear existing content
+            for widget in self.scrollable_frame.winfo_children():
+                widget.destroy()
+
+            # Create header
+            header_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+            header_frame.pack(fill='x', padx=20, pady=(20, 10))
+
+            header_label = ttk.Label(header_frame, text="🔗 Link Status",
+                                     style='SectionHeader.TLabel',
+                                     font=('Arial', 24, 'bold'))
+            header_label.pack(anchor='w')
+
+            # Create simplified port displays from JSON
+            debug_info(f"Creating {len(items)} port displays from JSON", "JSON_PORTS")
+
+            for item in items:
+                self._create_simple_port_row_from_json(item)
+
+            # Add refresh controls
+            self._create_link_refresh_controls(link_json.get('last_updated', 'Unknown'))
+
+            debug_info("Link dashboard created from JSON successfully", "JSON_SUCCESS")
+
+        except Exception as e:
+            debug_error(f"Error creating dashboard from JSON: {e}", "JSON_ERROR")
+            self._create_demo_link_fallback()
+
+    def _create_simple_port_row_from_json(self, item):
+        """Create simplified port row from JSON item"""
+        debug_info(f"Creating simple port row from JSON: {item.get('label', 'Unknown')}", "JSON_PORT")
+
+        # Extract basic info
+        port_name = item.get('label', 'Unknown Port')
+        port_value = item.get('value', 'Unknown')
+
+        # Create basic row
+        row_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+        row_frame.pack(fill='x', padx=40, pady=8)
+
+        # Port name
+        name_label = ttk.Label(row_frame, text=port_name,
+                               style='Info.TLabel', font=('Arial', 18, 'bold'))
+        name_label.pack(side='left')
+
+        # Status
+        status_label = ttk.Label(row_frame, text=port_value,
+                                 style='Info.TLabel', font=('Arial', 16))
+        status_label.pack(side='right')
 
     def create_port_dashboard(self):
         """Create port configuration dashboard with real device data"""
