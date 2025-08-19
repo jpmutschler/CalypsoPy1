@@ -17,7 +17,7 @@ CLEANED VERSION: Link Status methods moved to dedicated dashboard module
 
 # Application Information
 APP_NAME = "CalypsoPy"
-APP_VERSION = "1.4.0"  # Updated version to reflect refactoring
+APP_VERSION = "1.5.0"  # Updated version to reflect refactoring
 APP_BUILD = "20250820-001"  # Updated build
 APP_DESCRIPTION = "Serial Cables Atlas 3 Serial UI for CLI Interface"
 APP_AUTHOR = "Serial Cables, LLC"
@@ -1068,33 +1068,35 @@ class DashboardApp:
             print("DEBUG: Window maximize not supported on this platform")
 
     def create_layout(self):
-        """Create the main application layout - DEBUG VERSION"""
-        print("DEBUG: create_layout called")
+        """Create layout with centered content area"""
+        print("DEBUG: Creating layout with centered content")
 
         # Main container
         main_frame = ttk.Frame(self.root)
         main_frame.pack(fill='both', expand=True)
 
-        # Sidebar for dashboard navigation
+        # Sidebar (fixed width on left)
         self.sidebar = ttk.Frame(main_frame, style='Sidebar.TFrame', width=200)
         self.sidebar.pack(side='left', fill='y', padx=(0, 1))
         self.sidebar.pack_propagate(False)
-        print("DEBUG: Sidebar widget created")
 
-        # Content area
-        self.content_frame = ttk.Frame(main_frame, style='Content.TFrame')
-        self.content_frame.pack(side='right', fill='both', expand=True)
-        print("DEBUG: Content frame created")
+        # Content area container (takes remaining space)
+        content_container = ttk.Frame(main_frame, style='Content.TFrame')
+        content_container.pack(side='left', fill='both', expand=True)
 
-        # Call sidebar creation
-        print("DEBUG: About to call create_sidebar()")
+        # CENTERING MAGIC: Create the actual content frame inside the container
+        # This will be centered with percentage-based margins
+        self.content_frame = ttk.Frame(content_container, style='Content.TFrame')
+
+        # Center the content frame with percentage-based padding
+        # Adjust these percentages to control centering (10% margin = 80% content width)
+        self.content_frame.place(relx=0.35, rely=0.05, relwidth=0.8, relheight=0.9)
+
+        print("DEBUG: Content frame centered with place geometry manager")
+
+        # Initialize content
         self.create_sidebar()
-
-        # Call content area creation
-        print("DEBUG: About to call create_content_area()")
         self.create_content_area()
-
-        print("DEBUG: create_layout completed")
 
     def create_sidebar(self):
         """Create the sidebar with dashboard tiles - FIXED VERSION"""
@@ -1187,44 +1189,76 @@ class DashboardApp:
         print("DEBUG: Sidebar creation completed successfully")
 
     def create_content_area(self):
-        """Create the main content display area"""
-        # Main content frame
-        self.content_frame = ttk.Frame(self.root, style='Content.TFrame')
-        self.content_frame.grid(row=0, column=1, sticky='nsew')
+        """Create the main content display area - FIXED to work with pack layout"""
+        print("DEBUG: Creating content area with pack-compatible layout")
 
-        # Header section
-        header_frame = ttk.Frame(self.content_frame, style='Content.TFrame')
-        header_frame.pack(fill='x', padx=20, pady=20)
+        try:
+            # Header frame at the top
+            header_frame = ttk.Frame(self.content_frame, style='Content.TFrame')
+            header_frame.pack(fill='x', padx=20, pady=20)
+            print("DEBUG: Header frame created and packed")
 
-        # Dashboard title
-        self.content_title = ttk.Label(header_frame, text="Host Card Information",
-                                       style='Dashboard.TLabel')
-        self.content_title.pack(side='left')
+            # Left side of header: title
+            self.content_title = ttk.Label(header_frame, text="Host Card Information",
+                                           style='Dashboard.TLabel')
+            self.content_title.pack(side='left')
+            print("DEBUG: Content title created")
 
-        # Header button group
-        button_group = ttk.Frame(header_frame, style='Content.TFrame')
-        button_group.pack(side='right')
+            # Right side of header: buttons
+            button_group = ttk.Frame(header_frame, style='Content.TFrame')
+            button_group.pack(side='right')
 
-        # Settings button
-        self.settings_btn = ttk.Button(button_group, text="⚙️", width=3,
-                                       command=self.open_settings)
-        self.settings_btn.pack(side='right', padx=(5, 0))
+            # Cache status indicator
+            self.cache_status_label = ttk.Label(header_frame, text="",
+                                                style='Info.TLabel', font=('Arial', 8))
+            self.cache_status_label.pack(side='right', padx=(20, 10))
 
-        # Refresh button
-        self.refresh_btn = ttk.Button(button_group, text="🔄", width=3,
-                                      command=self.refresh_current_dashboard)
-        self.refresh_btn.pack(side='right')
+            # Settings button
+            self.settings_btn = ttk.Button(button_group, text="⚙️", width=3,
+                                           command=self.open_settings)
+            self.settings_btn.pack(side='right', padx=(5, 0))
 
-        # Cache status indicator
-        self.cache_status_label = ttk.Label(header_frame, text="",
-                                            style='Info.TLabel', font=('Arial', 8))
-        self.cache_status_label.pack(side='right', padx=(20, 10))
+            # Refresh button
+            self.refresh_btn = ttk.Button(button_group, text="🔄", width=3,
+                                          command=self.refresh_current_dashboard)
+            self.refresh_btn.pack(side='right')
+            print("DEBUG: Header buttons created")
 
-        # Scrollable content area
-        self._create_scrollable_content()
+            # Main content area with scrolling (takes remaining vertical space)
+            content_container = ttk.Frame(self.content_frame, style='Content.TFrame')
+            content_container.pack(fill='both', expand=True, padx=20, pady=(0, 20))
+            print("DEBUG: Content container created")
 
-        # Initial content load
-        self.update_content_area()
+            # Canvas and scrollbar for scrolling content
+            canvas = tk.Canvas(content_container, bg='#1e1e1e', highlightthickness=0)
+            scrollbar = ttk.Scrollbar(content_container, orient='vertical', command=canvas.yview)
+
+            # Create the scrollable frame
+            self.scrollable_frame = ttk.Frame(canvas, style='Content.TFrame')
+
+            # Configure scrolling
+            self.scrollable_frame.bind('<Configure>',
+                                       lambda e: canvas.configure(scrollregion=canvas.bbox('all')))
+
+            canvas.create_window((0, 0), window=self.scrollable_frame, anchor='nw')
+            canvas.configure(yscrollcommand=scrollbar.set)
+
+            # Pack canvas and scrollbar
+            canvas.pack(side='left', fill='both', expand=True)
+            scrollbar.pack(side='right', fill='y')
+            print("DEBUG: Canvas and scrollbar created and packed")
+
+            # Store canvas reference
+            self.content_canvas = canvas
+
+            # Load the initial dashboard content
+            self.update_content_area()
+            print("DEBUG: Content area creation completed successfully")
+
+        except Exception as e:
+            print(f"ERROR: Exception in create_content_area: {e}")
+            import traceback
+            traceback.print_exc()
 
     def _create_scrollable_content(self):
         """Create scrollable content area"""
@@ -1771,12 +1805,25 @@ class DashboardApp:
             self.show_loading_message(f"Demo retry failed: {e}")
 
     def open_settings(self):
-        """Open settings dialog"""
+        """Open settings dialog with error handling"""
         try:
-            settings_ui.SettingsDialog(self.root, self.cache_manager)
+            from Admin import settings_ui
+            dialog = settings_ui.SettingsDialog(
+                self.root,
+                self.settings_mgr,
+                on_settings_changed=self.on_settings_changed
+            )
+        except tk.TclError as e:
+            if "geometry manager" in str(e).lower():
+                print(f"Geometry manager error caught: {e}")
+                messagebox.showinfo("Settings",
+                                    "Settings dialog layout error. Please try again.\n\n"
+                                    "If this persists, restart the application.")
+            else:
+                raise
         except Exception as e:
-            print(f"ERROR: Error opening settings: {e}")
-            messagebox.showerror("Settings Error", f"Could not open settings: {e}")
+            print(f"Settings dialog error: {e}")
+            messagebox.showinfo("Settings", "Settings dialog temporarily unavailable")
 
     def start_auto_refresh(self):
         """Start automatic refresh if enabled"""

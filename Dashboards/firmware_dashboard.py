@@ -340,7 +340,7 @@ class FirmwareDashboard:
 
         # Create main container with centered content (increased padding for better centering)
         main_container = ttk.Frame(self.app.scrollable_frame, style='Content.TFrame')
-        main_container.pack(fill='both', expand=True, padx=650, pady=20)
+        main_container.pack(fill='both', expand=True, padx=10, pady=20)
 
         # Current firmware versions section
         self._create_version_section(main_container)

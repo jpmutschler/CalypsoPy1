@@ -1475,3 +1475,683 @@
 16:32:28 [INFO] root: 16:32:28.508 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
 16:32:28 [INFO] root: 16:32:28.508 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
 16:32:28 [INFO] root: 16:32:28.508 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+16:35:07 [INFO] root: 16:35:07.138 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+16:35:07 [INFO] root: 16:35:07.138 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+16:35:07 [INFO] root: 16:35:07.138 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+16:35:07 [INFO] root: 16:35:07.138 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+16:35:07 [INFO] root: 16:35:07.139 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+16:35:07 [INFO] root: 16:35:07.139 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+16:35:07 [INFO] root: 16:35:07.139 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+16:35:07 [INFO] root: 16:35:07.139 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+16:35:07 [INFO] root: 16:35:07.139 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+16:35:07 [INFO] root: 16:35:07.139 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+16:35:07 [INFO] root: 16:35:07.142 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+16:35:07 [INFO] root: 16:35:07.142 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+16:35:07 [INFO] root: 16:35:07.143 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+16:35:07 [INFO] root: 16:35:07.143 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+16:35:07 [INFO] root: 16:35:07.148 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+16:35:07 [INFO] root: 16:35:07.148 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+16:35:07 [INFO] root: 16:35:07.148 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+16:35:07 [INFO] root: 16:35:07.148 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+16:35:07 [INFO] root: 16:35:07.148 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+16:35:07 [INFO] root: 16:35:07.148 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+16:35:07 [INFO] root: 16:35:07.148 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+16:35:07 [INFO] root: 16:35:07.148 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+16:35:07 [INFO] root: 16:35:07.148 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+16:35:07 [INFO] root: 16:35:07.148 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+16:35:07 [INFO] root: 16:35:07.149 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+16:35:07 [INFO] root: 16:35:07.149 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+16:49:43 [INFO] root: 16:49:43.655 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+16:49:43 [INFO] root: 16:49:43.655 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+16:49:43 [INFO] root: 16:49:43.656 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+16:49:43 [INFO] root: 16:49:43.656 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+16:49:43 [INFO] root: 16:49:43.657 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+16:49:43 [INFO] root: 16:49:43.657 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+16:49:43 [INFO] root: 16:49:43.657 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+16:49:43 [INFO] root: 16:49:43.657 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+16:49:43 [INFO] root: 16:49:43.657 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+16:49:43 [INFO] root: 16:49:43.657 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+16:49:43 [INFO] root: 16:49:43.658 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+16:49:43 [INFO] root: 16:49:43.658 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+16:49:43 [INFO] root: 16:49:43.658 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+16:49:43 [INFO] root: 16:49:43.658 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+16:49:43 [INFO] root: 16:49:43.663 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+16:49:43 [INFO] root: 16:49:43.663 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+16:49:43 [INFO] root: 16:49:43.663 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+16:49:43 [INFO] root: 16:49:43.663 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+16:49:43 [INFO] root: 16:49:43.664 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+16:49:43 [INFO] root: 16:49:43.664 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+16:49:43 [INFO] root: 16:49:43.664 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+16:49:43 [INFO] root: 16:49:43.664 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+16:49:43 [INFO] root: 16:49:43.664 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+16:49:43 [INFO] root: 16:49:43.664 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+16:49:43 [INFO] root: 16:49:43.664 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+16:49:43 [INFO] root: 16:49:43.664 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+16:49:43 [INFO] root: 16:49:43.978 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+16:49:43 [INFO] root: 16:49:43.978 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+16:49:43 [INFO] root: 16:49:43.978 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+16:49:43 [INFO] root: 16:49:43.978 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+16:49:43 [INFO] root: 16:49:43.978 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+16:49:43 [INFO] root: 16:49:43.978 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+16:49:43 [INFO] root: 16:49:43.978 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+16:49:43 [INFO] root: 16:49:43.978 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+16:51:36 [INFO] root: 16:51:36.782 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+16:51:36 [INFO] root: 16:51:36.782 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+16:51:36 [INFO] root: 16:51:36.782 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+16:51:36 [INFO] root: 16:51:36.782 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+16:52:01 [INFO] root: 16:52:01.937 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+16:52:01 [INFO] root: 16:52:01.937 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+16:52:01 [INFO] root: 16:52:01.938 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+16:52:01 [INFO] root: 16:52:01.938 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+16:52:01 [INFO] root: 16:52:01.939 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+16:52:01 [INFO] root: 16:52:01.939 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+16:52:01 [INFO] root: 16:52:01.939 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+16:52:01 [INFO] root: 16:52:01.939 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+16:52:01 [INFO] root: 16:52:01.939 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+16:52:01 [INFO] root: 16:52:01.939 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+16:52:01 [INFO] root: 16:52:01.940 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+16:52:01 [INFO] root: 16:52:01.940 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+16:52:01 [INFO] root: 16:52:01.940 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+16:52:01 [INFO] root: 16:52:01.940 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+16:52:01 [INFO] root: 16:52:01.949 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+16:52:01 [INFO] root: 16:52:01.949 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+16:52:01 [INFO] root: 16:52:01.949 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+16:52:01 [INFO] root: 16:52:01.949 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+16:52:01 [INFO] root: 16:52:01.949 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+16:52:01 [INFO] root: 16:52:01.949 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+16:52:01 [INFO] root: 16:52:01.949 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+16:52:01 [INFO] root: 16:52:01.949 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+16:52:01 [INFO] root: 16:52:01.950 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+16:52:01 [INFO] root: 16:52:01.950 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+16:52:01 [INFO] root: 16:52:01.950 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+16:52:01 [INFO] root: 16:52:01.950 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+16:52:02 [INFO] root: 16:52:02.255 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+16:52:02 [INFO] root: 16:52:02.255 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+16:52:02 [INFO] root: 16:52:02.255 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+16:52:02 [INFO] root: 16:52:02.255 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+16:52:02 [INFO] root: 16:52:02.255 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+16:52:02 [INFO] root: 16:52:02.255 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+16:52:02 [INFO] root: 16:52:02.255 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+16:52:02 [INFO] root: 16:52:02.255 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+16:52:07 [INFO] root: 16:52:07.721 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+16:52:07 [INFO] root: 16:52:07.721 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+16:52:07 [INFO] root: 16:52:07.722 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+16:52:07 [INFO] root: 16:52:07.722 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+16:54:30 [INFO] root: 16:54:30.478 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+16:54:30 [INFO] root: 16:54:30.478 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+16:54:30 [INFO] root: 16:54:30.479 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+16:54:30 [INFO] root: 16:54:30.479 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+16:54:30 [INFO] root: 16:54:30.480 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+16:54:30 [INFO] root: 16:54:30.480 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+16:54:30 [INFO] root: 16:54:30.480 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+16:54:30 [INFO] root: 16:54:30.480 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+16:54:30 [INFO] root: 16:54:30.480 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+16:54:30 [INFO] root: 16:54:30.480 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+16:54:30 [INFO] root: 16:54:30.481 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+16:54:30 [INFO] root: 16:54:30.481 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+16:54:30 [INFO] root: 16:54:30.481 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+16:54:30 [INFO] root: 16:54:30.481 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+16:54:30 [INFO] root: 16:54:30.487 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+16:54:30 [INFO] root: 16:54:30.487 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+16:54:30 [INFO] root: 16:54:30.487 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+16:54:30 [INFO] root: 16:54:30.487 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+16:54:30 [INFO] root: 16:54:30.487 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+16:54:30 [INFO] root: 16:54:30.487 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+16:54:30 [INFO] root: 16:54:30.487 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+16:54:30 [INFO] root: 16:54:30.487 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+16:54:30 [INFO] root: 16:54:30.487 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+16:54:30 [INFO] root: 16:54:30.487 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+16:54:30 [INFO] root: 16:54:30.487 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+16:54:30 [INFO] root: 16:54:30.487 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+16:54:30 [INFO] root: 16:54:30.777 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+16:54:30 [INFO] root: 16:54:30.777 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+16:54:30 [INFO] root: 16:54:30.777 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+16:54:30 [INFO] root: 16:54:30.777 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+16:54:30 [INFO] root: 16:54:30.777 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+16:54:30 [INFO] root: 16:54:30.777 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+16:54:30 [INFO] root: 16:54:30.777 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+16:54:30 [INFO] root: 16:54:30.777 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+16:54:33 [INFO] root: 16:54:33.071 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+16:54:33 [INFO] root: 16:54:33.071 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+16:54:33 [INFO] root: 16:54:33.072 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+16:54:33 [INFO] root: 16:54:33.072 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+16:57:20 [INFO] root: 16:57:20.531 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+16:57:20 [INFO] root: 16:57:20.531 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+16:57:20 [INFO] root: 16:57:20.532 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+16:57:20 [INFO] root: 16:57:20.532 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+16:57:20 [INFO] root: 16:57:20.533 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+16:57:20 [INFO] root: 16:57:20.533 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+16:57:20 [INFO] root: 16:57:20.533 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+16:57:20 [INFO] root: 16:57:20.533 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+16:57:20 [INFO] root: 16:57:20.533 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+16:57:20 [INFO] root: 16:57:20.533 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+16:57:20 [INFO] root: 16:57:20.534 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+16:57:20 [INFO] root: 16:57:20.534 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+16:57:20 [INFO] root: 16:57:20.535 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+16:57:20 [INFO] root: 16:57:20.535 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+16:57:20 [INFO] root: 16:57:20.540 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+16:57:20 [INFO] root: 16:57:20.540 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+16:57:20 [INFO] root: 16:57:20.541 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+16:57:20 [INFO] root: 16:57:20.541 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+16:57:20 [INFO] root: 16:57:20.541 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+16:57:20 [INFO] root: 16:57:20.541 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+16:57:20 [INFO] root: 16:57:20.541 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+16:57:20 [INFO] root: 16:57:20.541 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+16:57:20 [INFO] root: 16:57:20.541 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+16:57:20 [INFO] root: 16:57:20.541 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+16:57:20 [INFO] root: 16:57:20.542 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+16:57:20 [INFO] root: 16:57:20.542 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+16:57:20 [INFO] root: 16:57:20.843 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+16:57:20 [INFO] root: 16:57:20.843 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+16:57:20 [INFO] root: 16:57:20.843 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+16:57:20 [INFO] root: 16:57:20.843 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+16:57:20 [INFO] root: 16:57:20.843 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+16:57:20 [INFO] root: 16:57:20.843 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+16:57:20 [INFO] root: 16:57:20.843 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+16:57:20 [INFO] root: 16:57:20.843 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+16:57:25 [INFO] root: 16:57:25.904 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+16:57:25 [INFO] root: 16:57:25.904 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+16:57:25 [INFO] root: 16:57:25.904 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+16:57:25 [INFO] root: 16:57:25.904 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+16:57:53 [INFO] root: 16:57:53.614 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+16:57:53 [INFO] root: 16:57:53.614 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+16:57:53 [INFO] root: 16:57:53.614 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+16:57:53 [INFO] root: 16:57:53.614 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+16:57:53 [INFO] root: 16:57:53.615 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+16:57:53 [INFO] root: 16:57:53.615 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+16:57:53 [INFO] root: 16:57:53.616 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+16:57:53 [INFO] root: 16:57:53.616 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+16:57:53 [INFO] root: 16:57:53.616 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+16:57:53 [INFO] root: 16:57:53.616 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+16:57:53 [INFO] root: 16:57:53.617 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+16:57:53 [INFO] root: 16:57:53.617 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+16:57:53 [INFO] root: 16:57:53.617 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+16:57:53 [INFO] root: 16:57:53.617 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+16:57:53 [INFO] root: 16:57:53.622 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+16:57:53 [INFO] root: 16:57:53.622 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+16:57:53 [INFO] root: 16:57:53.623 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+16:57:53 [INFO] root: 16:57:53.623 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+16:57:53 [INFO] root: 16:57:53.623 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+16:57:53 [INFO] root: 16:57:53.623 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+16:57:53 [INFO] root: 16:57:53.623 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+16:57:53 [INFO] root: 16:57:53.623 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+16:57:53 [INFO] root: 16:57:53.623 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+16:57:53 [INFO] root: 16:57:53.623 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+16:57:53 [INFO] root: 16:57:53.624 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+16:57:53 [INFO] root: 16:57:53.624 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+16:57:53 [INFO] root: 16:57:53.941 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+16:57:53 [INFO] root: 16:57:53.941 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+16:57:53 [INFO] root: 16:57:53.941 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+16:57:53 [INFO] root: 16:57:53.941 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+16:57:53 [INFO] root: 16:57:53.941 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+16:57:53 [INFO] root: 16:57:53.941 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+16:57:53 [INFO] root: 16:57:53.941 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+16:57:53 [INFO] root: 16:57:53.941 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+16:57:58 [INFO] root: 16:57:58.784 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+16:57:58 [INFO] root: 16:57:58.784 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+16:57:58 [INFO] root: 16:57:58.784 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+16:57:58 [INFO] root: 16:57:58.784 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+16:58:38 [INFO] root: 16:58:38.261 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+16:58:38 [INFO] root: 16:58:38.261 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+16:58:38 [INFO] root: 16:58:38.262 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+16:58:38 [INFO] root: 16:58:38.262 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+16:58:38 [INFO] root: 16:58:38.262 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+16:58:38 [INFO] root: 16:58:38.262 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+16:58:38 [INFO] root: 16:58:38.263 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+16:58:38 [INFO] root: 16:58:38.263 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+16:58:38 [INFO] root: 16:58:38.263 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+16:58:38 [INFO] root: 16:58:38.263 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+16:58:38 [INFO] root: 16:58:38.263 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+16:58:38 [INFO] root: 16:58:38.263 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+16:58:38 [INFO] root: 16:58:38.264 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+16:58:38 [INFO] root: 16:58:38.264 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+16:58:38 [INFO] root: 16:58:38.269 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+16:58:38 [INFO] root: 16:58:38.269 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+16:58:38 [INFO] root: 16:58:38.269 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+16:58:38 [INFO] root: 16:58:38.269 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+16:58:38 [INFO] root: 16:58:38.269 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+16:58:38 [INFO] root: 16:58:38.269 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+16:58:38 [INFO] root: 16:58:38.270 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+16:58:38 [INFO] root: 16:58:38.270 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+16:58:38 [INFO] root: 16:58:38.270 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+16:58:38 [INFO] root: 16:58:38.270 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+16:58:38 [INFO] root: 16:58:38.270 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+16:58:38 [INFO] root: 16:58:38.270 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+16:58:38 [INFO] root: 16:58:38.576 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+16:58:38 [INFO] root: 16:58:38.576 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+16:58:38 [INFO] root: 16:58:38.576 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+16:58:38 [INFO] root: 16:58:38.576 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+16:58:38 [INFO] root: 16:58:38.576 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+16:58:38 [INFO] root: 16:58:38.576 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+16:58:38 [INFO] root: 16:58:38.576 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+16:58:38 [INFO] root: 16:58:38.576 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+16:58:46 [INFO] root: 16:58:46.474 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+16:58:46 [INFO] root: 16:58:46.474 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+16:58:46 [INFO] root: 16:58:46.474 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+16:58:46 [INFO] root: 16:58:46.474 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+17:00:07 [INFO] root: 17:00:07.732 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+17:00:07 [INFO] root: 17:00:07.732 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+17:00:07 [INFO] root: 17:00:07.732 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+17:00:07 [INFO] root: 17:00:07.732 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+17:00:07 [INFO] root: 17:00:07.733 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+17:00:07 [INFO] root: 17:00:07.733 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+17:00:07 [INFO] root: 17:00:07.734 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+17:00:07 [INFO] root: 17:00:07.734 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+17:00:07 [INFO] root: 17:00:07.734 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+17:00:07 [INFO] root: 17:00:07.734 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+17:00:07 [INFO] root: 17:00:07.734 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+17:00:07 [INFO] root: 17:00:07.734 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+17:00:07 [INFO] root: 17:00:07.735 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+17:00:07 [INFO] root: 17:00:07.735 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+17:00:07 [INFO] root: 17:00:07.742 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+17:00:07 [INFO] root: 17:00:07.742 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+17:00:07 [INFO] root: 17:00:07.742 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+17:00:07 [INFO] root: 17:00:07.742 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+17:00:07 [INFO] root: 17:00:07.742 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+17:00:07 [INFO] root: 17:00:07.742 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+17:00:07 [INFO] root: 17:00:07.742 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+17:00:07 [INFO] root: 17:00:07.742 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+17:00:07 [INFO] root: 17:00:07.742 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+17:00:07 [INFO] root: 17:00:07.742 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+17:00:07 [INFO] root: 17:00:07.742 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+17:00:07 [INFO] root: 17:00:07.742 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+17:00:08 [INFO] root: 17:00:08.048 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+17:00:08 [INFO] root: 17:00:08.048 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+17:00:08 [INFO] root: 17:00:08.048 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+17:00:08 [INFO] root: 17:00:08.048 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+17:00:08 [INFO] root: 17:00:08.048 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+17:00:08 [INFO] root: 17:00:08.048 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+17:00:08 [INFO] root: 17:00:08.048 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+17:00:08 [INFO] root: 17:00:08.048 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+17:00:10 [INFO] root: 17:00:10.165 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+17:00:10 [INFO] root: 17:00:10.165 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+17:00:10 [INFO] root: 17:00:10.166 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+17:00:10 [INFO] root: 17:00:10.166 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+17:00:25 [INFO] root: 17:00:25.657 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+17:00:25 [INFO] root: 17:00:25.657 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+17:00:25 [INFO] root: 17:00:25.658 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+17:00:25 [INFO] root: 17:00:25.658 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+17:00:25 [INFO] root: 17:00:25.659 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+17:00:25 [INFO] root: 17:00:25.659 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+17:00:25 [INFO] root: 17:00:25.659 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+17:00:25 [INFO] root: 17:00:25.659 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+17:00:25 [INFO] root: 17:00:25.659 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+17:00:25 [INFO] root: 17:00:25.659 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+17:00:25 [INFO] root: 17:00:25.660 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+17:00:25 [INFO] root: 17:00:25.660 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+17:00:25 [INFO] root: 17:00:25.660 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+17:00:25 [INFO] root: 17:00:25.660 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+17:00:25 [INFO] root: 17:00:25.665 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+17:00:25 [INFO] root: 17:00:25.665 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+17:00:25 [INFO] root: 17:00:25.665 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+17:00:25 [INFO] root: 17:00:25.665 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+17:00:25 [INFO] root: 17:00:25.666 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+17:00:25 [INFO] root: 17:00:25.666 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+17:00:25 [INFO] root: 17:00:25.666 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+17:00:25 [INFO] root: 17:00:25.666 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+17:00:25 [INFO] root: 17:00:25.666 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+17:00:25 [INFO] root: 17:00:25.666 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+17:00:25 [INFO] root: 17:00:25.666 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+17:00:25 [INFO] root: 17:00:25.666 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+17:00:25 [INFO] root: 17:00:25.986 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+17:00:25 [INFO] root: 17:00:25.986 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+17:00:25 [INFO] root: 17:00:25.986 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+17:00:25 [INFO] root: 17:00:25.986 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+17:00:25 [INFO] root: 17:00:25.986 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+17:00:25 [INFO] root: 17:00:25.986 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+17:00:25 [INFO] root: 17:00:25.986 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+17:00:25 [INFO] root: 17:00:25.986 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+17:00:28 [INFO] root: 17:00:28.585 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+17:00:28 [INFO] root: 17:00:28.585 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+17:00:28 [INFO] root: 17:00:28.586 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+17:00:28 [INFO] root: 17:00:28.586 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+17:02:49 [INFO] root: 17:02:49.788 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+17:02:49 [INFO] root: 17:02:49.788 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+17:02:49 [INFO] root: 17:02:49.788 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+17:02:49 [INFO] root: 17:02:49.788 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+17:02:49 [INFO] root: 17:02:49.789 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+17:02:49 [INFO] root: 17:02:49.789 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+17:02:49 [INFO] root: 17:02:49.789 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+17:02:49 [INFO] root: 17:02:49.789 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+17:02:49 [INFO] root: 17:02:49.789 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+17:02:49 [INFO] root: 17:02:49.789 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+17:02:49 [INFO] root: 17:02:49.790 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+17:02:49 [INFO] root: 17:02:49.790 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+17:02:49 [INFO] root: 17:02:49.790 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+17:02:49 [INFO] root: 17:02:49.790 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+17:02:49 [INFO] root: 17:02:49.796 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+17:02:49 [INFO] root: 17:02:49.796 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+17:02:49 [INFO] root: 17:02:49.796 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+17:02:49 [INFO] root: 17:02:49.796 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+17:02:49 [INFO] root: 17:02:49.796 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+17:02:49 [INFO] root: 17:02:49.796 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+17:02:49 [INFO] root: 17:02:49.796 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+17:02:49 [INFO] root: 17:02:49.796 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+17:02:49 [INFO] root: 17:02:49.796 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+17:02:49 [INFO] root: 17:02:49.796 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+17:02:49 [INFO] root: 17:02:49.797 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+17:02:49 [INFO] root: 17:02:49.797 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+17:02:50 [INFO] root: 17:02:50.113 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+17:02:50 [INFO] root: 17:02:50.113 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+17:02:50 [INFO] root: 17:02:50.113 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+17:02:50 [INFO] root: 17:02:50.113 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+17:02:50 [INFO] root: 17:02:50.113 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+17:02:50 [INFO] root: 17:02:50.113 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+17:02:50 [INFO] root: 17:02:50.113 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+17:02:50 [INFO] root: 17:02:50.113 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+17:02:53 [INFO] root: 17:02:53.014 [INFO] [LINK_UI]  Creating link status dashboard
+17:02:53 [INFO] root: 17:02:53.014 [INFO] [LINK_UI]  Creating link status dashboard
+17:02:53 [INFO] root: 17:02:53.014 [INFO] [LINK_UI]  Creating demo link dashboard
+17:02:53 [INFO] root: 17:02:53.014 [INFO] [LINK_UI]  Creating demo link dashboard
+17:02:53 [INFO] root: 17:02:53.015 [INFO] [LINK_UI]  Loaded showport.txt from DemoData/showport.txt (454 chars)
+17:02:53 [INFO] root: 17:02:53.015 [INFO] [LINK_UI]  Loaded showport.txt from DemoData/showport.txt (454 chars)
+17:02:53 [INFO] root: 17:02:53.015 [INFO] [LINK_UI]  Using demo showport content (454 chars)
+17:02:53 [INFO] root: 17:02:53.015 [INFO] [LINK_UI]  Using demo showport content (454 chars)
+17:02:53 [INFO] root: 17:02:53.016 [INFO] [LINK_PARSER]  Parsed 4 ports and golden finger
+17:02:53 [INFO] root: 17:02:53.016 [INFO] [LINK_PARSER]  Parsed 4 ports and golden finger
+17:02:53 [INFO] root: 17:02:53.016 [INFO] [PARSE_SHOWPORT]  Parsing showport command response
+17:02:53 [INFO] root: 17:02:53.016 [INFO] [PARSE_SHOWPORT]  Parsing showport command response
+17:02:53 [INFO] root: 17:02:53.026 [INFO] [PARSE_SHOWPORT_SUCCESS]  Showport command parsed and cached successfully
+17:02:53 [INFO] root: 17:02:53.026 [INFO] [PARSE_SHOWPORT_SUCCESS]  Showport command parsed and cached successfully
+17:02:53 [INFO] root: 17:02:53.146 [INFO] [LINK_UI]  Loaded HCFront.png from Images/HCFront.png
+17:02:53 [INFO] root: 17:02:53.146 [INFO] [LINK_UI]  Loaded HCFront.png from Images/HCFront.png
+17:02:53 [INFO] root: 17:02:53.201 [INFO] [LINK_UI]  Demo link dashboard created successfully
+17:02:53 [INFO] root: 17:02:53.201 [INFO] [LINK_UI]  Demo link dashboard created successfully
+17:02:56 [INFO] root: 17:02:56.364 [INFO] [DEMO_SEND_CMD]  Sending enhanced demo command: showmode
+17:02:56 [INFO] root: 17:02:56.364 [INFO] [DEMO_SEND_CMD]  Sending enhanced demo command: showmode
+17:03:01 [ERROR] root: 17:03:01.389 [ERROR] [DEMO_TIMEOUT]  Enhanced demo command timeout after 5s
+17:03:01 [ERROR] root: 17:03:01.389 [ERROR] [DEMO_TIMEOUT]  Enhanced demo command timeout after 5s
+17:03:13 [INFO] root: 17:03:13.378 [INFO] [LINK_UI]  Creating link status dashboard
+17:03:13 [INFO] root: 17:03:13.378 [INFO] [LINK_UI]  Creating link status dashboard
+17:03:13 [INFO] root: 17:03:13.378 [INFO] [LINK_UI]  Creating demo link dashboard
+17:03:13 [INFO] root: 17:03:13.378 [INFO] [LINK_UI]  Creating demo link dashboard
+17:03:13 [INFO] root: 17:03:13.378 [INFO] [LINK_UI]  Loaded showport.txt from DemoData/showport.txt (454 chars)
+17:03:13 [INFO] root: 17:03:13.378 [INFO] [LINK_UI]  Loaded showport.txt from DemoData/showport.txt (454 chars)
+17:03:13 [INFO] root: 17:03:13.378 [INFO] [LINK_UI]  Using demo showport content (454 chars)
+17:03:13 [INFO] root: 17:03:13.378 [INFO] [LINK_UI]  Using demo showport content (454 chars)
+17:03:13 [INFO] root: 17:03:13.378 [INFO] [LINK_PARSER]  Parsed 4 ports and golden finger
+17:03:13 [INFO] root: 17:03:13.378 [INFO] [LINK_PARSER]  Parsed 4 ports and golden finger
+17:03:13 [INFO] root: 17:03:13.378 [INFO] [PARSE_SHOWPORT]  Parsing showport command response
+17:03:13 [INFO] root: 17:03:13.378 [INFO] [PARSE_SHOWPORT]  Parsing showport command response
+17:03:13 [INFO] root: 17:03:13.394 [INFO] [PARSE_SHOWPORT_SUCCESS]  Showport command parsed and cached successfully
+17:03:13 [INFO] root: 17:03:13.394 [INFO] [PARSE_SHOWPORT_SUCCESS]  Showport command parsed and cached successfully
+17:03:13 [INFO] root: 17:03:13.473 [INFO] [LINK_UI]  Loaded HCFront.png from Images/HCFront.png
+17:03:13 [INFO] root: 17:03:13.473 [INFO] [LINK_UI]  Loaded HCFront.png from Images/HCFront.png
+17:03:13 [INFO] root: 17:03:13.489 [INFO] [LINK_UI]  Demo link dashboard created successfully
+17:03:13 [INFO] root: 17:03:13.489 [INFO] [LINK_UI]  Demo link dashboard created successfully
+17:03:14 [INFO] root: 17:03:14.461 [INFO] [DEMO_SEND_CMD]  Sending enhanced demo command: showmode
+17:03:14 [INFO] root: 17:03:14.461 [INFO] [DEMO_SEND_CMD]  Sending enhanced demo command: showmode
+17:03:19 [ERROR] root: 17:03:19.487 [ERROR] [DEMO_TIMEOUT]  Enhanced demo command timeout after 5s
+17:03:19 [ERROR] root: 17:03:19.487 [ERROR] [DEMO_TIMEOUT]  Enhanced demo command timeout after 5s
+17:11:24 [INFO] root: 17:11:24.072 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+17:11:24 [INFO] root: 17:11:24.072 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+17:11:24 [INFO] root: 17:11:24.072 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+17:11:24 [INFO] root: 17:11:24.072 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+17:11:35 [INFO] root: 17:11:35.159 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+17:11:35 [INFO] root: 17:11:35.159 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+17:11:35 [INFO] root: 17:11:35.159 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+17:11:35 [INFO] root: 17:11:35.159 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+17:11:35 [INFO] root: 17:11:35.160 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+17:11:35 [INFO] root: 17:11:35.160 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+17:11:35 [INFO] root: 17:11:35.160 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+17:11:35 [INFO] root: 17:11:35.160 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+17:11:35 [INFO] root: 17:11:35.161 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+17:11:35 [INFO] root: 17:11:35.161 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+17:11:35 [INFO] root: 17:11:35.161 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+17:11:35 [INFO] root: 17:11:35.161 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+17:11:35 [INFO] root: 17:11:35.162 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+17:11:35 [INFO] root: 17:11:35.162 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+17:11:35 [INFO] root: 17:11:35.167 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+17:11:35 [INFO] root: 17:11:35.167 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+17:11:35 [INFO] root: 17:11:35.167 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+17:11:35 [INFO] root: 17:11:35.167 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+17:11:35 [INFO] root: 17:11:35.167 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+17:11:35 [INFO] root: 17:11:35.167 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+17:11:35 [INFO] root: 17:11:35.168 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+17:11:35 [INFO] root: 17:11:35.168 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+17:11:35 [INFO] root: 17:11:35.168 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+17:11:35 [INFO] root: 17:11:35.168 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+17:11:35 [INFO] root: 17:11:35.168 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+17:11:35 [INFO] root: 17:11:35.168 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+17:11:35 [INFO] root: 17:11:35.484 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+17:11:35 [INFO] root: 17:11:35.484 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+17:11:35 [INFO] root: 17:11:35.484 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+17:11:35 [INFO] root: 17:11:35.484 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+17:11:35 [INFO] root: 17:11:35.484 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+17:11:35 [INFO] root: 17:11:35.484 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+17:11:35 [INFO] root: 17:11:35.484 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+17:11:35 [INFO] root: 17:11:35.484 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+17:12:00 [INFO] root: 17:12:00.671 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+17:12:00 [INFO] root: 17:12:00.671 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+17:12:00 [INFO] root: 17:12:00.671 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+17:12:00 [INFO] root: 17:12:00.671 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+17:12:09 [INFO] root: 17:12:09.749 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+17:12:09 [INFO] root: 17:12:09.749 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+17:12:09 [INFO] root: 17:12:09.750 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+17:12:09 [INFO] root: 17:12:09.750 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+17:12:09 [INFO] root: 17:12:09.751 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+17:12:09 [INFO] root: 17:12:09.751 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+17:12:09 [INFO] root: 17:12:09.751 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+17:12:09 [INFO] root: 17:12:09.751 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+17:12:09 [INFO] root: 17:12:09.751 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+17:12:09 [INFO] root: 17:12:09.751 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+17:12:09 [INFO] root: 17:12:09.752 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+17:12:09 [INFO] root: 17:12:09.752 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+17:12:09 [INFO] root: 17:12:09.753 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+17:12:09 [INFO] root: 17:12:09.753 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+17:12:09 [INFO] root: 17:12:09.758 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+17:12:09 [INFO] root: 17:12:09.758 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+17:12:09 [INFO] root: 17:12:09.758 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+17:12:09 [INFO] root: 17:12:09.758 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+17:12:09 [INFO] root: 17:12:09.759 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+17:12:09 [INFO] root: 17:12:09.759 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+17:12:09 [INFO] root: 17:12:09.759 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+17:12:09 [INFO] root: 17:12:09.759 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+17:12:09 [INFO] root: 17:12:09.759 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+17:12:09 [INFO] root: 17:12:09.759 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+17:12:09 [INFO] root: 17:12:09.760 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+17:12:09 [INFO] root: 17:12:09.760 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+17:12:10 [INFO] root: 17:12:10.060 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+17:12:10 [INFO] root: 17:12:10.060 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+17:12:10 [INFO] root: 17:12:10.060 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+17:12:10 [INFO] root: 17:12:10.060 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+17:12:10 [INFO] root: 17:12:10.060 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+17:12:10 [INFO] root: 17:12:10.060 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+17:12:10 [INFO] root: 17:12:10.060 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+17:12:10 [INFO] root: 17:12:10.060 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+17:12:15 [INFO] root: 17:12:15.342 [INFO] [LINK_UI]  Creating link status dashboard
+17:12:15 [INFO] root: 17:12:15.342 [INFO] [LINK_UI]  Creating link status dashboard
+17:12:15 [INFO] root: 17:12:15.342 [INFO] [LINK_UI]  Creating demo link dashboard
+17:12:15 [INFO] root: 17:12:15.342 [INFO] [LINK_UI]  Creating demo link dashboard
+17:12:15 [INFO] root: 17:12:15.343 [INFO] [LINK_UI]  Loaded showport.txt from DemoData/showport.txt (454 chars)
+17:12:15 [INFO] root: 17:12:15.343 [INFO] [LINK_UI]  Loaded showport.txt from DemoData/showport.txt (454 chars)
+17:12:15 [INFO] root: 17:12:15.343 [INFO] [LINK_UI]  Using demo showport content (454 chars)
+17:12:15 [INFO] root: 17:12:15.343 [INFO] [LINK_UI]  Using demo showport content (454 chars)
+17:12:15 [INFO] root: 17:12:15.344 [INFO] [LINK_PARSER]  Parsed 4 ports and golden finger
+17:12:15 [INFO] root: 17:12:15.344 [INFO] [LINK_PARSER]  Parsed 4 ports and golden finger
+17:12:15 [INFO] root: 17:12:15.344 [INFO] [PARSE_SHOWPORT]  Parsing showport command response
+17:12:15 [INFO] root: 17:12:15.344 [INFO] [PARSE_SHOWPORT]  Parsing showport command response
+17:12:15 [INFO] root: 17:12:15.354 [INFO] [PARSE_SHOWPORT_SUCCESS]  Showport command parsed and cached successfully
+17:12:15 [INFO] root: 17:12:15.354 [INFO] [PARSE_SHOWPORT_SUCCESS]  Showport command parsed and cached successfully
+17:12:15 [INFO] root: 17:12:15.455 [INFO] [LINK_UI]  Loaded HCFront.png from Images/HCFront.png
+17:12:15 [INFO] root: 17:12:15.455 [INFO] [LINK_UI]  Loaded HCFront.png from Images/HCFront.png
+17:12:15 [INFO] root: 17:12:15.502 [INFO] [LINK_UI]  Demo link dashboard created successfully
+17:12:15 [INFO] root: 17:12:15.502 [INFO] [LINK_UI]  Demo link dashboard created successfully
+17:12:37 [INFO] root: 17:12:37.861 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+17:12:37 [INFO] root: 17:12:37.861 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+17:12:37 [INFO] root: 17:12:37.861 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+17:12:37 [INFO] root: 17:12:37.861 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+17:12:46 [INFO] root: 17:12:46.883 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+17:12:46 [INFO] root: 17:12:46.883 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+17:12:46 [INFO] root: 17:12:46.883 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+17:12:46 [INFO] root: 17:12:46.883 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+17:12:46 [INFO] root: 17:12:46.884 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+17:12:46 [INFO] root: 17:12:46.884 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+17:12:46 [INFO] root: 17:12:46.884 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+17:12:46 [INFO] root: 17:12:46.884 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+17:12:46 [INFO] root: 17:12:46.885 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+17:12:46 [INFO] root: 17:12:46.885 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+17:12:46 [INFO] root: 17:12:46.885 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+17:12:46 [INFO] root: 17:12:46.885 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+17:12:46 [INFO] root: 17:12:46.886 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+17:12:46 [INFO] root: 17:12:46.886 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+17:12:46 [INFO] root: 17:12:46.892 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+17:12:46 [INFO] root: 17:12:46.892 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+17:12:46 [INFO] root: 17:12:46.892 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+17:12:46 [INFO] root: 17:12:46.892 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+17:12:46 [INFO] root: 17:12:46.892 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+17:12:46 [INFO] root: 17:12:46.892 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+17:12:46 [INFO] root: 17:12:46.893 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+17:12:46 [INFO] root: 17:12:46.893 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+17:12:46 [INFO] root: 17:12:46.893 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+17:12:46 [INFO] root: 17:12:46.893 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+17:12:46 [INFO] root: 17:12:46.893 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+17:12:46 [INFO] root: 17:12:46.893 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+17:12:47 [INFO] root: 17:12:47.192 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+17:12:47 [INFO] root: 17:12:47.192 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+17:12:47 [INFO] root: 17:12:47.192 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+17:12:47 [INFO] root: 17:12:47.192 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+17:12:47 [INFO] root: 17:12:47.192 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+17:12:47 [INFO] root: 17:12:47.192 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+17:12:47 [INFO] root: 17:12:47.192 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+17:12:47 [INFO] root: 17:12:47.192 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+17:12:56 [INFO] root: 17:12:56.118 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+17:12:56 [INFO] root: 17:12:56.118 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+17:12:56 [INFO] root: 17:12:56.119 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+17:12:56 [INFO] root: 17:12:56.119 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+17:13:15 [INFO] root: 17:13:15.343 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+17:13:15 [INFO] root: 17:13:15.343 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+17:13:15 [INFO] root: 17:13:15.344 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+17:13:15 [INFO] root: 17:13:15.344 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+17:13:15 [INFO] root: 17:13:15.345 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+17:13:15 [INFO] root: 17:13:15.345 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+17:13:15 [INFO] root: 17:13:15.345 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+17:13:15 [INFO] root: 17:13:15.345 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+17:13:15 [INFO] root: 17:13:15.345 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+17:13:15 [INFO] root: 17:13:15.345 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+17:13:15 [INFO] root: 17:13:15.346 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+17:13:15 [INFO] root: 17:13:15.346 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+17:13:15 [INFO] root: 17:13:15.346 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+17:13:15 [INFO] root: 17:13:15.346 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+17:13:15 [INFO] root: 17:13:15.352 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+17:13:15 [INFO] root: 17:13:15.352 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+17:13:15 [INFO] root: 17:13:15.352 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+17:13:15 [INFO] root: 17:13:15.352 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+17:13:15 [INFO] root: 17:13:15.352 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+17:13:15 [INFO] root: 17:13:15.352 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+17:13:15 [INFO] root: 17:13:15.352 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+17:13:15 [INFO] root: 17:13:15.352 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+17:13:15 [INFO] root: 17:13:15.352 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+17:13:15 [INFO] root: 17:13:15.352 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+17:13:15 [INFO] root: 17:13:15.353 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+17:13:15 [INFO] root: 17:13:15.353 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+17:13:15 [INFO] root: 17:13:15.660 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+17:13:15 [INFO] root: 17:13:15.660 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+17:13:15 [INFO] root: 17:13:15.660 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+17:13:15 [INFO] root: 17:13:15.660 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+17:13:15 [INFO] root: 17:13:15.660 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+17:13:15 [INFO] root: 17:13:15.660 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+17:13:15 [INFO] root: 17:13:15.660 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+17:13:15 [INFO] root: 17:13:15.660 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+17:13:56 [INFO] root: 17:13:56.757 [INFO] [DEMO_SEND_CMD]  Sending enhanced demo command: showmode
+17:13:56 [INFO] root: 17:13:56.757 [INFO] [DEMO_SEND_CMD]  Sending enhanced demo command: showmode
+17:14:01 [ERROR] root: 17:14:01.779 [ERROR] [DEMO_TIMEOUT]  Enhanced demo command timeout after 5s
+17:14:01 [ERROR] root: 17:14:01.779 [ERROR] [DEMO_TIMEOUT]  Enhanced demo command timeout after 5s
+17:14:06 [INFO] root: 17:14:06.890 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+17:14:06 [INFO] root: 17:14:06.890 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+17:14:06 [INFO] root: 17:14:06.890 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+17:14:06 [INFO] root: 17:14:06.890 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+17:14:39 [INFO] root: 17:14:39.467 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+17:14:39 [INFO] root: 17:14:39.467 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+17:14:39 [INFO] root: 17:14:39.467 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+17:14:39 [INFO] root: 17:14:39.467 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+17:14:39 [INFO] root: 17:14:39.468 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+17:14:39 [INFO] root: 17:14:39.468 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+17:14:39 [INFO] root: 17:14:39.469 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+17:14:39 [INFO] root: 17:14:39.469 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+17:14:39 [INFO] root: 17:14:39.469 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+17:14:39 [INFO] root: 17:14:39.469 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+17:14:39 [INFO] root: 17:14:39.469 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+17:14:39 [INFO] root: 17:14:39.469 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+17:14:39 [INFO] root: 17:14:39.470 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+17:14:39 [INFO] root: 17:14:39.470 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+17:14:39 [INFO] root: 17:14:39.477 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+17:14:39 [INFO] root: 17:14:39.477 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+17:14:39 [INFO] root: 17:14:39.477 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+17:14:39 [INFO] root: 17:14:39.477 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+17:14:39 [INFO] root: 17:14:39.478 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+17:14:39 [INFO] root: 17:14:39.478 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+17:14:39 [INFO] root: 17:14:39.478 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+17:14:39 [INFO] root: 17:14:39.478 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+17:14:39 [INFO] root: 17:14:39.478 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+17:14:39 [INFO] root: 17:14:39.478 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+17:14:39 [INFO] root: 17:14:39.478 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+17:14:39 [INFO] root: 17:14:39.478 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+17:14:39 [INFO] root: 17:14:39.793 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+17:14:39 [INFO] root: 17:14:39.793 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+17:14:39 [INFO] root: 17:14:39.794 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+17:14:39 [INFO] root: 17:14:39.794 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+17:14:39 [INFO] root: 17:14:39.794 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+17:14:39 [INFO] root: 17:14:39.794 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+17:14:39 [INFO] root: 17:14:39.794 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+17:14:39 [INFO] root: 17:14:39.794 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+17:14:42 [INFO] root: 17:14:42.996 [INFO] [LINK_UI]  Creating link status dashboard
+17:14:42 [INFO] root: 17:14:42.996 [INFO] [LINK_UI]  Creating link status dashboard
+17:14:42 [INFO] root: 17:14:42.996 [INFO] [LINK_UI]  Creating demo link dashboard
+17:14:42 [INFO] root: 17:14:42.996 [INFO] [LINK_UI]  Creating demo link dashboard
+17:14:42 [INFO] root: 17:14:42.997 [INFO] [LINK_UI]  Loaded showport.txt from DemoData/showport.txt (454 chars)
+17:14:42 [INFO] root: 17:14:42.997 [INFO] [LINK_UI]  Loaded showport.txt from DemoData/showport.txt (454 chars)
+17:14:42 [INFO] root: 17:14:42.997 [INFO] [LINK_UI]  Using demo showport content (454 chars)
+17:14:42 [INFO] root: 17:14:42.997 [INFO] [LINK_UI]  Using demo showport content (454 chars)
+17:14:42 [INFO] root: 17:14:42.998 [INFO] [LINK_PARSER]  Parsed 4 ports and golden finger
+17:14:42 [INFO] root: 17:14:42.998 [INFO] [LINK_PARSER]  Parsed 4 ports and golden finger
+17:14:42 [INFO] root: 17:14:42.998 [INFO] [PARSE_SHOWPORT]  Parsing showport command response
+17:14:42 [INFO] root: 17:14:42.998 [INFO] [PARSE_SHOWPORT]  Parsing showport command response
+17:14:43 [INFO] root: 17:14:43.009 [INFO] [PARSE_SHOWPORT_SUCCESS]  Showport command parsed and cached successfully
+17:14:43 [INFO] root: 17:14:43.009 [INFO] [PARSE_SHOWPORT_SUCCESS]  Showport command parsed and cached successfully
+17:14:43 [INFO] root: 17:14:43.124 [INFO] [LINK_UI]  Loaded HCFront.png from Images/HCFront.png
+17:14:43 [INFO] root: 17:14:43.124 [INFO] [LINK_UI]  Loaded HCFront.png from Images/HCFront.png
+17:14:43 [INFO] root: 17:14:43.170 [INFO] [LINK_UI]  Demo link dashboard created successfully
+17:14:43 [INFO] root: 17:14:43.170 [INFO] [LINK_UI]  Demo link dashboard created successfully
+17:15:07 [INFO] root: 17:15:07.513 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+17:15:07 [INFO] root: 17:15:07.513 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+17:15:07 [INFO] root: 17:15:07.513 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+17:15:07 [INFO] root: 17:15:07.513 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+17:15:47 [INFO] root: 17:15:47.415 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+17:15:47 [INFO] root: 17:15:47.415 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized without cache manager
+17:15:47 [INFO] root: 17:15:47.416 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+17:15:47 [INFO] root: 17:15:47.416 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+17:15:47 [INFO] root: 17:15:47.416 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+17:15:47 [INFO] root: 17:15:47.416 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+17:15:47 [INFO] root: 17:15:47.418 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+17:15:47 [INFO] root: 17:15:47.418 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+17:15:47 [INFO] root: 17:15:47.418 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+17:15:47 [INFO] root: 17:15:47.418 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+17:15:47 [INFO] root: 17:15:47.421 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+17:15:47 [INFO] root: 17:15:47.421 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+17:15:47 [INFO] root: 17:15:47.421 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+17:15:47 [INFO] root: 17:15:47.421 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+17:15:47 [INFO] root: 17:15:47.427 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+17:15:47 [INFO] root: 17:15:47.427 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+17:15:47 [INFO] root: 17:15:47.427 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+17:15:47 [INFO] root: 17:15:47.427 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+17:15:47 [INFO] root: 17:15:47.427 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+17:15:47 [INFO] root: 17:15:47.427 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+17:15:47 [INFO] root: 17:15:47.427 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+17:15:47 [INFO] root: 17:15:47.427 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+17:15:47 [INFO] root: 17:15:47.427 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+17:15:47 [INFO] root: 17:15:47.427 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+17:15:47 [INFO] root: 17:15:47.428 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+17:15:47 [INFO] root: 17:15:47.428 [INFO] [LINK_UI]  LinkStatusDashboardUI initialized
+17:15:47 [INFO] root: 17:15:47.736 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+17:15:47 [INFO] root: 17:15:47.736 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+17:15:47 [INFO] root: 17:15:47.736 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+17:15:47 [INFO] root: 17:15:47.736 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+17:15:47 [INFO] root: 17:15:47.736 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+17:15:47 [INFO] root: 17:15:47.736 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+17:15:47 [INFO] root: 17:15:47.736 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+17:15:47 [INFO] root: 17:15:47.736 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+17:16:56 [INFO] root: 17:16:56.049 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+17:16:56 [INFO] root: 17:16:56.049 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+17:16:56 [INFO] root: 17:16:56.049 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+17:16:56 [INFO] root: 17:16:56.049 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected

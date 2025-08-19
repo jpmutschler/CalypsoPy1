@@ -68,7 +68,7 @@ class ResetsDashboard:
 
             # Create main container that fills the scrollable frame
             main_container = ttk.Frame(scrollable_frame, style='Content.TFrame')
-            main_container.pack(fill='both', expand=True, padx=650, pady=20)
+            main_container.pack(fill='both', expand=True, padx=10, pady=20)
             print("DEBUG: Created main container")
 
             # Dashboard title section

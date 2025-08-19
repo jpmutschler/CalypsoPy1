@@ -459,7 +459,7 @@ class LinkStatusDashboardUI:
         # Display the HCFront.png image if loaded (lower portion)
         if self.hc_image:
             image_frame = ttk.Frame(main_container, style='Content.TFrame')
-            image_frame.pack(fill='both', padx=(650, 15), expand=True)
+            image_frame.pack(fill='both', padx=(10, 15), expand=True)
             self._create_image_section(image_frame)
         else:
             # Show message if image not found
