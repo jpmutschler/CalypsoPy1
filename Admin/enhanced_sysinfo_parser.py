@@ -29,13 +29,13 @@ except ImportError as e:
 
 class EnhancedSystemInfoParser:
     """
-    FIXED: Enhanced parser with complete method implementation
+    Enhanced parser with complete method implementation
     """
 
-    def __init__(self, cache_manager):
+    def __init__(self, cache_manager=None):
         self.cache = cache_manager
 
-    # FIXED: Add missing parse_showport_command method
+    # Add missing parse_showport_command method
     def parse_showport_command(self, showport_output: str) -> Dict[str, Any]:
         """
         Parse showport command output specifically

@@ -1036,39 +1036,66 @@ class DashboardApp:
         self.create_content_area()
 
     def create_sidebar(self):
-        """Create navigation sidebar"""
-        # Sidebar frame
-        sidebar_frame = ttk.Frame(self.root, style='Sidebar.TFrame', width=200)
-        sidebar_frame.grid(row=0, column=0, sticky='nsew', padx=(0, 2))
-        sidebar_frame.grid_propagate(False)
+        """Create the sidebar with dashboard tiles - FIXED VERSION"""
+        # Header - simplified without settings gear
+        header_frame = ttk.Frame(self.sidebar, style='Sidebar.TFrame')
+        header_frame.pack(fill='x', padx=10, pady=10)
 
-        # App title in sidebar
-        title_frame = ttk.Frame(sidebar_frame, style='Sidebar.TFrame')
-        title_frame.pack(fill='x', padx=10, pady=10)
+        header_label = ttk.Label(header_frame, text="📊 Dashboards",
+                                 style='Sidebar.TLabel',
+                                 font=('Arial', 12, 'bold'))
+        header_label.pack()
 
-        title_label = ttk.Label(title_frame, text=f"{APP_NAME}\n{APP_VERSION}",
-                                style='SidebarTitle.TLabel', justify='center')
-        title_label.pack()
-
-        # Dashboard navigation buttons
-        dashboards = [
-            ("💻", "Host Card Information", "host"),
-            ("🔗", "Link Status", "link"),
-            ("🔌", "Port Configuration", "port"),
-            ("✅", "Compliance", "compliance"),
-            ("📋", "Registers", "registers"),
-            ("⚙️", "Advanced", "advanced"),
-            ("🔄", "Resets", "resets"),
-            ("📦", "Firmware Updates", "firmware"),
-            ("❓", "Help", "help")
+        # Dashboard tiles with proper formatting
+        self.dashboards = [
+            ("host", "💻", "Host Card Information"),
+            ("link", "🔗", "Link Status"),
+            ("port", "🔌", "Port Configuration"),
+            ("compliance", "✅", "Compliance"),
+            ("registers", "📋", "Registers"),
+            ("advanced", "⚙️", "Advanced"),
+            ("resets", "🔄", "Resets"),
+            ("firmware", "📦", "Firmware Updates"),
+            ("help", "❓", "Help")
         ]
 
-        for icon, name, dashboard_id in dashboards:
-            btn = ttk.Button(sidebar_frame,
-                             text=f"{icon} {name}",
-                             command=lambda d=dashboard_id: self.switch_dashboard(d),
-                             style='Sidebar.TButton')
-            btn.pack(fill='x', padx=10, pady=2)
+        self.tile_frames = {}
+        for dashboard_id, icon, title in self.dashboards:
+            self.create_dashboard_tile(dashboard_id, icon, title)
+
+        # *** CONNECTION STATUS WITH DEMO MODE INDICATOR ***
+        status_frame = ttk.Frame(self.sidebar, style='Sidebar.TFrame')
+        status_frame.pack(side='bottom', fill='x', padx=10, pady=10)
+
+        # Set status text and color based on mode
+        if self.is_demo_mode:
+            status_text = "🎭 DEMO MODE"
+            status_color = '#ff9500'  # Orange for demo
+        else:
+            status_text = f"🔌 {self.port}"
+            status_color = '#00ff00'  # Green for real connection
+
+        self.connection_label = ttk.Label(status_frame,
+                                          text=status_text,
+                                          style='Sidebar.TLabel',
+                                          font=('Arial', 9, 'bold'))
+        self.connection_label.pack()
+
+        # Apply the status color (this might require a custom style)
+        try:
+            self.connection_label.configure(foreground=status_color)
+        except:
+            pass  # Fallback if style configuration fails
+
+        # *** ADD DEMO MODE INFO ***
+        if self.is_demo_mode:
+            demo_info_label = ttk.Label(status_frame,
+                                        text="Training Environment",
+                                        style='Sidebar.TLabel',
+                                        font=('Arial', 8))
+            demo_info_label.pack()
+
+
 
     def create_content_area(self):
         """Create the main content display area"""
@@ -1182,13 +1209,27 @@ class DashboardApp:
     # =====================================================================
 
     def switch_dashboard(self, dashboard_id):
-        """Switch to a different dashboard"""
-        self.current_dashboard = dashboard_id
+        """Switch to a different dashboard with proper highlighting"""
         print(f"DEBUG: Switching to {dashboard_id} dashboard")
 
-        # Dashboard-specific initialization if needed
-        if dashboard_id == "host":
-            # Warm cache if needed
+        # Update highlighting - reset all tiles
+        for tile_id, tile_button in self.tile_frames.items():
+            if tile_id == dashboard_id:
+                # Highlight selected tile
+                tile_button.configure(bg='#404040')
+            else:
+                # Reset other tiles
+                tile_button.configure(bg='#2d2d2d')
+
+        # Update current dashboard
+        self.current_dashboard = dashboard_id
+
+        # Send appropriate command when switching to specific dashboards
+        if dashboard_id == "link":
+            print("DEBUG: Switching to link dashboard - will send showport command")
+            # The create_link_dashboard method will handle sending the command
+        elif dashboard_id == "host":
+            # Warm cache if needed before updating content
             cache_warmed = self.warm_cache_if_needed()
             if cache_warmed:
                 self.update_cache_status("Loading fresh data...")
@@ -1240,16 +1281,88 @@ class DashboardApp:
             print(f"ERROR: Failed to create {self.current_dashboard} dashboard: {e}")
             self.show_dashboard_error(self.current_dashboard, e)
 
+    def create_dashboard_tile(self, dashboard_id, icon, title):
+        """Create a dashboard tile with proper styling"""
+        # Main tile frame with proper styling
+        tile_frame = ttk.Frame(self.sidebar, style='Sidebar.TFrame', relief='solid', borderwidth=1)
+        tile_frame.pack(fill='x', padx=10, pady=5)
+
+        # Make tile clickable
+        tile_button = tk.Button(tile_frame,
+                                text=f"{icon}\n{title}",
+                                font=('Arial', 10, 'bold'),
+                                bg='#2d2d2d',
+                                fg='#ffffff',
+                                activebackground='#404040',
+                                activeforeground='#ffffff',
+                                relief='flat',
+                                borderwidth=0,
+                                cursor='hand2',
+                                command=lambda: self.switch_dashboard(dashboard_id))
+
+        # Configure button to fill the frame
+        tile_button.pack(fill='both', expand=True, padx=2, pady=2)
+
+        # Store reference for highlighting
+        self.tile_frames[dashboard_id] = tile_button
+
+        # Highlight current dashboard
+        if dashboard_id == self.current_dashboard:
+            tile_button.configure(bg='#404040')
+
+
+
     def create_host_dashboard(self):
-        """Create host card dashboard - delegate to dashboard module"""
+        """FIXED: Create host card information dashboard"""
+        print("DEBUG: Creating host dashboard...")
+
+        if self.is_demo_mode:
+            # For demo mode, try to use data directly from CLI
+            print("DEBUG: Demo mode - loading data directly")
+
+            try:
+                demo_content = getattr(self.cli, 'demo_sysinfo_content', None)
+
+                if demo_content and len(demo_content) > 100:
+                    print(f"DEBUG: Using demo content directly ({len(demo_content)} chars)")
+
+                    # Parse immediately using the enhanced parser
+                    parsed_data = self.sysinfo_parser.parse_unified_sysinfo(demo_content, "demo")
+                    print("DEBUG: Demo data parsed successfully")
+
+                    # Update the dashboard
+                    self.host_card_ui.create_host_dashboard()
+                    return
+
+                else:
+                    print("DEBUG: No demo content, loading fallback")
+
+            except Exception as e:
+                print(f"ERROR: Demo dashboard failed: {e}")
+                import traceback
+                traceback.print_exc()
+
+        # For real device or fallback, use the UI method
         try:
-            if hasattr(self.host_card_ui, 'create_host_dashboard'):
-                self.host_card_ui.create_host_dashboard()
-            else:
-                print("WARNING: Host dashboard create method not found")
+            self.host_card_ui.create_host_dashboard()
         except Exception as e:
-            print(f"ERROR: Error creating host dashboard: {e}")
-            raise
+            print(f"ERROR: Failed to create host dashboard: {e}")
+            import traceback
+            traceback.print_exc()
+
+            # Show error message in the dashboard
+            error_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+            error_frame.pack(fill='both', expand=True, padx=20, pady=20)
+
+            ttk.Label(error_frame,
+                      text="❌ Error Loading Host Dashboard",
+                      style='Dashboard.TLabel',
+                      font=('Arial', 16, 'bold')).pack(pady=(0, 10))
+
+            ttk.Label(error_frame,
+                      text=f"Error: {str(e)}",
+                      style='Info.TLabel',
+                      font=('Arial', 10)).pack()
 
     def create_link_dashboard(self):
         """Create link status dashboard - FULLY DELEGATED to dashboard module"""

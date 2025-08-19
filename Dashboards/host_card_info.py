@@ -357,28 +357,28 @@ class HostCardDashboardUI:
         self.app = dashboard_app
         self.raw_output_expanded = False
         self.auto_refresh_var = tk.BooleanVar()
-    
+
     def create_host_dashboard(self):
         """Create the complete host card information dashboard"""
         # Get real host card information from both commands
         host_info = self.app.host_card_manager.get_host_card_info()
         sections = host_info.get_display_sections()
-        
+
         # Create each section with icons and organized data
         for icon, section_title, section_data in sections:
             self.create_host_info_section(icon, section_title, section_data)
-        
+
         # Add refresh controls
         self.create_host_refresh_controls(host_info)
-        
+
         # Add raw command output for debugging (collapsible)
         if self.app.is_demo_mode or (host_info.raw_ver_response or host_info.raw_lsd_response):
             self.create_raw_output_section(host_info)
 
     def create_host_info_section(self, icon, title, data_items):
         """Create a section with enhanced data validation"""
-        # Create section frame
-        section_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame',
+        # FIX: Use self.app.scrollable_frame instead of self.scrollable_frame
+        section_frame = ttk.Frame(self.app.scrollable_frame, style='Content.TFrame',
                                   relief='solid', borderwidth=1)
         section_frame.pack(fill='x', pady=10)
 
@@ -405,18 +405,14 @@ class HostCardDashboardUI:
 
             # If no valid items were displayed, show a message
             if items_displayed == 0:
-                no_data_label = ttk.Label(content_frame,
-                                          text="Waiting for device data...",
-                                          style='Info.TLabel',
-                                          font=('Arial', 10, 'italic'))
-                no_data_label.pack(anchor='w')
+                no_data_label = ttk.Label(content_frame, text="No valid data available",
+                                        style='Info.TLabel', font=('Arial', 10, 'italic'))
+                no_data_label.pack(pady=10)
         else:
-            # No data available message
-            no_data_label = ttk.Label(content_frame,
-                                      text="No data available",
-                                      style='Info.TLabel',
-                                      font=('Arial', 10, 'italic'))
-            no_data_label.pack(anchor='w')
+            # Show message when no data items
+            no_data_label = ttk.Label(content_frame, text="No data available",
+                                    style='Info.TLabel', font=('Arial', 10, 'italic'))
+            no_data_label.pack(pady=10)
 
     def debug_cache_status(self):
         """Debug method to check cache status"""
@@ -435,146 +431,146 @@ class HostCardDashboardUI:
             print(f"DEBUG: Complete sysinfo data available with {len(complete_data)} keys")
         else:
             print("DEBUG: No complete sysinfo data in cache")
-    
+
     def create_data_row(self, parent, field_name, value):
-        """Create a single data row with field name and value"""
+        """Create a data row with field name and value"""
         row_frame = ttk.Frame(parent, style='Content.TFrame')
-        row_frame.pack(fill='x', pady=3)
-        
-        # Field name (left aligned)
-        field_label = ttk.Label(row_frame, text=f"{field_name}:", 
-                              style='Info.TLabel', font=('Arial', 10, 'bold'))
+        row_frame.pack(fill='x', pady=2)
+
+        # Field name label
+        field_label = ttk.Label(row_frame, text=f"{field_name}:",
+                                style='Info.TLabel', font=('Arial', 10, 'bold'))
         field_label.pack(side='left')
-        
-        # Value (right aligned with status color if applicable)
-        value_color = self.get_status_color(field_name, value)
-        
-        # Create a custom style for this value if it has a special color
-        if value_color != '#cccccc':  # Default color
-            style_name = f"Status_{field_name.replace(' ', '_').replace('.', '_')}.TLabel"
-            style = ttk.Style()
-            style.configure(style_name, background='#1e1e1e', 
-                           foreground=value_color, font=('Arial', 10))
-            value_label = ttk.Label(row_frame, text=value, style=style_name)
-        else:
-            value_label = ttk.Label(row_frame, text=value, style='Info.TLabel')
-        
+
+        # Value label with color coding for certain values
+        value_color = self._get_value_color(field_name, value)
+        value_label = ttk.Label(row_frame, text=str(value),
+                                style='Info.TLabel', font=('Arial', 10))
         value_label.pack(side='right')
-    
-    def get_status_color(self, field_name, value):
-        """Get appropriate color for status values"""
-        # Temperature status colors
-        if "temperature" in field_name.lower():
+
+        # Apply color if needed
+        if value_color != '#cccccc':
+            value_label.configure(foreground=value_color)
+
+    def _get_value_color(self, field_name, value):
+        """Get color for value based on field type and value"""
+        # Temperature color coding
+        if 'temperature' in field_name.lower():
             try:
-                temp_val = int(re.search(r'\d+', str(value)).group())
-                if temp_val > 70:
+                temp = float(re.sub(r'[^\d.]', '', str(value)))
+                if temp > 70:
                     return '#ff4444'  # Red for high temp
-                elif temp_val > 60:
-                    return '#ff9500'  # Orange for warm temp
+                elif temp > 60:
+                    return '#ff9500'  # Orange for medium temp
                 else:
                     return '#00ff00'  # Green for normal temp
             except:
                 return '#cccccc'
-        
-        # Error status colors
-        if "error" in field_name.lower():
+
+        # Error count color coding
+        if 'error' in field_name.lower():
             try:
-                error_count = int(value)
+                error_count = int(re.sub(r'[^\d]', '', str(value)))
                 if error_count > 0:
                     return '#ff4444'  # Red for errors
                 else:
                     return '#00ff00'  # Green for no errors
             except:
                 return '#cccccc'
-        
-        # Voltage status colors
-        if "rail" in field_name.lower() and "mv" in str(value).lower():
+
+        # Current draw color coding
+        if 'current' in field_name.lower():
             try:
-                voltage = int(re.search(r'\d+', str(value)).group())
-                rail_type = field_name.lower()
-                
-                # Basic voltage range checks
-                if "0.8v" in rail_type and (voltage < 750 or voltage > 950):
-                    return '#ff9500'
-                elif "1.2v" in rail_type and (voltage < 1100 or voltage > 1300):
-                    return '#ff9500'
-                elif "1.5v" in rail_type and (voltage < 1400 or voltage > 1600):
-                    return '#ff9500'
-                else:
-                    return '#00ff00'
-            except:
-                return '#cccccc'
-        
-        # Current status colors
-        if "current" in field_name.lower() and "ma" in str(value).lower():
-            try:
-                current = int(re.search(r'\d+', str(value)).group())
+                current = float(re.sub(r'[^\d.]', '', str(value)))
                 if current > 15000:
                     return '#ff9500'
                 else:
                     return '#00ff00'
             except:
                 return '#cccccc'
-        
+
         return '#cccccc'  # Default color
-    
+
     def create_host_refresh_controls(self, host_info):
         """Create refresh controls and status display"""
         controls_frame = ttk.Frame(self.app.scrollable_frame, style='Content.TFrame')
         controls_frame.pack(fill='x', pady=15)
-        
+
         # Refresh button
-        refresh_btn = ttk.Button(controls_frame, text="🔄 Refresh Device Info", 
-                               command=self.refresh_host_info)
+        refresh_btn = ttk.Button(controls_frame, text="🔄 Refresh Device Info",
+                                 command=self.refresh_host_info)
         refresh_btn.pack(side='left')
-        
+
         # Auto-refresh toggle
-        auto_refresh_check = ttk.Checkbutton(controls_frame, 
-                                           text="Auto-refresh (30s)", 
-                                           variable=self.auto_refresh_var)
+        auto_refresh_check = ttk.Checkbutton(controls_frame,
+                                             text="Auto-refresh (30s)",
+                                             variable=self.auto_refresh_var)
         auto_refresh_check.pack(side='left', padx=(15, 0))
-        
+
         # Last update time
         if host_info.last_updated:
-            update_label = ttk.Label(controls_frame, 
-                                   text=f"Last updated: {host_info.last_updated}",
-                                   style='Info.TLabel', font=('Arial', 9))
+            update_label = ttk.Label(controls_frame,
+                                     text=f"Last updated: {host_info.last_updated}",
+                                     style='Info.TLabel', font=('Arial', 9))
             update_label.pack(side='right')
-    
+
     def create_raw_output_section(self, host_info):
         """Create collapsible raw output section for debugging"""
         # Create expandable frame
-        raw_frame = ttk.Frame(self.app.scrollable_frame, style='Content.TFrame', 
-                             relief='solid', borderwidth=1)
+        raw_frame = ttk.Frame(self.app.scrollable_frame, style='Content.TFrame',
+                              relief='solid', borderwidth=1)
         raw_frame.pack(fill='x', pady=20)
-        
+
         # Header with expand/collapse button
         header_frame = ttk.Frame(raw_frame, style='Content.TFrame')
         header_frame.pack(fill='x', padx=15, pady=(15, 10))
-        
-        self.expand_btn = ttk.Button(header_frame, 
-                              text="▼ Raw Command Output" if self.raw_output_expanded else "▶ Raw Command Output",
-                              command=lambda: self.toggle_raw_output(raw_frame))
+
+        self.expand_btn = ttk.Button(header_frame,
+                                     text="▼ Raw Command Output" if self.raw_output_expanded else "▶ Raw Command Output",
+                                     command=lambda: self.toggle_raw_output(raw_frame))
         self.expand_btn.pack(side='left')
-        
+
         # Content frame
         self.raw_content_frame = ttk.Frame(raw_frame, style='Content.TFrame')
         if self.raw_output_expanded:
             self.raw_content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
-        
-        # Add content to raw frame
-        self.populate_raw_content(host_info)
-    
+
+            # Show raw responses
+            if host_info.raw_ver_response:
+                self.create_raw_text_display(self.raw_content_frame, "Ver Command Output", host_info.raw_ver_response)
+
+            if host_info.raw_lsd_response:
+                self.create_raw_text_display(self.raw_content_frame, "LSD Command Output", host_info.raw_lsd_response)
+
     def toggle_raw_output(self, raw_frame):
-        """Toggle raw output visibility"""
+        """Toggle raw output display"""
         self.raw_output_expanded = not self.raw_output_expanded
-        
+        self.expand_btn.config(text="▼ Raw Command Output" if self.raw_output_expanded else "▶ Raw Command Output")
+
         if self.raw_output_expanded:
-            self.expand_btn.config(text="▼ Raw Command Output")
             self.raw_content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
         else:
-            self.expand_btn.config(text="▶ Raw Command Output")
             self.raw_content_frame.pack_forget()
+
+    def create_raw_text_display(self, parent, title, text_content):
+        """Create a text display for raw command output"""
+        # Title
+        title_label = ttk.Label(parent, text=title, style='Dashboard.TLabel', font=('Arial', 10, 'bold'))
+        title_label.pack(anchor='w', pady=(10, 5))
+
+        # Text area with scrollbar
+        text_frame = ttk.Frame(parent)
+        text_frame.pack(fill='both', expand=True, pady=(0, 10))
+
+        text_widget = tk.Text(text_frame, height=8, wrap='word', font=('Consolas', 9))
+        scrollbar = ttk.Scrollbar(text_frame, orient='vertical', command=text_widget.yview)
+        text_widget.configure(yscrollcommand=scrollbar.set)
+
+        text_widget.insert('1.0', text_content)
+        text_widget.configure(state='disabled')  # Make read-only
+
+        text_widget.pack(side='left', fill='both', expand=True)
+        scrollbar.pack(side='right', fill='y')
     
     def populate_raw_content(self, host_info):
         """Populate the raw content frame with command outputs"""
@@ -637,23 +633,12 @@ class HostCardDashboardUI:
     def refresh_host_info(self):
         """Refresh host card information"""
         try:
-            # Force refresh of host card info
+            # Force refresh
             self.app.host_card_manager.get_host_card_info(force_refresh=True)
-            
-            # Refresh the dashboard display if we're currently on host dashboard
-            if self.app.current_dashboard == "host":
-                self.app.update_content_area()
-                
-            # Log the refresh action
-            self.app.log_data.append(f"[{datetime.now().strftime('%H:%M:%S')}] Host card info refreshed (ver + lsd)")
-            
+            # Refresh the display
+            self.app.update_content_area()
         except Exception as e:
-            # Handle any errors during refresh
-            error_msg = f"Failed to refresh host info: {str(e)}"
-            self.app.log_data.append(f"[{datetime.now().strftime('%H:%M:%S')}] {error_msg}")
-            
-            # Show error to user
-            messagebox.showerror("Refresh Error", error_msg)
+            print(f"ERROR: Failed to refresh host info: {e}")
 
 # Demo mode support functions
 def get_demo_ver_response(device_state):
