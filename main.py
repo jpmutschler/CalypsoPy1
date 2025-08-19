@@ -2399,11 +2399,11 @@ class DashboardApp:
                    command=self.refresh_current_dashboard).pack(side='right')
 
     def create_link_dashboard(self):
-        """Create properly formatted link status dashboard matching other dashboard styles"""
-        debug_info("Creating properly formatted link status dashboard", "LINK_DASHBOARD_FORMATTED")
+        """Create perfectly aligned and centered link status dashboard"""
+        debug_info("Creating perfectly aligned link status dashboard", "LINK_DASHBOARD_ALIGNED")
 
         if self.is_demo_mode:
-            debug_info("Demo mode - creating formatted link dashboard", "DEMO_FORMATTED_MODE")
+            debug_info("Demo mode - creating aligned link dashboard", "DEMO_ALIGNED_MODE")
 
             try:
                 # Extract and parse showport data
@@ -2417,17 +2417,320 @@ class DashboardApp:
                     showport_content = self._load_demo_showport_file_direct()
 
                 if showport_content:
-                    self._create_formatted_link_dashboard_from_showport(showport_content)
+                    self._create_aligned_link_dashboard_from_showport(showport_content)
                 else:
-                    self._create_formatted_demo_fallback()
+                    self._create_aligned_demo_fallback()
 
             except Exception as e:
-                debug_error(f"Formatted demo link dashboard failed: {e}", "DEMO_FORMATTED_ERROR")
-                self._create_formatted_demo_fallback()
+                debug_error(f"Aligned demo link dashboard failed: {e}", "DEMO_ALIGNED_ERROR")
+                self._create_aligned_demo_fallback()
         else:
             # Real device mode
             self.send_showport_command()
             self.show_loading_message("Loading link status...")
+
+    def _create_aligned_link_dashboard_from_showport(self, showport_content):
+        """Create perfectly aligned link dashboard from showport content"""
+        debug_info("Creating aligned link dashboard from showport content", "ALIGNED_DASHBOARD")
+
+        try:
+            # Parse showport content
+            from Dashboards.link_status_dashboard import LinkStatusParser
+            parser = LinkStatusParser()
+            formatted_content = f"Cmd>showport\n\n{showport_content}\n\nOK>"
+            link_info = parser.parse_showport_response(formatted_content)
+
+            debug_info(f"Parsed {len(link_info.ports)} ports for aligned display", "ALIGNED_PARSE")
+
+            # Load HCFront.png image
+            hc_image = self._load_hc_image()
+
+            # Clear existing content
+            for widget in self.scrollable_frame.winfo_children():
+                widget.destroy()
+
+            # Create main centered container (like Resets Dashboard)
+            main_container = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+            main_container.pack(expand=True, fill='none')  # Center the entire frame
+
+            # Create header
+            header_frame = ttk.Frame(main_container, style='Content.TFrame')
+            header_frame.pack(pady=(0, 40))
+
+            header_label = ttk.Label(header_frame, text="🔗 Link Status",
+                                     style='SectionHeader.TLabel',
+                                     font=('Arial', 24, 'bold'))
+            header_label.pack()
+
+            # Create aligned ports table
+            table_frame = ttk.Frame(main_container, style='Content.TFrame')
+            table_frame.pack(pady=(0, 30))
+
+            # Sort ports in ascending order (80, 112, 128)
+            sorted_ports = []
+            for port_key, port_info in link_info.ports.items():
+                try:
+                    port_num = int(port_info.port_number)
+                    sorted_ports.append((port_num, port_info))
+                except (ValueError, TypeError):
+                    # Handle non-numeric port numbers
+                    sorted_ports.append((9999, port_info))  # Put at end
+
+            sorted_ports.sort(key=lambda x: x[0])
+
+            # Create port rows in ascending order
+            for i, (port_num, port_info) in enumerate(sorted_ports):
+                self._create_perfectly_aligned_port_row(table_frame, port_info, i)
+
+            # Add golden finger at the bottom
+            if link_info.golden_finger and link_info.golden_finger.port_number:
+                self._create_perfectly_aligned_port_row(table_frame, link_info.golden_finger, len(sorted_ports))
+
+            # Create image section (centered below ports)
+            if hc_image:
+                image_frame = ttk.Frame(main_container, style='Content.TFrame')
+                image_frame.pack(pady=(30, 20))
+
+                image_label = ttk.Label(image_frame, image=hc_image, background='#1e1e1e')
+                image_label.pack()
+                image_label.image = hc_image  # Keep reference
+            else:
+                # Show message if image not found
+                no_image_frame = ttk.Frame(main_container, style='Content.TFrame')
+                no_image_frame.pack(pady=(30, 20))
+
+                no_image_label = ttk.Label(no_image_frame,
+                                           text="HCFront.png not found in Images directory",
+                                           style='Info.TLabel', font=('Arial', 12, 'italic'))
+                no_image_label.pack()
+
+            # Add refresh controls at the bottom
+            self._create_aligned_refresh_controls(main_container, link_info.last_updated)
+
+            debug_info("Aligned link dashboard created successfully", "ALIGNED_SUCCESS")
+
+        except Exception as e:
+            debug_error(f"Error creating aligned link dashboard: {e}", "ALIGNED_ERROR")
+            import traceback
+            traceback.print_exc()
+            self._create_aligned_demo_fallback()
+
+    def _create_perfectly_aligned_port_row(self, parent_frame, port_info, row_index):
+        """Create perfectly aligned port row with consistent vertical alignment"""
+        port_name = f"Port {port_info.port_number}" if port_info.port_number != "Golden Finger" else port_info.port_number
+
+        debug_info(
+            f"Creating aligned row {row_index}: {port_name} - {port_info.display_speed} {port_info.display_width}",
+            "ALIGNED_ROW")
+
+        # Create row frame with consistent padding
+        row_frame = ttk.Frame(parent_frame, style='Content.TFrame')
+        row_frame.pack(fill='x', pady=6)
+
+        # Configure grid with precise column widths for perfect alignment
+        row_frame.columnconfigure(0, weight=0, minsize=180)  # Port name - fixed width
+        row_frame.columnconfigure(1, weight=0, minsize=50)  # Status light - centered
+        row_frame.columnconfigure(2, weight=0, minsize=140)  # Speed/Width - fixed width
+        row_frame.columnconfigure(3, weight=0, minsize=120)  # Active status - fixed width
+
+        # Port name (left-aligned in fixed width column)
+        name_label = ttk.Label(row_frame, text=port_name,
+                               style='Info.TLabel', font=('Arial', 20, 'bold'))
+        name_label.grid(row=0, column=0, sticky='w', padx=(0, 10))
+
+        # Status light (perfectly centered)
+        status_light_frame = ttk.Frame(row_frame, style='Content.TFrame')
+        status_light_frame.grid(row=0, column=1, padx=5)
+
+        status_canvas = tk.Canvas(status_light_frame, width=28, height=28,
+                                  bg='#1e1e1e', highlightthickness=0)
+        status_canvas.pack()
+
+        # Draw colored circle with white border for better visibility
+        status_canvas.create_oval(2, 2, 26, 26, fill=port_info.status_color, outline='#ffffff', width=1)
+
+        # Speed and width (left-aligned in fixed width column)
+        speed_frame = ttk.Frame(row_frame, style='Content.TFrame')
+        speed_frame.grid(row=0, column=2, sticky='w', padx=(10, 10))
+
+        if port_info.display_speed == "No Link":
+            speed_label = ttk.Label(speed_frame, text="No Link",
+                                    style='Info.TLabel', font=('Arial', 18, 'bold'),
+                                    foreground='#ff4444')
+            speed_label.pack(anchor='w')
+        else:
+            # Speed and width on same line for clean look
+            speed_width_text = f"{port_info.display_speed}"
+            if port_info.display_width:
+                speed_width_text += f" {port_info.display_width}"
+
+            speed_label = ttk.Label(speed_frame, text=speed_width_text,
+                                    style='Info.TLabel', font=('Arial', 18, 'bold'))
+            speed_label.pack(anchor='w')
+
+        # Active status (left-aligned in fixed width column)
+        if port_info.active:
+            active_frame = ttk.Frame(row_frame, style='Content.TFrame')
+            active_frame.grid(row=0, column=3, sticky='w', padx=(10, 0))
+
+            active_var = tk.BooleanVar(value=True)
+            active_check = ttk.Checkbutton(active_frame, variable=active_var, state='disabled')
+            active_check.pack(side='left')
+
+            active_label = ttk.Label(active_frame, text="Active",
+                                     foreground='#00ff00', background='#1e1e1e',
+                                     font=('Arial', 16, 'bold'))
+            active_label.pack(side='left', padx=(5, 0))
+        else:
+            active_frame = ttk.Frame(row_frame, style='Content.TFrame')
+            active_frame.grid(row=0, column=3, sticky='w', padx=(10, 0))
+
+            active_var = tk.BooleanVar(value=False)
+            active_check = ttk.Checkbutton(active_frame, text="Active",
+                                           variable=active_var, state='disabled')
+            active_check.pack()
+
+    def _create_aligned_demo_fallback(self):
+        """Create aligned demo fallback with perfect formatting"""
+        debug_info("Creating aligned demo fallback", "ALIGNED_FALLBACK")
+
+        # Load image
+        hc_image = self._load_hc_image()
+
+        # Clear existing content
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+
+        # Create main centered container (like Resets Dashboard)
+        main_container = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+        main_container.pack(expand=True, fill='none')  # Center the entire frame
+
+        # Header
+        header_frame = ttk.Frame(main_container, style='Content.TFrame')
+        header_frame.pack(pady=(0, 40))
+
+        header_label = ttk.Label(header_frame, text="🔗 Link Status",
+                                 style='SectionHeader.TLabel',
+                                 font=('Arial', 24, 'bold'))
+        header_label.pack()
+
+        # Ports table
+        table_frame = ttk.Frame(main_container, style='Content.TFrame')
+        table_frame.pack(pady=(0, 30))
+
+        # Demo ports in ascending order, Golden Finger last
+        demo_ports_data = [
+            ("Port 80", "Gen6 x04", "#00ff00", True),  # Green for Gen6
+            ("Port 112", "No Link", "#ff4444", False),  # Red for No Link
+            ("Port 128", "Gen5 x16", "#ff9500", True),  # Yellow for Gen5
+            ("Golden Finger", "Gen5 x16", "#ff9500", True)  # Yellow for Gen5
+        ]
+
+        for i, (port_name, speed_text, color, active) in enumerate(demo_ports_data):
+            self._create_aligned_demo_port_row(table_frame, port_name, speed_text, color, active, i)
+
+        # Image section
+        if hc_image:
+            image_frame = ttk.Frame(main_container, style='Content.TFrame')
+            image_frame.pack(pady=(30, 20))
+
+            image_label = ttk.Label(image_frame, image=hc_image, background='#1e1e1e')
+            image_label.pack()
+            image_label.image = hc_image  # Keep reference
+        else:
+            no_image_frame = ttk.Frame(main_container, style='Content.TFrame')
+            no_image_frame.pack(pady=(30, 20))
+
+            no_image_label = ttk.Label(no_image_frame,
+                                       text="HCFront.png not found in Images directory",
+                                       style='Info.TLabel', font=('Arial', 12, 'italic'))
+            no_image_label.pack()
+
+        # Refresh controls
+        self._create_aligned_refresh_controls(main_container, "Demo Data")
+
+        debug_info("Aligned demo fallback created", "ALIGNED_FALLBACK_SUCCESS")
+
+    def _create_aligned_demo_port_row(self, parent_frame, port_name, speed_text, color, active, row_index):
+        """Create perfectly aligned demo port row"""
+        debug_info(f"Creating aligned demo row {row_index}: {port_name}", "ALIGNED_DEMO_ROW")
+
+        # Create row frame
+        row_frame = ttk.Frame(parent_frame, style='Content.TFrame')
+        row_frame.pack(fill='x', pady=6)
+
+        # Configure grid with same precise alignment as real data
+        row_frame.columnconfigure(0, weight=0, minsize=180)  # Port name
+        row_frame.columnconfigure(1, weight=0, minsize=50)  # Status light
+        row_frame.columnconfigure(2, weight=0, minsize=140)  # Speed/Width
+        row_frame.columnconfigure(3, weight=0, minsize=120)  # Active status
+
+        # Port name
+        name_label = ttk.Label(row_frame, text=port_name,
+                               style='Info.TLabel', font=('Arial', 20, 'bold'))
+        name_label.grid(row=0, column=0, sticky='w', padx=(0, 10))
+
+        # Status light
+        status_light_frame = ttk.Frame(row_frame, style='Content.TFrame')
+        status_light_frame.grid(row=0, column=1, padx=5)
+
+        status_canvas = tk.Canvas(status_light_frame, width=28, height=28,
+                                  bg='#1e1e1e', highlightthickness=0)
+        status_canvas.pack()
+        status_canvas.create_oval(2, 2, 26, 26, fill=color, outline='#ffffff', width=1)
+
+        # Speed and width
+        speed_frame = ttk.Frame(row_frame, style='Content.TFrame')
+        speed_frame.grid(row=0, column=2, sticky='w', padx=(10, 10))
+
+        if speed_text == "No Link":
+            speed_label = ttk.Label(speed_frame, text=speed_text,
+                                    style='Info.TLabel', font=('Arial', 18, 'bold'),
+                                    foreground='#ff4444')
+            speed_label.pack(anchor='w')
+        else:
+            speed_label = ttk.Label(speed_frame, text=speed_text,
+                                    style='Info.TLabel', font=('Arial', 18, 'bold'))
+            speed_label.pack(anchor='w')
+
+        # Active status
+        if active:
+            active_frame = ttk.Frame(row_frame, style='Content.TFrame')
+            active_frame.grid(row=0, column=3, sticky='w', padx=(10, 0))
+
+            active_var = tk.BooleanVar(value=True)
+            active_check = ttk.Checkbutton(active_frame, variable=active_var, state='disabled')
+            active_check.pack(side='left')
+
+            active_label = ttk.Label(active_frame, text="Active",
+                                     foreground='#00ff00', background='#1e1e1e',
+                                     font=('Arial', 16, 'bold'))
+            active_label.pack(side='left', padx=(5, 0))
+        else:
+            active_frame = ttk.Frame(row_frame, style='Content.TFrame')
+            active_frame.grid(row=0, column=3, sticky='w', padx=(10, 0))
+
+            active_var = tk.BooleanVar(value=False)
+            active_check = ttk.Checkbutton(active_frame, text="Active",
+                                           variable=active_var, state='disabled')
+            active_check.pack()
+
+    def _create_aligned_refresh_controls(self, parent_frame, last_updated):
+        """Create aligned refresh controls at the bottom"""
+        controls_frame = ttk.Frame(parent_frame, style='Content.TFrame')
+        controls_frame.pack(fill='x', pady=20)
+
+        # Refresh button (left side)
+        refresh_btn = ttk.Button(controls_frame, text="🔄 Refresh Link Status",
+                                 command=self._refresh_link_status)
+        refresh_btn.pack(side='left')
+
+        # Last update time (right side)
+        if last_updated and last_updated != 'Unknown':
+            update_label = ttk.Label(controls_frame,
+                                     text=f"Last updated: {last_updated}",
+                                     style='Info.TLabel', font=('Arial', 10))
+            update_label.pack(side='right')
 
     def _create_formatted_link_dashboard_from_showport(self, showport_content):
         """Create formatted link dashboard from showport content with proper styling"""
