@@ -7,6 +7,24 @@ All command responses are cached and retrieved through the cache manager
 import re
 from datetime import datetime
 from typing import Dict, Any, Optional, List
+try:
+    from Admin.debug_config import (
+        debug_print,
+        debug_error,
+        debug_warning,
+        debug_info,
+        is_debug_enabled,
+        get_debug_status,
+        toggle_debug,
+        enable_debug,
+        disable_debug,
+        port_debug,
+        log_info
+    )
+    DEBUG_FUNCTIONS_AVAILABLE = True
+    print("DEBUG: Successfully imported debug functions from Admin.debug_config")
+except ImportError as e:
+    print(f"Warning: Could not import from Admin.debug_config: {e}")
 
 
 class EnhancedSystemInfoParser:
@@ -111,6 +129,103 @@ class EnhancedSystemInfoParser:
         self._cache_all_sections(parsed_data)
 
         return parsed_data
+
+    def get_showport_status_json(self) -> Optional[Dict[str, Any]]:
+        """
+        Get showport status JSON for port dashboard compatibility
+
+        This method provides backward compatibility with existing main.py code
+        that expects get_showport_status_json() method.
+
+        Returns:
+            JSON object with showport status data or None if not available
+        """
+        # This is just an alias for get_link_status_json for backward compatibility
+        link_json = self.get_link_status_json()
+        if link_json:
+            debug_info("Retrieved showport status JSON (via link status JSON)", "SHOWPORT_JSON")
+            return link_json
+        else:
+            debug_info("No showport status JSON available", "SHOWPORT_JSON_NONE")
+            return None
+
+    def get_cached_showport_data(self) -> Optional[Dict[str, Any]]:
+        """
+        Get cached showport data for compatibility
+
+        Returns:
+            Cached showport data or None if not available
+        """
+        # Check for cached link status data
+        cached_data = self.cache.get('link_status_json')
+        if cached_data:
+            debug_info("Retrieved cached showport data", "CACHED_SHOWPORT")
+            return cached_data
+
+        # Also check for cached showport section data
+        showport_section = self.cache.get('showport_section')
+        if showport_section:
+            debug_info("Retrieved cached showport section data", "CACHED_SHOWPORT_SECTION")
+            return showport_section
+
+        debug_info("No cached showport data available", "NO_CACHED_SHOWPORT")
+        return None
+
+    def is_showport_data_fresh(self, max_age_seconds: int = 300) -> bool:
+        """
+        Check if showport data is fresh
+
+        Args:
+            max_age_seconds: Maximum age in seconds (default 5 minutes)
+
+        Returns:
+            True if showport data is fresh, False otherwise
+        """
+        # Use the existing is_data_fresh method
+        return self.is_data_fresh(max_age_seconds)
+
+    def parse_showport_command(self, showport_content: str) -> Dict[str, Any]:
+        """
+        Parse showport command response and cache it
+
+        Args:
+            showport_content: Raw showport command response
+
+        Returns:
+            Parsed showport data
+        """
+        debug_info("Parsing showport command response", "PARSE_SHOWPORT")
+
+        try:
+            # Parse the showport content using existing methods
+            showport_data = self._parse_showport_section(showport_content)
+
+            # Cache the parsed data
+            ttl = 300  # 5 minutes
+            self.cache.set('showport_section', showport_data, 'showport', ttl)
+
+            # Also create link status JSON format
+            link_json = {
+                'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'sections': {
+                    'port_status': {
+                        'title': 'Port and Link Status',
+                        'icon': '🔗',
+                        'items': self._extract_link_items(showport_data)
+                    }
+                },
+                'data_fresh': True
+            }
+
+            # Cache the JSON format
+            self.cache.set('link_status_json', link_json, 'link_status', ttl)
+
+            debug_info("Showport command parsed and cached successfully", "PARSE_SHOWPORT_SUCCESS")
+            return showport_data
+
+        except Exception as e:
+            debug_error(f"Failed to parse showport command: {e}", "PARSE_SHOWPORT_ERROR")
+            return {}
 
     def _cache_all_sections(self, parsed_data: Dict[str, Any]):
         """Cache all parsed sections with appropriate keys and TTL"""

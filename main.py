@@ -1422,105 +1422,270 @@ class DashboardApp:
                 self.show_loading_message("Loading host card information...")
 
     def create_link_status_dashboard(self):
-        """Create link status dashboard with enhanced Demo Mode support"""
+        """Create link status dashboard with proper Admin integration"""
         debug_info("Creating link status dashboard", "LINK_DASHBOARD_CREATE")
 
         if self.is_demo_mode:
-            # Enhanced Demo Mode - get data from enhanced CLI or fallback
+            # Enhanced Demo Mode - try multiple data sources
+            debug_info("Demo mode - attempting to load link status data", "DEMO_LINK_LOAD")
+
             try:
-                # Method 1: Try enhanced demo CLI data access
+                # Method 1: Try enhanced demo CLI first
                 if hasattr(self.cli, 'get_link_status_data'):
                     link_data = self.cli.get_link_status_data()
                     if link_data:
-                        debug_info("Using enhanced demo data for link dashboard", "LINK_DEMO_DATA")
+                        debug_info("Using enhanced CLI link data", "DEMO_CLI_DATA")
                         self._create_link_dashboard_from_enhanced_data(link_data)
                         return
 
-                # Method 2: Try enhanced parser cached data
-                if hasattr(self, 'sysinfo_parser'):
-                    link_status_json = self.sysinfo_parser.get_link_status_json()
-                    if link_status_json:
-                        debug_info("Using enhanced parser data for link dashboard", "LINK_PARSER_DATA")
-                        self._create_link_dashboard_from_enhanced_data(link_status_json)
-                        return
-
-                # Method 3: Extract showport from demo sysinfo content
-                demo_content = getattr(self.cli, 'demo_sysinfo_content', None)
-                if demo_content:
-                    debug_info("Extracting showport from demo sysinfo content", "LINK_EXTRACT_SHOWPORT")
-                    showport_content = self._extract_showport_from_sysinfo(demo_content)
-                    if showport_content:
-                        self._create_link_dashboard_from_showport_content(showport_content)
-                        return
-
-                # Method 4: Try loading separate showport file
-                debug_info("Loading separate demo showport file", "LINK_DEMO_FILE")
-                demo_showport_content = self._load_demo_showport_file()
-                if demo_showport_content:
-                    self._create_link_dashboard_from_showport_content(demo_showport_content)
+                # Method 2: Check if sysinfo was already parsed and cached
+                link_json = self.sysinfo_parser.get_link_status_json()
+                if link_json and link_json.get('data_fresh', False):
+                    debug_info("Using cached link status JSON from sysinfo", "DEMO_CACHED_JSON")
+                    self._create_link_dashboard_from_enhanced_data(link_json)
                     return
 
+                # Method 3: Try to extract showport from demo sysinfo content
+                demo_content = getattr(self.cli, 'demo_sysinfo_content', None)
+                if demo_content:
+                    debug_info("Extracting showport from demo sysinfo content", "DEMO_EXTRACT_SHOWPORT")
+                    showport_content = self._extract_showport_from_sysinfo(demo_content)
+
+                    if showport_content:
+                        # Parse the showport content
+                        self.sysinfo_parser.parse_showport_command(showport_content)
+
+                        # Get the newly cached data
+                        link_json = self.sysinfo_parser.get_link_status_json()
+                        if link_json:
+                            debug_info("Successfully parsed showport from sysinfo", "DEMO_SHOWPORT_PARSED")
+                            self._create_link_dashboard_from_enhanced_data(link_json)
+                            return
+
+                # Method 4: Load separate showport file
+                debug_info("Loading separate demo showport file", "DEMO_SHOWPORT_FILE")
+                showport_content = self._load_demo_showport_file()
+                if showport_content:
+                    # Parse and use the showport file
+                    self.sysinfo_parser.parse_showport_command(showport_content)
+                    link_json = self.sysinfo_parser.get_link_status_json()
+                    if link_json:
+                        debug_info("Successfully loaded showport from file", "DEMO_SHOWPORT_FILE_SUCCESS")
+                        self._create_link_dashboard_from_enhanced_data(link_json)
+                        return
+
                 # Method 5: Create fallback demo data
-                debug_warning("Using fallback demo showport data", "LINK_DEMO_FALLBACK")
+                debug_warning("Using fallback demo link data", "DEMO_LINK_FALLBACK")
                 self._create_link_dashboard_fallback()
 
             except Exception as e:
-                debug_error(f"Enhanced demo link dashboard failed: {e}", "LINK_DEMO_ERROR")
+                debug_error(f"Demo link dashboard creation failed: {e}", "DEMO_LINK_ERROR")
+                import traceback
+                traceback.print_exc()
                 self._create_link_dashboard_fallback()
         else:
-            # Real device mode - check for cached data first
-            cached_link_data = None
-            if hasattr(self, 'sysinfo_parser'):
-                cached_link_data = self.sysinfo_parser.get_link_status_json()
+            # Real device mode
+            debug_info("Real device mode - checking for cached link data", "REAL_LINK_CHECK")
 
-            if cached_link_data and self.sysinfo_parser.is_data_fresh(300):
-                debug_info("Using fresh cached showport data", "LINK_CACHED")
-                self._create_link_dashboard_from_enhanced_data(cached_link_data)
+            # Check for cached data first
+            link_json = self.sysinfo_parser.get_link_status_json()
+            if link_json and self.sysinfo_parser.is_data_fresh(300):
+                debug_info("Using fresh cached link data", "REAL_LINK_CACHED")
+                self._create_link_dashboard_from_enhanced_data(link_json)
             else:
-                debug_info("Real device mode - requesting fresh showport data", "LINK_REQUEST")
+                debug_info("No fresh link data, requesting showport", "REAL_LINK_REQUEST")
                 self.send_showport_command()
                 self.show_loading_message("Loading link status...")
 
     def _create_link_dashboard_from_enhanced_data(self, link_data):
-        """Create link dashboard from enhanced parser data"""
+        """Create link dashboard from enhanced parser JSON data"""
         debug_info("Creating link dashboard from enhanced data", "LINK_CREATE_ENHANCED")
 
         try:
+            # Import the existing Link Status dashboard components
+            from Dashboards.link_status_dashboard import LinkStatusParser, PortInfo
+
             # Clear existing content
             for widget in self.scrollable_frame.winfo_children():
                 widget.destroy()
 
+            # Get sections from enhanced data
             sections = link_data.get('sections', {})
+            port_status_section = sections.get('port_status', {})
+            items = port_status_section.get('items', [])
 
-            if not sections:
-                debug_warning("No sections found in enhanced link data", "LINK_NO_SECTIONS")
+            if not items:
+                debug_warning("No port items found in enhanced data", "LINK_NO_ITEMS")
                 self._create_link_dashboard_fallback()
                 return
 
-            # Create sections from enhanced data
-            for section_key, section_data in sections.items():
-                icon = section_data.get('icon', '🔗')
-                title = section_data.get('title', section_key.replace('_', ' ').title())
-                items = section_data.get('items', [])
+            debug_info(f"Processing {len(items)} port items", "LINK_PROCESS_ITEMS")
 
-                debug_info(f"Creating link section: {title} with {len(items)} items", "LINK_SECTION")
+            # Create header
+            header_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+            header_frame.pack(fill='x', padx=20, pady=(20, 10))
 
-                # Create section header
-                self._create_link_section_header(icon, title)
+            header_label = ttk.Label(header_frame, text="🔗 Link Status",
+                                     style='SectionHeader.TLabel',
+                                     font=('Arial', 24, 'bold'))
+            header_label.pack(anchor='w')
 
-                # Create port items with proper formatting
-                for item in items:
-                    self._create_enhanced_port_display(item)
+            # Process each port item and create display
+            for item in items:
+                self._create_enhanced_port_row(item)
 
             # Add refresh controls
-            last_updated = link_data.get('last_updated', 'Unknown')
-            self._create_link_refresh_controls(last_updated)
+            self._create_link_refresh_controls(link_data.get('last_updated', 'Unknown'))
 
             debug_info("Link dashboard created from enhanced data successfully", "LINK_CREATE_SUCCESS")
 
         except Exception as e:
             debug_error(f"Enhanced link dashboard creation failed: {e}", "LINK_CREATE_ERROR")
+            import traceback
+            traceback.print_exc()
             self._create_link_dashboard_fallback()
+
+    def _create_enhanced_port_row(self, item):
+        """Create port row from enhanced parser item data"""
+        debug_info(f"Creating enhanced port row for: {item.get('label', 'Unknown')}", "PORT_ROW_CREATE")
+
+        try:
+            # Extract information from the enhanced parser item format
+            port_label = item.get('label', 'Unknown Port')
+            port_value = item.get('value', 'Unknown')
+            port_details = item.get('details', '')
+
+            # Parse the details to extract speed and width information
+            speed_level = "00"
+            width = "00"
+            max_speed = "00"
+            max_width = "00"
+
+            # Extract speed level from details
+            speed_match = re.search(r'Speed:\s*Level\s*(\d+)', port_details, re.IGNORECASE)
+            if speed_match:
+                speed_level = speed_match.group(1).zfill(2)
+
+            # Extract width from details
+            width_match = re.search(r'Width:\s*(\d+)', port_details, re.IGNORECASE)
+            if width_match:
+                width = width_match.group(1).zfill(2)
+
+            # Extract max width from details
+            max_width_match = re.search(r'Max Width:\s*(\d+)', port_details, re.IGNORECASE)
+            if max_width_match:
+                max_width = max_width_match.group(1)
+
+            # Determine display values using the existing Link Status logic
+            display_speed, display_width, status_color, active = self._process_port_display_logic(
+                speed_level, width, max_width
+            )
+
+            # Create the port display row
+            self._create_port_display_row(
+                port_name=port_label,
+                display_speed=display_speed,
+                display_width=display_width,
+                status_color=status_color,
+                active=active
+            )
+
+        except Exception as e:
+            debug_error(f"Enhanced port row creation failed: {e}", "PORT_ROW_ERROR")
+
+    def _process_port_display_logic(self, speed_level, width, max_width):
+        """Process port display logic using existing Link Status dashboard logic"""
+
+        # Check for no link condition first (speed 01, width 00)
+        if speed_level == "01" and width == "00":
+            return "No Link", "", "#ff4444", False  # Red for no link
+
+        # Speed mappings with proper Gen6/Gen5 colors
+        speed_mappings = {
+            "06": ("Gen6", "#00ff00"),  # Green for Gen6
+            "05": ("Gen5", "#ff9500"),  # Yellow/Orange for Gen5
+            "04": ("Gen4", "#ff9500"),  # Yellow/Orange for Gen4
+            "03": ("Gen3", "#ff9500"),  # Yellow/Orange for Gen3
+            "02": ("Gen2", "#ff9500"),  # Yellow/Orange for Gen2
+            "01": ("Gen1", "#ff4444"),  # Red for Gen1
+        }
+
+        # Get display speed and color
+        if speed_level in speed_mappings:
+            display_speed, status_color = speed_mappings[speed_level]
+            active = True
+        else:
+            display_speed = f"Level {speed_level}"
+            status_color = "#cccccc"  # Gray for unknown
+            active = False
+
+        # Process width display
+        if width in ["02", "04", "08", "16"]:
+            display_width = f"x{width}"
+        else:
+            display_width = f"x{width}" if width != "00" else ""
+
+        return display_speed, display_width, status_color, active
+
+    def _create_port_display_row(self, port_name, display_speed, display_width, status_color, active):
+        """Create the visual port display row"""
+        debug_info(f"Creating port display: {port_name} - {display_speed} {display_width}", "PORT_DISPLAY")
+
+        # Create main row frame
+        row_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+        row_frame.pack(fill='x', padx=40, pady=8)
+
+        # Port name (left side)
+        name_frame = ttk.Frame(row_frame, style='Content.TFrame')
+        name_frame.pack(side='left', fill='x', expand=True)
+
+        name_label = ttk.Label(name_frame, text=port_name,
+                               style='Info.TLabel', font=('Arial', 20, 'bold'))
+        name_label.pack(side='left')
+
+        # Status indicators (right side)
+        status_frame = ttk.Frame(row_frame, style='Content.TFrame')
+        status_frame.pack(side='right')
+
+        # Active checkbox with proper styling (matches existing Link Status dashboard)
+        if active:
+            checkbox_frame = ttk.Frame(status_frame, style='Content.TFrame')
+            checkbox_frame.pack(side='right', padx=(30, 0))
+
+            active_var = tk.BooleanVar(value=True)
+            active_check = ttk.Checkbutton(checkbox_frame, variable=active_var, state='disabled')
+            active_check.pack(side='left')
+
+            # Green "Active" text for active ports
+            active_label = ttk.Label(checkbox_frame, text="Active",
+                                     foreground='#00ff00', background='#1e1e1e',
+                                     font=('Arial', 16, 'bold'))
+            active_label.pack(side='left', padx=(8, 0))
+        else:
+            active_var = tk.BooleanVar(value=False)
+            active_check = ttk.Checkbutton(status_frame, text="Active",
+                                           variable=active_var, state='disabled')
+            active_check.pack(side='right', padx=(30, 0))
+
+        # Status light and text (matches existing dashboard)
+        status_info_frame = ttk.Frame(status_frame, style='Content.TFrame')
+        status_info_frame.pack(side='right', padx=(30, 30))
+
+        # Create status light (colored circle) - Gen6=green, Gen5=yellow
+        status_canvas = tk.Canvas(status_info_frame, width=28, height=28,
+                                  bg='#1e1e1e', highlightthickness=0)
+        status_canvas.pack(side='left', padx=(0, 15))
+        status_canvas.create_oval(4, 4, 24, 24, fill=status_color, outline='')
+
+        # Speed and width text
+        if display_speed == "No Link":
+            status_text = "No Link"
+        else:
+            status_text = f"{display_speed}{' ' + display_width if display_width else ''}"
+
+        status_label = ttk.Label(status_info_frame, text=status_text,
+                                 style='Info.TLabel', font=('Arial', 18, 'bold'))
+        status_label.pack(side='left')
 
     def _create_link_dashboard_from_showport_content(self, showport_content):
         """Create link dashboard from raw showport content"""
@@ -1558,31 +1723,33 @@ class DashboardApp:
 
     def _extract_showport_from_sysinfo(self, sysinfo_content):
         """Extract showport section from sysinfo content"""
-        debug_info("Extracting showport section from sysinfo", "SHOWPORT_EXTRACT")
+        debug_info("Extracting showport section from sysinfo", "EXTRACT_SHOWPORT")
 
         try:
-            # Look for showport section
-            showport_match = re.search(
+            # Look for showport section using multiple patterns
+            patterns = [
                 r'showport\s*=+\s*(.*?)(?:\s*=+|$)',
-                sysinfo_content,
-                re.DOTALL | re.IGNORECASE
-            )
+                r'================================================================================\s*showport\s*================================================================================\s*(.*?)(?:\s*================================================================================|$)',
+                r'showport\s*-+\s*(.*?)(?:\s*-+|$)'
+            ]
 
-            if showport_match:
-                showport_content = showport_match.group(1).strip()
-                debug_info(f"Extracted showport section ({len(showport_content)} chars)", "SHOWPORT_EXTRACTED")
-                return showport_content
-            else:
-                debug_warning("No showport section found in sysinfo", "SHOWPORT_NOT_FOUND")
-                return None
+            for pattern in patterns:
+                match = re.search(pattern, sysinfo_content, re.DOTALL | re.IGNORECASE)
+                if match:
+                    showport_content = match.group(1).strip()
+                    debug_info(f"Extracted showport section ({len(showport_content)} chars)", "SHOWPORT_EXTRACTED")
+                    return showport_content
+
+            debug_warning("No showport section found in sysinfo content", "SHOWPORT_NOT_FOUND")
+            return None
 
         except Exception as e:
-            debug_error(f"Failed to extract showport from sysinfo: {e}", "SHOWPORT_EXTRACT_ERROR")
+            debug_error(f"Failed to extract showport from sysinfo: {e}", "EXTRACT_SHOWPORT_ERROR")
             return None
 
     def _load_demo_showport_file(self):
         """Load showport.txt from DemoData directory"""
-        debug_info("Loading demo showport file", "DEMO_SHOWPORT_LOAD")
+        debug_info("Loading demo showport file", "LOAD_SHOWPORT_FILE")
 
         showport_paths = [
             "DemoData/showport.txt",
@@ -1600,13 +1767,13 @@ class DashboardApp:
                 try:
                     with open(path, 'r', encoding='utf-8') as f:
                         content = f.read()
-                    debug_info(f"Loaded demo showport from {path} ({len(content)} chars)", "SHOWPORT_LOADED")
+                    debug_info(f"Loaded demo showport from {path} ({len(content)} chars)", "SHOWPORT_FILE_LOADED")
                     return content
                 except Exception as e:
-                    debug_error(f"Error loading showport {path}: {e}", "SHOWPORT_READ_ERROR")
+                    debug_error(f"Error loading showport {path}: {e}", "SHOWPORT_FILE_ERROR")
                     continue
             else:
-                debug_info(f"Showport path does not exist: {abs_path}", "SHOWPORT_NOT_FOUND")
+                debug_info(f"Showport file not found: {abs_path}", "SHOWPORT_FILE_NOT_FOUND")
 
         debug_warning("No showport file found", "SHOWPORT_FILE_MISSING")
         return None
@@ -1744,76 +1911,67 @@ class DashboardApp:
             update_label.pack(side='right')
 
     def _create_link_dashboard_fallback(self):
-        """Create fallback link dashboard with demo data"""
-        debug_info("Creating fallback link dashboard", "LINK_FALLBACK")
+        """Create fallback link dashboard with proper Gen6/Gen5 demo data"""
+        debug_info("Creating fallback link dashboard with demo data", "LINK_FALLBACK")
 
         # Clear existing content
         for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
 
         # Create header
-        self._create_link_section_header("🔗", "Link Status (Demo)")
+        header_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+        header_frame.pack(fill='x', padx=20, pady=(20, 10))
 
-        # Create fallback demo ports with proper Gen6/Gen5 formatting
-        fallback_ports = [
+        header_label = ttk.Label(header_frame, text="🔗 Link Status (Demo)",
+                                 style='SectionHeader.TLabel',
+                                 font=('Arial', 24, 'bold'))
+        header_label.pack(anchor='w')
+
+        # Create demo ports with proper Gen6/Gen5 formatting from DemoData/showport.txt format
+        demo_ports = [
             {
                 "name": "Port 80",
-                "speed_level": "06",
-                "width": "04",
                 "display_speed": "Gen6",
                 "display_width": "x4",
-                "status": "Active",
                 "status_color": "#00ff00",  # Green for Gen6
                 "active": True
             },
             {
                 "name": "Port 112",
-                "speed_level": "01",
-                "width": "00",
                 "display_speed": "No Link",
                 "display_width": "",
-                "status": "No Link",
                 "status_color": "#ff4444",  # Red for No Link
                 "active": False
             },
             {
                 "name": "Port 128",
-                "speed_level": "05",
-                "width": "16",
                 "display_speed": "Gen5",
                 "display_width": "x16",
-                "status": "Active",
                 "status_color": "#ff9500",  # Yellow/Orange for Gen5
                 "active": True
             },
             {
                 "name": "Golden Finger",
-                "speed_level": "06",
-                "width": "16",
                 "display_speed": "Gen6",
                 "display_width": "x16",
-                "status": "Active",
                 "status_color": "#00ff00",  # Green for Gen6
                 "active": True
             }
         ]
 
-        for port in fallback_ports:
-            self._create_port_row(
+        for port in demo_ports:
+            self._create_port_display_row(
                 port_name=port["name"],
-                speed_level=port["speed_level"],
-                width=port["width"],
                 display_speed=port["display_speed"],
                 display_width=port["display_width"],
-                status=port["status"],
                 status_color=port["status_color"],
                 active=port["active"]
             )
 
         # Add refresh controls
-        self._create_link_refresh_controls("Demo Mode - Static Data")
+        self._create_link_refresh_controls("Demo Mode - Fallback Data")
 
-        debug_info("Fallback link dashboard created", "LINK_FALLBACK_CREATED")
+        debug_info("Fallback link dashboard created successfully", "LINK_FALLBACK_SUCCESS")
 
     def send_sysinfo_command_enhanced(self, force_refresh=False):
         """Enhanced sysinfo command with Demo Mode Admin integration"""
@@ -1917,7 +2075,7 @@ class DashboardApp:
 
     def refresh_link_status_enhanced(self):
         """Enhanced refresh for link status information"""
-        debug_info("Refreshing link status with enhanced support", "LINK_REFRESH_ENHANCED")
+        debug_info("Refreshing link status with enhanced support", "LINK_REFRESH")
 
         try:
             if self.is_demo_mode and hasattr(self.cli, 'force_refresh_data'):
@@ -1928,13 +2086,8 @@ class DashboardApp:
             if hasattr(self, 'send_sysinfo_command_enhanced'):
                 self.send_sysinfo_command_enhanced(force_refresh=True)
             else:
-                # Fallback to direct showport refresh
-                if self.is_demo_mode:
-                    # Recreate demo link dashboard
-                    self.create_link_status_dashboard()
-                else:
-                    # Send showport command for real device
-                    self.send_showport_command()
+                # Fallback to recreating dashboard
+                self.create_link_status_dashboard()
 
             # Log the refresh action
             timestamp = datetime.now().strftime('%H:%M:%S')
