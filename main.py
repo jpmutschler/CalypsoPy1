@@ -15,7 +15,7 @@ CalypsoPy Dependencies:
 
 # Application Information
 APP_NAME = "CalypsoPy"
-APP_VERSION = "1.3.4"  # Updated version
+APP_VERSION = "1.3.5"  # Updated version
 APP_BUILD = "20250809-001"  # Updated build
 APP_DESCRIPTION = "Serial Cables Atlas 3 Serial UI for CLI Interface"
 APP_AUTHOR = "Serial Cables, LLC"
