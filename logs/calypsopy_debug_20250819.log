@@ -1,0 +1,162 @@
+08:45:26 [INFO] root: 08:45:26.493 [INFO] [DASHBOARD_INIT]  Initializing DashboardApp for Demo mode
+08:45:26 [INFO] root: 08:45:26.493 [INFO] [DASHBOARD_INIT]  Initializing DashboardApp for Demo mode
+08:45:26 [INFO] root: 08:45:26.498 [INFO] [DEMO_CLI_CREATE]  Creating enhanced demo CLI for port: DEMO
+08:45:26 [INFO] root: 08:45:26.498 [INFO] [DEMO_CLI_CREATE]  Creating enhanced demo CLI for port: DEMO
+08:45:26 [INFO] root: 08:45:26.498 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized with cache manager
+08:45:26 [INFO] root: 08:45:26.498 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized with cache manager
+08:45:26 [INFO] root: 08:45:26.499 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+08:45:26 [INFO] root: 08:45:26.499 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+08:45:26 [INFO] root: 08:45:26.500 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+08:45:26 [INFO] root: 08:45:26.500 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+08:45:26 [INFO] root: 08:45:26.500 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+08:45:26 [INFO] root: 08:45:26.500 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+08:45:26 [INFO] root: 08:45:26.500 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+08:45:26 [INFO] root: 08:45:26.500 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+08:45:26 [INFO] root: 08:45:26.501 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+08:45:26 [INFO] root: 08:45:26.501 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+08:45:26 [INFO] root: 08:45:26.502 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+08:45:26 [INFO] root: 08:45:26.502 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+08:45:26 [INFO] root: 08:45:26.590 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+08:45:26 [INFO] root: 08:45:26.590 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+08:45:26 [ERROR] root: 08:45:26.590 [ERROR] [DEMO_PARSE_EXCEPTION]  Initial demo content parsing exception: 'DeviceDataCache' object has no attribute 'store'
+08:45:26 [ERROR] root: 08:45:26.590 [ERROR] [DEMO_PARSE_EXCEPTION]  Initial demo content parsing exception: 'DeviceDataCache' object has no attribute 'store'
+08:45:26 [INFO] root: 08:45:26.590 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+08:45:26 [INFO] root: 08:45:26.590 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+08:45:26 [INFO] root: 08:45:26.590 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+08:45:26 [INFO] root: 08:45:26.590 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+08:45:26 [INFO] root: 08:45:26.591 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+08:45:26 [INFO] root: 08:45:26.591 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+08:45:26 [INFO] root: 08:45:26.591 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+08:45:26 [INFO] root: 08:45:26.591 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+08:45:26 [INFO] root: 08:45:26.591 [INFO] [DEMO_CLI_CREATE_SUCCESS]  Enhanced demo CLI created successfully
+08:45:26 [INFO] root: 08:45:26.591 [INFO] [DEMO_CLI_CREATE_SUCCESS]  Enhanced demo CLI created successfully
+08:45:26 [INFO] root: 08:45:26.591 [INFO] [CLI_ENHANCED_DEMO]  Using Enhanced UnifiedDemoSerialCLI for demo mode
+08:45:26 [INFO] root: 08:45:26.591 [INFO] [CLI_ENHANCED_DEMO]  Using Enhanced UnifiedDemoSerialCLI for demo mode
+08:45:26 [INFO] root: 08:45:26.592 [INFO] [DEMO_BG_START]  Enhanced UnifiedDemoSerialCLI background thread started
+08:45:26 [INFO] root: 08:45:26.592 [INFO] [DEMO_BG_START]  Enhanced UnifiedDemoSerialCLI background thread started
+08:45:26 [INFO] root: 08:45:26.592 [INFO] [DEMO_BG_THREAD]  Demo background thread started
+08:45:26 [INFO] root: 08:45:26.592 [INFO] [DEMO_BG_END]  Enhanced background thread ending
+08:45:26 [INFO] root: 08:45:26.592 [INFO] [DEMO_BG_THREAD]  Demo background thread started
+08:45:26 [INFO] root: 08:45:26.592 [INFO] [DEMO_BG_END]  Enhanced background thread ending
+08:45:26 [INFO] root: 08:45:26.771 [INFO] [HOST_DASHBOARD_CREATE]  Creating host dashboard
+08:45:26 [INFO] root: 08:45:26.771 [INFO] [HOST_DASHBOARD_CREATE]  Creating host dashboard
+08:45:26 [INFO] root: 08:45:26.771 [INFO] [HOST_DEMO_DATA]  Using enhanced demo data for host dashboard
+08:45:26 [INFO] root: 08:45:26.771 [INFO] [HOST_DEMO_DATA]  Using enhanced demo data for host dashboard
+08:45:26 [INFO] root: 08:45:26.869 [INFO] [HOST_DEMO_SUCCESS]  Host dashboard created from enhanced demo data
+08:45:26 [INFO] root: 08:45:26.869 [INFO] [HOST_DEMO_SUCCESS]  Host dashboard created from enhanced demo data
+08:45:26 [INFO] root: 08:45:26.869 [INFO] [DEVICE_CONNECT]  Connecting to device (Demo mode: True)
+08:45:26 [INFO] root: 08:45:26.869 [INFO] [DEVICE_CONNECT]  Connecting to device (Demo mode: True)
+08:45:26 [INFO] root: 08:45:26.869 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+08:45:26 [INFO] root: 08:45:26.869 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+08:45:26 [INFO] root: 08:45:26.869 [INFO] [DEMO_CONNECT_DELAY]  Simulating connection delay: 0.1s
+08:45:26 [INFO] root: 08:45:26.869 [INFO] [DEMO_CONNECT_DELAY]  Simulating connection delay: 0.1s
+08:45:26 [INFO] root: 08:45:26.970 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+08:45:26 [INFO] root: 08:45:26.970 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+08:45:26 [INFO] root: 08:45:26.970 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+08:45:26 [INFO] root: 08:45:26.970 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+08:45:26 [INFO] root: 08:45:26.970 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+08:45:26 [INFO] root: 08:45:26.970 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+08:45:26 [INFO] root: 08:45:26.970 [INFO] [CLI_CONNECT_SUCCESS]  CLI connected successfully
+08:45:26 [INFO] root: 08:45:26.970 [INFO] [CLI_CONNECT_SUCCESS]  CLI connected successfully
+08:45:26 [INFO] root: 08:45:26.970 [INFO] [DEMO_ENHANCED_DATA]  Using enhanced demo data
+08:45:26 [INFO] root: 08:45:26.970 [INFO] [DEMO_ENHANCED_DATA]  Using enhanced demo data
+08:45:26 [INFO] root: 08:45:26.971 [INFO] [DEMO_BG_START]  Enhanced UnifiedDemoSerialCLI background thread started
+08:45:26 [INFO] root: 08:45:26.971 [INFO] [DEMO_BG_START]  Enhanced UnifiedDemoSerialCLI background thread started
+08:45:26 [INFO] root: 08:45:26.993 [INFO] [HOST_DASHBOARD_CREATE]  Creating host dashboard
+08:45:26 [INFO] root: 08:45:26.993 [INFO] [HOST_DASHBOARD_CREATE]  Creating host dashboard
+08:45:26 [INFO] root: 08:45:26.994 [INFO] [HOST_DEMO_DATA]  Using enhanced demo data for host dashboard
+08:45:26 [INFO] root: 08:45:26.994 [INFO] [HOST_DEMO_DATA]  Using enhanced demo data for host dashboard
+08:45:27 [INFO] root: 08:45:27.023 [INFO] [HOST_DEMO_SUCCESS]  Host dashboard created from enhanced demo data
+08:45:27 [INFO] root: 08:45:27.023 [INFO] [HOST_DEMO_SUCCESS]  Host dashboard created from enhanced demo data
+08:45:40 [INFO] root: 08:45:40.183 [INFO] [HOST_DASHBOARD_CREATE]  Creating host dashboard
+08:45:40 [INFO] root: 08:45:40.183 [INFO] [HOST_DASHBOARD_CREATE]  Creating host dashboard
+08:45:40 [INFO] root: 08:45:40.183 [INFO] [HOST_DEMO_DATA]  Using enhanced demo data for host dashboard
+08:45:40 [INFO] root: 08:45:40.183 [INFO] [HOST_DEMO_DATA]  Using enhanced demo data for host dashboard
+08:45:40 [INFO] root: 08:45:40.213 [INFO] [HOST_DEMO_SUCCESS]  Host dashboard created from enhanced demo data
+08:45:40 [INFO] root: 08:45:40.213 [INFO] [HOST_DEMO_SUCCESS]  Host dashboard created from enhanced demo data
+08:45:45 [INFO] root: 08:45:45.765 [INFO] [HOST_DASHBOARD_CREATE]  Creating host dashboard
+08:45:45 [INFO] root: 08:45:45.765 [INFO] [HOST_DASHBOARD_CREATE]  Creating host dashboard
+08:45:45 [INFO] root: 08:45:45.765 [INFO] [HOST_DEMO_DATA]  Using enhanced demo data for host dashboard
+08:45:45 [INFO] root: 08:45:45.765 [INFO] [HOST_DEMO_DATA]  Using enhanced demo data for host dashboard
+08:45:45 [INFO] root: 08:45:45.778 [INFO] [HOST_DEMO_SUCCESS]  Host dashboard created from enhanced demo data
+08:45:45 [INFO] root: 08:45:45.778 [INFO] [HOST_DEMO_SUCCESS]  Host dashboard created from enhanced demo data
+08:45:57 [INFO] root: 08:45:57.697 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+08:45:57 [INFO] root: 08:45:57.697 [INFO] [DEMO_DISCONNECT]  Disconnecting enhanced demo mode
+08:45:57 [INFO] root: 08:45:57.697 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+08:45:57 [INFO] root: 08:45:57.697 [INFO] [DEMO_DISCONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI disconnected
+09:06:46 [INFO] root: 09:06:46.630 [INFO] [DASHBOARD_INIT]  Initializing DashboardApp for Demo mode
+09:06:46 [INFO] root: 09:06:46.630 [INFO] [DASHBOARD_INIT]  Initializing DashboardApp for Demo mode
+09:06:46 [INFO] root: 09:06:46.633 [INFO] [DEMO_CLI_CREATE]  Creating enhanced demo CLI for port: DEMO
+09:06:46 [INFO] root: 09:06:46.633 [INFO] [DEMO_CLI_CREATE]  Creating enhanced demo CLI for port: DEMO
+09:06:46 [INFO] root: 09:06:46.633 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized with cache manager
+09:06:46 [INFO] root: 09:06:46.633 [INFO] [DEMO_PARSER_INIT]  Enhanced parser initialized with cache manager
+09:06:46 [INFO] root: 09:06:46.634 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+09:06:46 [INFO] root: 09:06:46.634 [INFO] [DEMO_FILE_SEARCH]  Searching for demo sysinfo file
+09:06:46 [INFO] root: 09:06:46.635 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+09:06:46 [INFO] root: 09:06:46.635 [INFO] [FILE_LOADED]  Loaded demo sysinfo from DemoData/sysinfo.txt (1459 chars)
+09:06:46 [INFO] root: 09:06:46.635 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+09:06:46 [INFO] root: 09:06:46.635 [INFO] [CONTENT_VERIFIED]  Sysinfo content verification passed
+09:06:46 [INFO] root: 09:06:46.636 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+09:06:46 [INFO] root: 09:06:46.636 [INFO] [SHOWPORT_SEARCH]  Searching for demo showport.txt file
+09:06:46 [INFO] root: 09:06:46.637 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+09:06:46 [INFO] root: 09:06:46.637 [INFO] [SHOWPORT_LOADED]  Loaded demo showport from DemoData/showport.txt (454 chars)
+09:06:46 [INFO] root: 09:06:46.637 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+09:06:46 [INFO] root: 09:06:46.637 [INFO] [DEMO_PARSE_START]  Parsing initial demo content
+09:06:46 [INFO] root: 09:06:46.733 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+09:06:46 [INFO] root: 09:06:46.733 [INFO] [DEMO_PARSE_SUCCESS]  Initial demo content parsed successfully
+09:06:46 [ERROR] root: 09:06:46.733 [ERROR] [DEMO_PARSE_EXCEPTION]  Initial demo content parsing exception: 'DeviceDataCache' object has no attribute 'store'
+09:06:46 [ERROR] root: 09:06:46.733 [ERROR] [DEMO_PARSE_EXCEPTION]  Initial demo content parsing exception: 'DeviceDataCache' object has no attribute 'store'
+09:06:46 [INFO] root: 09:06:46.733 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+09:06:46 [INFO] root: 09:06:46.733 [INFO] [DEMO_CLI_INIT]  Enhanced UnifiedDemoSerialCLI initialized for DEMO
+09:06:46 [INFO] root: 09:06:46.733 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+09:06:46 [INFO] root: 09:06:46.733 [INFO] [DEMO_SYSINFO_LOADED]  Demo sysinfo content loaded: 1459 chars
+09:06:46 [INFO] root: 09:06:46.733 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+09:06:46 [INFO] root: 09:06:46.733 [INFO] [DEMO_SHOWPORT_LOADED]  Demo showport content loaded: 454 chars
+09:06:46 [INFO] root: 09:06:46.733 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+09:06:46 [INFO] root: 09:06:46.733 [INFO] [DEMO_PARSER_AVAILABLE]  Enhanced parser available for demo parsing
+09:06:46 [INFO] root: 09:06:46.734 [INFO] [DEMO_CLI_CREATE_SUCCESS]  Enhanced demo CLI created successfully
+09:06:46 [INFO] root: 09:06:46.734 [INFO] [DEMO_CLI_CREATE_SUCCESS]  Enhanced demo CLI created successfully
+09:06:46 [INFO] root: 09:06:46.734 [INFO] [CLI_ENHANCED_DEMO]  Using Enhanced UnifiedDemoSerialCLI for demo mode
+09:06:46 [INFO] root: 09:06:46.734 [INFO] [CLI_ENHANCED_DEMO]  Using Enhanced UnifiedDemoSerialCLI for demo mode
+09:06:46 [INFO] root: 09:06:46.734 [INFO] [DEMO_BG_START]  Enhanced UnifiedDemoSerialCLI background thread started
+09:06:46 [INFO] root: 09:06:46.735 [INFO] [DEMO_BG_THREAD]  Demo background thread started
+09:06:46 [INFO] root: 09:06:46.734 [INFO] [DEMO_BG_START]  Enhanced UnifiedDemoSerialCLI background thread started
+09:06:46 [INFO] root: 09:06:46.735 [INFO] [DEMO_BG_THREAD]  Demo background thread started
+09:06:46 [INFO] root: 09:06:46.735 [INFO] [DEMO_BG_END]  Enhanced background thread ending
+09:06:46 [INFO] root: 09:06:46.735 [INFO] [DEMO_BG_END]  Enhanced background thread ending
+09:06:46 [INFO] root: 09:06:46.899 [INFO] [HOST_DASHBOARD_CREATE]  Creating host dashboard
+09:06:46 [INFO] root: 09:06:46.899 [INFO] [HOST_DASHBOARD_CREATE]  Creating host dashboard
+09:06:46 [INFO] root: 09:06:46.899 [INFO] [HOST_DEMO_DATA]  Using enhanced demo data for host dashboard
+09:06:46 [INFO] root: 09:06:46.899 [INFO] [HOST_DEMO_DATA]  Using enhanced demo data for host dashboard
+09:06:47 [INFO] root: 09:06:47.007 [INFO] [HOST_DEMO_SUCCESS]  Host dashboard created from enhanced demo data
+09:06:47 [INFO] root: 09:06:47.007 [INFO] [HOST_DEMO_SUCCESS]  Host dashboard created from enhanced demo data
+09:06:47 [INFO] root: 09:06:47.007 [INFO] [DEVICE_CONNECT]  Connecting to device (Demo mode: True)
+09:06:47 [INFO] root: 09:06:47.007 [INFO] [DEVICE_CONNECT]  Connecting to device (Demo mode: True)
+09:06:47 [INFO] root: 09:06:47.007 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+09:06:47 [INFO] root: 09:06:47.007 [INFO] [DEMO_CONNECT_START]  Initializing enhanced unified demo mode
+09:06:47 [INFO] root: 09:06:47.007 [INFO] [DEMO_CONNECT_DELAY]  Simulating connection delay: 0.1s
+09:06:47 [INFO] root: 09:06:47.007 [INFO] [DEMO_CONNECT_DELAY]  Simulating connection delay: 0.1s
+09:06:47 [INFO] root: 09:06:47.108 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+09:06:47 [INFO] root: 09:06:47.108 [INFO] [DEMO_SYSINFO_READY]  Sysinfo data available for demo mode
+09:06:47 [INFO] root: 09:06:47.108 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+09:06:47 [INFO] root: 09:06:47.108 [INFO] [DEMO_PARSER_READY]  Enhanced parser ready for demo parsing
+09:06:47 [INFO] root: 09:06:47.108 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+09:06:47 [INFO] root: 09:06:47.108 [INFO] [DEMO_CONNECT_SUCCESS]  Enhanced UnifiedDemoSerialCLI connected successfully
+09:06:47 [INFO] root: 09:06:47.108 [INFO] [CLI_CONNECT_SUCCESS]  CLI connected successfully
+09:06:47 [INFO] root: 09:06:47.108 [INFO] [CLI_CONNECT_SUCCESS]  CLI connected successfully
+09:06:47 [INFO] root: 09:06:47.108 [INFO] [DEMO_ENHANCED_DATA]  Using enhanced demo data
+09:06:47 [INFO] root: 09:06:47.108 [INFO] [DEMO_ENHANCED_DATA]  Using enhanced demo data
+09:06:47 [INFO] root: 09:06:47.109 [INFO] [DEMO_BG_START]  Enhanced UnifiedDemoSerialCLI background thread started
+09:06:47 [INFO] root: 09:06:47.109 [INFO] [DEMO_BG_START]  Enhanced UnifiedDemoSerialCLI background thread started
+09:06:47 [INFO] root: 09:06:47.127 [INFO] [HOST_DASHBOARD_CREATE]  Creating host dashboard
+09:06:47 [INFO] root: 09:06:47.127 [INFO] [HOST_DASHBOARD_CREATE]  Creating host dashboard
+09:06:47 [INFO] root: 09:06:47.127 [INFO] [HOST_DEMO_DATA]  Using enhanced demo data for host dashboard
+09:06:47 [INFO] root: 09:06:47.127 [INFO] [HOST_DEMO_DATA]  Using enhanced demo data for host dashboard
+09:06:47 [INFO] root: 09:06:47.159 [INFO] [HOST_DEMO_SUCCESS]  Host dashboard created from enhanced demo data
+09:06:47 [INFO] root: 09:06:47.159 [INFO] [HOST_DEMO_SUCCESS]  Host dashboard created from enhanced demo data
+09:06:59 [INFO] root: 09:06:59.634 [INFO] [HOST_DASHBOARD_CREATE]  Creating host dashboard
+09:06:59 [INFO] root: 09:06:59.634 [INFO] [HOST_DASHBOARD_CREATE]  Creating host dashboard
+09:06:59 [INFO] root: 09:06:59.634 [INFO] [HOST_DEMO_DATA]  Using enhanced demo data for host dashboard
+09:06:59 [INFO] root: 09:06:59.634 [INFO] [HOST_DEMO_DATA]  Using enhanced demo data for host dashboard
+09:06:59 [INFO] root: 09:06:59.658 [INFO] [HOST_DEMO_SUCCESS]  Host dashboard created from enhanced demo data
+09:06:59 [INFO] root: 09:06:59.658 [INFO] [HOST_DEMO_SUCCESS]  Host dashboard created from enhanced demo data

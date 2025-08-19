@@ -5,6 +5,7 @@ Admin/debug_config.py
 Centralized Debug Configuration for CalypsoPy
 Control all debug output from this single file
 
+FIXED VERSION: Added missing standalone convenience functions
 """
 
 import os
@@ -29,65 +30,6 @@ class DebugConfig:
     """
     Centralized debug configuration for CalypsoPy
     """
-
-    # Add these functions to the end of your Admin/debug_config.py file
-    # (before the "if __name__ == '__main__':" section)
-
-    def debug_print(message: str, component: str = 'main', prefix: str = '') -> None:
-        """
-        Standard debug_print function used throughout CalypsoPy
-        This provides backward compatibility for existing code
-        """
-        debug.debug(message, component, prefix)
-
-    def debug_error(message: str, component: str = 'main', prefix: str = '') -> None:
-        """
-        Standard debug_error function used throughout CalypsoPy
-        This provides backward compatibility for existing code
-        """
-        debug.error(message, component, prefix)
-
-    def debug_warning(message: str, component: str = 'main', prefix: str = '') -> None:
-        """
-        Standard debug_warning function used throughout CalypsoPy
-        This provides backward compatibility for existing code
-        """
-        debug.warning(message, component, prefix)
-
-    def debug_info(message: str, component: str = 'main', prefix: str = '') -> None:
-        """
-        Standard debug_info function used throughout CalypsoPy
-        This provides backward compatibility for existing code
-        """
-        debug.info(message, component, prefix)
-
-    def is_debug_enabled(component: str = 'main') -> bool:
-        """
-        Check if debug is enabled for a component
-        This provides backward compatibility for existing code
-        """
-        return debug.is_enabled(component)
-
-    def get_debug_status() -> Dict[str, Any]:
-        """Get current debug status"""
-        return debug.get_status()
-
-    def toggle_debug(component: str = 'main') -> bool:
-        """Toggle debug for a component"""
-        if debug.is_enabled(component):
-            debug.disable_component(component)
-            return False
-        else:
-            debug.enable_component(component)
-            return True
-
-    def enable_debug(component: str = 'main') -> None:
-        """Enable debug for a component"""
-        debug.enable_component(component)
-
-    def disable_debug(component: str = 'main') -> None:
-        """Disable debug for a component"""
-        debug.disable_component(component)
 
     def __init__(self):
         """Initialize debug configuration"""
@@ -311,11 +253,81 @@ class DebugConfig:
             print(f"  {component:15}: {status_str}")
         print("=" * 50 + "\n")
 
+
 # Global debug instance
 debug = DebugConfig()
 
 
-# Convenience functions for easy access
+# ==============================================================================
+# STANDALONE CONVENIENCE FUNCTIONS - THESE WERE MISSING!
+# ==============================================================================
+# These functions provide the interface that main.py expects to import
+
+def debug_print(message: str, component: str = 'main', prefix: str = '') -> None:
+    """
+    Standard debug_print function used throughout CalypsoPy
+    This provides backward compatibility for existing code
+    """
+    debug.debug(message, component, prefix)
+
+
+def debug_error(message: str, component: str = 'main', prefix: str = '') -> None:
+    """
+    Standard debug_error function used throughout CalypsoPy
+    This provides backward compatibility for existing code
+    """
+    debug.error(message, component, prefix)
+
+
+def debug_warning(message: str, component: str = 'main', prefix: str = '') -> None:
+    """
+    Standard debug_warning function used throughout CalypsoPy
+    This provides backward compatibility for existing code
+    """
+    debug.warning(message, component, prefix)
+
+
+def debug_info(message: str, component: str = 'main', prefix: str = '') -> None:
+    """
+    Standard debug_info function used throughout CalypsoPy
+    This provides backward compatibility for existing code
+    """
+    debug.info(message, component, prefix)
+
+
+def is_debug_enabled(component: str = 'main') -> bool:
+    """Check if debug is enabled for a component"""
+    return debug.is_enabled(component)
+
+
+def get_debug_status() -> Dict[str, Any]:
+    """Get current debug status"""
+    return debug.get_status()
+
+
+def toggle_debug() -> None:
+    """Toggle debug on/off"""
+    debug.enabled = not debug.enabled
+    status = "enabled" if debug.enabled else "disabled"
+    print(f"Debug {status}")
+
+
+def enable_debug() -> None:
+    """Enable debug output"""
+    debug.enabled = True
+    print("Debug enabled")
+
+
+def disable_debug() -> None:
+    """Disable debug output"""
+    debug.enabled = False
+    print("Debug disabled")
+
+
+# ==============================================================================
+# ADDITIONAL CONVENIENCE FUNCTIONS
+# ==============================================================================
+
 def debug_enabled(component: str = 'main') -> bool:
     """Check if debug is enabled"""
     return debug.is_enabled(component)
@@ -401,5 +413,12 @@ if __name__ == "__main__":
     port_debug("Testing port configuration debug")
     host_debug("Testing host card debug")
     cache_debug("Testing cache debug")
+
+    # Test standalone functions
+    print("\nTesting standalone functions...")
+    debug_print("Testing debug_print function")
+    debug_error("Testing debug_error function")
+    debug_info("Testing debug_info function")
+    debug_warning("Testing debug_warning function")
 
     print("Debug configuration test completed!")

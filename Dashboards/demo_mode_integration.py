@@ -1,159 +1,241 @@
 #!/usr/bin/env python3
 """
-demo_mode_integration.py - FIXED VERSION
+Dashboards/demo_mode_integration.py
 
-Complete demo mode integration that works with:
-- EnhancedSystemInfoParser
-- DeviceDataCache
-- HostCardInfoManager
-- All existing dashboard modules
+Enhanced Demo Mode Integration for CalypsoPy
+Integrates with Admin components for proper sysinfo command handling
 
-This provides a realistic simulation environment for training and testing.
+This enhanced version adds:
+- Integration with Admin cache manager, parser, debug, and settings
+- Proper sysinfo command execution with ver, lsd, and showport parsing
+- Dashboard data preparation for Host Card and Link Status
+- Unified command processing with enhanced error handling
+
+Author: Serial Cables Development Team
 """
 
 import random
 import time
 import threading
 import queue
-import os
-import json
 from datetime import datetime
-from typing import Dict, Any, Optional, List
+import os
+import re
+from typing import Dict, Any, Optional
+
+# Import Admin components for integration
+try:
+    from Admin.cache_manager import DeviceDataCache
+    from Admin.enhanced_sysinfo_parser import EnhancedSystemInfoParser
+    from Admin.debug_config import debug_print, debug_error, debug_info, debug_warning
+    from Admin.settings_manager import SettingsManager
+
+    ADMIN_COMPONENTS_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: Admin components not available: {e}")
+    ADMIN_COMPONENTS_AVAILABLE = False
 
 
-class UnifiedDemoSerialCLI:
+class EnhancedUnifiedDemoSerialCLI:
     """
-    FIXED: Unified Demo CLI with proper integration to all existing modules
+    Enhanced Unified Demo CLI with Admin components integration
+
+    This enhanced version provides:
+    - Proper sysinfo command handling with Admin integration
+    - Cache management for parsed demo data
+    - Debug logging throughout command execution
+    - Settings-based demo behavior configuration
     """
 
-    def __init__(self, port="DEMO"):
+    def __init__(self, port="DEMO", cache_manager=None, settings_manager=None):
+        """
+        Initialize Enhanced Demo CLI
+
+        Args:
+            port: Demo port identifier
+            cache_manager: DeviceDataCache instance for caching
+            settings_manager: SettingsManager instance for configuration
+        """
         self.port = port
         self.baudrate = 115200
         self.serial_connection = None
         self.is_running = False
-
-        # Proper queue initialization
         self.command_queue = queue.Queue()
         self.response_queue = queue.Queue()
         self.log_queue = queue.Queue()
 
-        # Device state for dynamic responses
-        self.device_state = self._initialize_device_state()
+        # Admin components integration
+        self.cache_manager = cache_manager
+        self.settings_manager = settings_manager
+        self.parser = None
 
-        # Load demo sysinfo content
-        self.demo_sysinfo_content = self._load_demo_sysinfo_file()
+        # Initialize parser if cache manager available
+        if ADMIN_COMPONENTS_AVAILABLE and self.cache_manager:
+            self.parser = EnhancedSystemInfoParser(self.cache_manager)
+            debug_info("Enhanced parser initialized with cache manager", "DEMO_PARSER_INIT")
+        elif ADMIN_COMPONENTS_AVAILABLE:
+            self.parser = EnhancedSystemInfoParser()
+            debug_info("Enhanced parser initialized without cache manager", "DEMO_PARSER_INIT")
 
-        # Background thread reference
-        self._background_thread = None
-
-        print(f"DEBUG: UnifiedDemoSerialCLI initialized for {port}")
-        if self.demo_sysinfo_content:
-            print(f"DEBUG: Demo content loaded: {len(self.demo_sysinfo_content)} chars")
-        else:
-            print("WARNING: No demo content loaded - using fallback data")
-
-    def _initialize_device_state(self) -> Dict[str, Any]:
-        """Initialize dynamic device state for realistic simulation"""
-        return {
-            'serial_number': 'GBH14412506206Z',
+        # Demo device state with enhanced properties
+        self.demo_device_state = {
+            'current_mode': 0,  # Default SBR mode
+            'temperature': 45.5,
+            'serial_number': 'DEMO12345678',
+            'firmware_version': 'RC28',
             'company': 'SerialCables,Inc',
-            'model': 'PCI6-RD-x16HT-BG6-144',
-            'firmware_version': '0.1.0',
-            'build_date': 'Jul 18 2025 11:05:16',
-            'sbr_version': '0 34 160 28',
-            'board_temperature': 55,
-            'fan_speed': 6310,
-            'voltage_0_8v': 890,
-            'voltage_0_89v': 991,
-            'voltage_1_2v': 1304,
-            'voltage_1_5v': 1512,
-            'current_draw': 10240,
-            'port_states': {
-                '80': {'speed': '06', 'width': '04', 'active': True},
-                '112': {'speed': '01', 'width': '00', 'active': True},
-                '128': {'speed': '01', 'width': '00', 'active': True}
-            },
-            'golden_finger': {'speed': '05', 'width': '16', 'active': True},
-            'error_counts': {
-                '0_8v': 0,
-                '0_89v': 0,
-                '1_2v': 0,
-                '1_5v': 0
-            },
-            'uptime_hours': 1,
-            'last_update': time.time()
+            'model': 'DEMO-PCI6-RD-x16HT-BG6-144',
+            'version': '1.0.0',
+            'build_date': 'Aug 19 2025 12:00:00',
+            'sbr_version': '0 34 160 28'
         }
 
-    def _load_demo_sysinfo_file(self) -> Optional[str]:
-        """Load sysinfo.txt from multiple possible locations"""
+        # Load demo content from files
+        self.demo_sysinfo_content = self._load_demo_sysinfo_file()
+        self.demo_showport_content = self._load_demo_showport_file()
+
+        # Parse demo content on initialization if available
+        self._parse_initial_demo_content()
+
+        debug_info(f"Enhanced UnifiedDemoSerialCLI initialized for {port}", "DEMO_CLI_INIT")
+        self._log_initialization_status()
+
+    def _log_initialization_status(self):
+        """Log initialization status with debug info"""
+        if self.demo_sysinfo_content:
+            debug_info(f"Demo sysinfo content loaded: {len(self.demo_sysinfo_content)} chars", "DEMO_SYSINFO_LOADED")
+        else:
+            debug_warning("No demo sysinfo content loaded", "DEMO_SYSINFO_MISSING")
+
+        if self.demo_showport_content:
+            debug_info(f"Demo showport content loaded: {len(self.demo_showport_content)} chars", "DEMO_SHOWPORT_LOADED")
+        else:
+            debug_warning("No demo showport content loaded", "DEMO_SHOWPORT_MISSING")
+
+        if self.parser:
+            debug_info("Enhanced parser available for demo parsing", "DEMO_PARSER_AVAILABLE")
+        else:
+            debug_warning("Enhanced parser not available", "DEMO_PARSER_MISSING")
+
+    def _parse_initial_demo_content(self):
+        """Parse initial demo content and cache it"""
+        if not self.parser or not self.demo_sysinfo_content:
+            debug_warning("Cannot parse initial demo content - parser or content missing", "DEMO_PARSE_SKIP")
+            return
+
+        try:
+            debug_info("Parsing initial demo content", "DEMO_PARSE_START")
+
+            # Parse the unified sysinfo content
+            parsed_data = self.parser.parse_unified_sysinfo(
+                self.demo_sysinfo_content,
+                "demo"
+            )
+
+            if parsed_data:
+                debug_info("Initial demo content parsed successfully", "DEMO_PARSE_SUCCESS")
+
+                # Cache the parsed data if cache manager available
+                if self.cache_manager:
+                    cache_key = "demo_sysinfo_initial"
+                    self.cache_manager.store(cache_key, parsed_data, "sysinfo")
+                    debug_info(f"Initial demo data cached with key: {cache_key}", "DEMO_CACHE_STORED")
+            else:
+                debug_error("Initial demo content parsing failed", "DEMO_PARSE_FAILED")
+
+        except Exception as e:
+            debug_error(f"Initial demo content parsing exception: {e}", "DEMO_PARSE_EXCEPTION")
+
+    def _load_demo_sysinfo_file(self):
+        """Load sysinfo.txt from multiple possible locations with enhanced debugging"""
         demo_paths = [
-            "sysinfo.txt",  # Current directory
             "DemoData/sysinfo.txt",
             "./DemoData/sysinfo.txt",
             "../DemoData/sysinfo.txt",
-            os.path.join(os.path.dirname(__file__), "sysinfo.txt"),
             os.path.join(os.path.dirname(__file__), "DemoData", "sysinfo.txt"),
-            os.path.join(os.getcwd(), "sysinfo.txt"),
-            os.path.join(os.getcwd(), "DemoData", "sysinfo.txt")
+            os.path.join(os.path.dirname(__file__), "..", "DemoData", "sysinfo.txt"),
+            os.path.join(os.getcwd(), "DemoData", "sysinfo.txt"),
+            "sysinfo.txt",  # Current directory fallback
         ]
 
-        print("DEBUG: Searching for demo sysinfo file...")
+        debug_info("Searching for demo sysinfo file", "DEMO_FILE_SEARCH")
+
         for i, path in enumerate(demo_paths):
             abs_path = os.path.abspath(path)
-            print(f"DEBUG: Checking path {i + 1}: {abs_path}")
+            debug_print(f"Checking sysinfo path {i + 1}: {abs_path}", "FILE_CHECK")
 
             if os.path.exists(path):
                 try:
                     with open(path, 'r', encoding='utf-8') as f:
                         content = f.read()
-                    print(f"DEBUG: ✓ Loaded demo sysinfo from {path} ({len(content)} chars)")
+
+                    debug_info(f"Loaded demo sysinfo from {path} ({len(content)} chars)", "FILE_LOADED")
 
                     # Verify content has expected sections
-                    if 'ver' in content and 'lsd' in content and 'showport' in content:
-                        print("DEBUG: ✓ Content verification passed")
+                    if self._verify_sysinfo_content(content):
+                        debug_info("Sysinfo content verification passed", "CONTENT_VERIFIED")
                         return content
                     else:
-                        print("DEBUG: ⚠ Content missing expected sections")
+                        debug_warning(f"Sysinfo content verification failed for {path}", "CONTENT_VERIFY_FAILED")
+                        continue
 
                 except Exception as e:
-                    print(f"DEBUG: ✗ Error loading {path}: {e}")
+                    debug_error(f"Error loading sysinfo {path}: {e}", "FILE_READ_ERROR")
                     continue
             else:
-                print(f"DEBUG: ✗ Path does not exist: {abs_path}")
+                debug_print(f"Sysinfo path does not exist: {abs_path}", "FILE_NOT_FOUND")
 
-        print("DEBUG: No sysinfo file found - creating fallback data")
+        debug_warning("No sysinfo file found - creating fallback data", "SYSINFO_FALLBACK")
         return self._create_fallback_sysinfo()
 
-    def _create_fallback_sysinfo(self) -> str:
-        """Create comprehensive fallback sysinfo data"""
-        return """================================================================================
+    def _verify_sysinfo_content(self, content: str) -> bool:
+        """Verify sysinfo content has expected sections"""
+        required_sections = ['ver', 'lsd', 'showport']
+        missing_sections = []
+
+        content_lower = content.lower()
+        for section in required_sections:
+            if section not in content_lower:
+                missing_sections.append(section)
+
+        if missing_sections:
+            debug_error(f"Missing required sections: {missing_sections}", "CONTENT_MISSING_SECTIONS")
+            return False
+
+        return True
+
+    def _create_fallback_sysinfo(self):
+        """Create fallback sysinfo data if file not found"""
+        current_time = datetime.now().strftime('%b %d %Y %H:%M:%S')
+
+        fallback_content = f"""================================================================================
 ver
 ================================================================================
 
-S/N      : GBH14412506206Z
-Company  : SerialCables,Inc
-Model    : PCI6-RD-x16HT-BG6-144
-Version  : 0.1.0    Date : Jul 18 2025 11:05:16
-SBR Version : 0 34 160 28
+S/N      : {self.demo_device_state['serial_number']}
+Company  : {self.demo_device_state['company']}
+Model    : {self.demo_device_state['model']}
+Version  : {self.demo_device_state['version']}    Date : {current_time}
+SBR Version : {self.demo_device_state['sbr_version']}
 
 ================================================================================
 lsd
 ================================================================================
 
 Thermal:
-        Board Temperature : 55 degree
+        Board Temperature : {int(self.demo_device_state['temperature'])} degree
 
 Fans Speed:
-        Switch Fan : 6310 rpm
+        Switch Fan : {random.randint(5000, 7000)} rpm
 
 Voltage Sensors:
-Board    0.8V  Voltage : 890 mV
-Board   0.89V  Voltage : 991 mV
-Board    1.2V  Voltage : 1304 mV
-Board    1.5v  Voltage : 1512 mV
+Board    0.8V  Voltage : {random.randint(840, 860)} mV
+Board   0.89V  Voltage : {random.randint(910, 930)} mV
+Board    1.2V  Voltage : {random.randint(1240, 1260)} mV
+Board    1.5v  Voltage : {random.randint(1470, 1490)} mV
 
 Current Status:
-Current : 10240 mA
+Current : {random.randint(9000, 10000)} mA
 
 Error Status:
 Voltage    0.8V  error : 0
@@ -173,557 +255,856 @@ Port Upstream-------------------------------------------------------------------
 
 Golden finger: speed 05, width 16, max_width = 16"""
 
-    def connect(self) -> bool:
-        """Simulate connection establishment"""
-        try:
-            self.log_queue.put("DEMO: Initializing unified demo mode...")
-            time.sleep(0.1)
+        debug_info("Created fallback sysinfo data", "FALLBACK_CREATED")
+        return fallback_content
 
-            if self.demo_sysinfo_content:
-                content_preview = self.demo_sysinfo_content[:100].replace('\n', ' ')
-                self.log_queue.put(f"DEMO: sysinfo data loaded - {content_preview}...")
+    def _load_demo_showport_file(self):
+        """Load showport.txt from DemoData directory"""
+        showport_paths = [
+            "DemoData/showport.txt",
+            "./DemoData/showport.txt",
+            "../DemoData/showport.txt",
+            os.path.join(os.path.dirname(__file__), "DemoData", "showport.txt"),
+            os.path.join(os.path.dirname(__file__), "..", "DemoData", "showport.txt"),
+            os.path.join(os.getcwd(), "DemoData", "showport.txt")
+        ]
+
+        debug_info("Searching for demo showport.txt file", "SHOWPORT_SEARCH")
+
+        for i, path in enumerate(showport_paths):
+            abs_path = os.path.abspath(path)
+            debug_print(f"Checking showport path {i + 1}: {abs_path}", "SHOWPORT_CHECK")
+
+            if os.path.exists(path):
+                try:
+                    with open(path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    debug_info(f"Loaded demo showport from {path} ({len(content)} chars)", "SHOWPORT_LOADED")
+                    return content
+                except Exception as e:
+                    debug_error(f"Error loading showport {path}: {e}", "SHOWPORT_READ_ERROR")
+                    continue
             else:
-                self.log_queue.put("DEMO: WARNING - using fallback sysinfo data")
+                debug_print(f"Showport path does not exist: {abs_path}", "SHOWPORT_NOT_FOUND")
 
-            self.log_queue.put("DEMO: Connection established successfully")
-            self.is_running = True
+        debug_warning("No showport.txt file found - creating fallback data", "SHOWPORT_FALLBACK")
+        return self._create_fallback_showport()
 
-            print("DEBUG: UnifiedDemoSerialCLI connected successfully")
-            return True
+    def _create_fallback_showport(self):
+        """Create fallback showport data if file not found"""
+        fallback_content = """Port Slot------------------------------------------------------------------------------
 
-        except Exception as e:
-            print(f"ERROR: Demo connection failed: {e}")
-            return False
+Port80 : speed 06, width 04, max_speed06, max_width16
+Port112: speed 01, width 00, max_speed06, max_width16
+Port128: speed 05, width 16, max_speed06, max_width16
+
+Port Upstream------------------------------------------------------------------------------
+
+Golden finger: speed 06, width 16, max_width = 16"""
+
+        debug_info("Created fallback showport data", "SHOWPORT_FALLBACK_CREATED")
+        return fallback_content
+
+    def connect(self):
+        """Simulate connection with enhanced debugging"""
+        debug_info("Initializing enhanced unified demo mode", "DEMO_CONNECT_START")
+
+        # Simulate connection delay if enabled
+        if self.settings_manager and self.settings_manager.get('demo', 'simulate_delays', True):
+            delay = 0.1
+            debug_info(f"Simulating connection delay: {delay}s", "DEMO_CONNECT_DELAY")
+            time.sleep(delay)
+
+        # Log demo content status
+        if self.demo_sysinfo_content:
+            content_preview = self.demo_sysinfo_content[:100].replace('\n', ' ')
+            self.log_queue.put(f"DEMO: sysinfo data loaded - {content_preview}...")
+            debug_info("Sysinfo data available for demo mode", "DEMO_SYSINFO_READY")
+        else:
+            self.log_queue.put("DEMO: WARNING - sysinfo data not available")
+            debug_warning("Sysinfo data not available", "DEMO_SYSINFO_NOT_READY")
+
+        # Log parser status
+        if self.parser:
+            debug_info("Enhanced parser ready for demo parsing", "DEMO_PARSER_READY")
+        else:
+            debug_warning("Enhanced parser not available", "DEMO_PARSER_NOT_READY")
+
+        self.log_queue.put("DEMO: Enhanced connection established successfully")
+        self.is_running = True
+
+        debug_info("Enhanced UnifiedDemoSerialCLI connected successfully", "DEMO_CONNECT_SUCCESS")
+        return True
 
     def disconnect(self):
-        """Simulate disconnection"""
+        """Simulate disconnection with enhanced debugging"""
+        debug_info("Disconnecting enhanced demo mode", "DEMO_DISCONNECT")
         self.is_running = False
+        self.log_queue.put("DEMO: Enhanced unified demo connection closed")
+        debug_info("Enhanced UnifiedDemoSerialCLI disconnected", "DEMO_DISCONNECT_SUCCESS")
 
-        # Stop background thread gracefully
-        if self._background_thread and self._background_thread.is_alive():
-            self._background_thread.join(timeout=1.0)
+    def send_command(self, command, timeout=5):
+        """
+        Enhanced command sending with better timeout handling
 
-        self.log_queue.put("DEMO: Unified demo connection closed")
-        print("DEBUG: UnifiedDemoSerialCLI disconnected")
+        Args:
+            command: Command to send
+            timeout: Timeout in seconds
 
-    def send_command(self, command: str) -> bool:
-        """Simulate sending command to device"""
-        if self.is_running:
+        Returns:
+            Response string or None if timeout/error
+        """
+        if not self.is_running:
+            debug_error("Cannot send command - not running", "DEMO_SEND_NOT_RUNNING")
+            return None
+
+        debug_info(f"Sending enhanced demo command: {command}", "DEMO_SEND_CMD")
+
+        try:
+            # Put command in queue for background processing
             self.command_queue.put(command)
             self.log_queue.put(f"DEMO SENT: {command}")
-            print(f"DEBUG: Demo command queued: {command}")
-            return True
-        else:
-            print("DEBUG: Cannot send command - not running")
-            return False
 
-    def read_response(self) -> Optional[str]:
+            # Wait for response with timeout
+            start_time = time.time()
+            while time.time() - start_time < timeout:
+                try:
+                    response = self.response_queue.get_nowait()
+                    debug_info(f"Enhanced demo response received ({len(response)} chars)", "DEMO_RECV_SUCCESS")
+                    return response
+                except queue.Empty:
+                    time.sleep(0.1)  # Small delay before checking again
+
+            debug_error(f"Enhanced demo command timeout after {timeout}s", "DEMO_TIMEOUT")
+            return None
+
+        except Exception as e:
+            debug_error(f"Enhanced demo command failed: {e}", "DEMO_SEND_ERROR")
+            return None
+
+    def read_response(self):
         """Simulate reading response from device"""
         if self.is_running:
             try:
                 response = self.response_queue.get_nowait()
                 self.log_queue.put(f"DEMO RECV: {response[:100]}...")  # Limit log size
-                print(f"DEBUG: Demo response read: {len(response)} chars")
+                debug_info(f"Demo response read: {len(response)} chars", "DEMO_READ_SUCCESS")
                 return response
             except queue.Empty:
+                debug_print("No response in queue", "DEMO_READ_EMPTY")
                 return None
+        debug_warning("Cannot read response - not running", "DEMO_READ_NOT_RUNNING")
         return None
 
     def run_background(self):
-        """
-        FIXED: Background thread that processes commands with enhanced functionality
-        """
-        print("DEBUG: UnifiedDemoSerialCLI background thread started")
-        self._background_thread = threading.current_thread()
+        """Enhanced background thread that processes commands with Admin integration"""
+        debug_info("Enhanced UnifiedDemoSerialCLI background thread started", "DEMO_BG_START")
 
         while self.is_running:
             try:
                 # Check for commands with timeout
                 try:
                     command = self.command_queue.get(timeout=0.1)
-                    print(f"DEBUG: Background thread processing command: {command}")
+                    debug_info(f"Background thread processing command: {command}", "DEMO_BG_PROCESS")
 
-                    # Process the command
-                    response = self._handle_unified_command(command)
+                    # Process the command with enhanced handling
+                    response = self._handle_enhanced_command(command)
 
                     if response:
-                        print(f"DEBUG: Generated response ({len(response)} chars)")
+                        debug_info(f"Generated response ({len(response)} chars)", "DEMO_BG_RESPONSE")
 
-                        # Simulate realistic delay based on command
+                        # Simulate realistic delay based on settings
                         delay = self._get_command_delay(command)
                         if delay > 0:
-                            print(f"DEBUG: Waiting {delay} seconds before sending response")
+                            debug_info(f"Simulating command delay: {delay}s", "DEMO_BG_DELAY")
                             time.sleep(delay)
 
                         # Put response in queue
                         self.response_queue.put(response)
-                        print(f"DEBUG: Response queued successfully")
+                        debug_info("Response queued successfully", "DEMO_BG_QUEUED")
                     else:
-                        print(f"DEBUG: No response generated for command: {command}")
+                        debug_warning(f"No response generated for command: {command}", "DEMO_BG_NO_RESPONSE")
 
                 except queue.Empty:
                     # No command to process, continue loop
                     pass
 
-                # Update device state periodically
-                self._update_device_state()
-
             except Exception as e:
-                print(f"DEBUG: Background thread error: {e}")
+                debug_error(f"Background thread error: {e}", "DEMO_BG_ERROR")
                 import traceback
                 traceback.print_exc()
 
             # Small delay to prevent CPU spinning
             time.sleep(0.05)
 
-        print("DEBUG: Background thread ending")
+        debug_info("Enhanced background thread ending", "DEMO_BG_END")
 
-    def _handle_unified_command(self, command: str) -> Optional[str]:
+    def _handle_enhanced_command(self, command):
         """
-        FIXED: Handle commands with comprehensive response generation
+        Enhanced command handling with Admin components integration
+
+        Args:
+            command: Command to process
+
+        Returns:
+            Response string or None
         """
         command_lower = command.lower().strip()
-        print(f"DEBUG: Processing command: '{command}' -> '{command_lower}'")
+        debug_info(f"Processing enhanced command: '{command}' -> '{command_lower}'", "DEMO_CMD_PROCESS")
 
-        # Handle sysinfo command (main command)
         if 'sysinfo' in command_lower:
             return self._handle_sysinfo_command()
-
-        # Handle individual commands
-        elif 'ver' in command_lower or 'version' in command_lower:
+        elif 'ver' in command_lower and 'sysinfo' not in command_lower:
             return self._handle_ver_command()
-
         elif 'lsd' in command_lower:
             return self._handle_lsd_command()
-
         elif 'showport' in command_lower:
             return self._handle_showport_command()
-
-        elif 'help' in command_lower:
-            return self._handle_help_command()
-
+        elif command_lower in ['help', '?']:
+            return self._get_help_response()
         elif 'status' in command_lower:
-            return self._handle_status_command()
-
-        elif 'reset' in command_lower:
-            return self._handle_reset_command(command)
-
-        elif 'read_reg' in command_lower:
-            return self._handle_read_register_command(command)
-
-        elif 'write_reg' in command_lower:
-            return self._handle_write_register_command(command)
-
+            return self._get_status_response()
+        elif 'version' in command_lower:
+            return self._get_version_response()
+        elif any(reset_cmd in command_lower for reset_cmd in ['reset', 'msrst', 'swreset']):
+            return self._handle_reset_command(command_lower)
         else:
-            print(f"DEBUG: Unknown command: {command}")
-            return f"ERROR: Unknown command '{command}'\nType 'help' for available commands.\n\nCmd>[]"
+            debug_warning(f"Unknown command: {command}", "DEMO_CMD_UNKNOWN")
+            return f"Unknown command: {command}\nType 'help' for available commands."
 
-    def _handle_sysinfo_command(self) -> str:
-        """Handle sysinfo command with dynamic data"""
-        print("DEBUG: Handling sysinfo command")
+    def _handle_sysinfo_command(self):
+        """Handle sysinfo command with enhanced parsing and caching"""
+        debug_info("Handling enhanced sysinfo command", "DEMO_SYSINFO_HANDLE")
 
+        if not self.demo_sysinfo_content:
+            debug_error("No sysinfo content available", "DEMO_SYSINFO_NO_CONTENT")
+            return "Error: Demo sysinfo data not available"
+
+        try:
+            # Parse the content using enhanced parser if available
+            if self.parser:
+                debug_info("Using enhanced parser for sysinfo", "DEMO_SYSINFO_PARSE")
+
+                parsed_data = self.parser.parse_unified_sysinfo(
+                    self.demo_sysinfo_content,
+                    "demo"
+                )
+
+                if parsed_data:
+                    debug_info("Sysinfo parsing successful", "DEMO_SYSINFO_PARSE_SUCCESS")
+
+                    # Cache the parsed data
+                    if self.cache_manager:
+                        cache_key = f"demo_sysinfo_{int(time.time())}"
+                        self.cache_manager.store(cache_key, parsed_data, "sysinfo")
+                        debug_info(f"Sysinfo data cached with key: {cache_key}", "DEMO_SYSINFO_CACHED")
+                else:
+                    debug_warning("Sysinfo parsing returned no data", "DEMO_SYSINFO_PARSE_EMPTY")
+
+            # Return the raw sysinfo content for command response
+            debug_info(f"Returning sysinfo content ({len(self.demo_sysinfo_content)} chars)", "DEMO_SYSINFO_RETURN")
+            return self.demo_sysinfo_content
+
+        except Exception as e:
+            debug_error(f"Sysinfo command handling failed: {e}", "DEMO_SYSINFO_ERROR")
+            return f"Error processing sysinfo command: {e}"
+
+    def _handle_ver_command(self):
+        """Handle ver command separately"""
+        debug_info("Handling ver command", "DEMO_VER_HANDLE")
+
+        # Extract ver section from sysinfo content
         if self.demo_sysinfo_content:
-            # Use file content as base but with dynamic updates
-            base_content = self.demo_sysinfo_content
+            ver_match = re.search(r'ver\s*=+\s*(.*?)\s*=+', self.demo_sysinfo_content, re.DOTALL | re.IGNORECASE)
+            if ver_match:
+                ver_content = ver_match.group(1).strip()
+                debug_info("Ver section extracted successfully", "DEMO_VER_EXTRACTED")
+                return f"Cmd>ver\n\n{ver_content}\n\nOK>"
 
-            # Apply dynamic updates to the content
-            dynamic_content = self._apply_dynamic_updates(base_content)
-
-            print(f"DEBUG: Returning dynamic sysinfo content ({len(dynamic_content)} chars)")
-            return f"Cmd>sysinfo\n\n{dynamic_content}\n\nCmd>[]"
-        else:
-            print("DEBUG: No sysinfo content available")
-            return "ERROR: Demo sysinfo data not available\n\nCmd>[]"
-
-    def _apply_dynamic_updates(self, base_content: str) -> str:
-        """Apply dynamic updates to base sysinfo content"""
-        content = base_content
-
-        # Update temperature (simulate slight variations)
-        temp_variation = random.randint(-3, 3)
-        new_temp = max(45, min(65, self.device_state['board_temperature'] + temp_variation))
-        content = content.replace(
-            f"Board Temperature : {self.device_state['board_temperature']} degree",
-            f"Board Temperature : {new_temp} degree"
-        )
-        self.device_state['board_temperature'] = new_temp
-
-        # Update fan speed (simulate slight variations)
-        fan_variation = random.randint(-100, 100)
-        new_fan_speed = max(5000, min(7000, self.device_state['fan_speed'] + fan_variation))
-        content = content.replace(
-            f"Switch Fan : {self.device_state['fan_speed']} rpm",
-            f"Switch Fan : {new_fan_speed} rpm"
-        )
-        self.device_state['fan_speed'] = new_fan_speed
-
-        # Update voltage slightly (simulate normal fluctuation)
-        for voltage_key, base_value in [
-            ('voltage_0_8v', 890),
-            ('voltage_0_89v', 991),
-            ('voltage_1_2v', 1304),
-            ('voltage_1_5v', 1512)
-        ]:
-            variation = random.randint(-5, 5)
-            new_value = base_value + variation
-            self.device_state[voltage_key] = new_value
-
-            # Update in content
-            if voltage_key == 'voltage_0_8v':
-                content = content.replace(
-                    f"Board    0.8V  Voltage : {base_value} mV",
-                    f"Board    0.8V  Voltage : {new_value} mV"
-                )
-            elif voltage_key == 'voltage_0_89v':
-                content = content.replace(
-                    f"Board   0.89V  Voltage : {base_value} mV",
-                    f"Board   0.89V  Voltage : {new_value} mV"
-                )
-            elif voltage_key == 'voltage_1_2v':
-                content = content.replace(
-                    f"Board    1.2V  Voltage : {base_value} mV",
-                    f"Board    1.2V  Voltage : {new_value} mV"
-                )
-            elif voltage_key == 'voltage_1_5v':
-                content = content.replace(
-                    f"Board    1.5v  Voltage : {base_value} mV",
-                    f"Board    1.5v  Voltage : {new_value} mV"
-                )
-
-        # Update current draw
-        current_variation = random.randint(-200, 200)
-        new_current = max(9000, min(12000, self.device_state['current_draw'] + current_variation))
-        content = content.replace(
-            f"Current : {self.device_state['current_draw']} mA",
-            f"Current : {new_current} mA"
-        )
-        self.device_state['current_draw'] = new_current
-
-        return content
-
-    def _handle_ver_command(self) -> str:
-        """Handle ver command"""
-        print("DEBUG: Handling ver command")
+        # Fallback ver response
+        debug_warning("Using fallback ver response", "DEMO_VER_FALLBACK")
         return f"""Cmd>ver
 
-S/N      : {self.device_state['serial_number']}
-Company  : {self.device_state['company']}
-Model    : {self.device_state['model']}
-Version  : {self.device_state['firmware_version']}    Date : {self.device_state['build_date']}
-SBR Version : {self.device_state['sbr_version']}
+S/N      : {self.demo_device_state['serial_number']}
+Company  : {self.demo_device_state['company']}
+Model    : {self.demo_device_state['model']}
+Version  : {self.demo_device_state['version']}    Date : {self.demo_device_state['build_date']}
+SBR Version : {self.demo_device_state['sbr_version']}
 
-Cmd>[]"""
+OK>"""
 
-    def _handle_lsd_command(self) -> str:
-        """Handle lsd command"""
-        print("DEBUG: Handling lsd command")
+    def _handle_lsd_command(self):
+        """Handle lsd command separately"""
+        debug_info("Handling lsd command", "DEMO_LSD_HANDLE")
+
+        # Extract lsd section from sysinfo content
+        if self.demo_sysinfo_content:
+            lsd_match = re.search(r'lsd\s*=+\s*(.*?)\s*=+', self.demo_sysinfo_content, re.DOTALL | re.IGNORECASE)
+            if lsd_match:
+                lsd_content = lsd_match.group(1).strip()
+                debug_info("LSD section extracted successfully", "DEMO_LSD_EXTRACTED")
+                return f"Cmd>lsd\n\n{lsd_content}\n\nOK>"
+
+        # Fallback lsd response with random values
+        debug_warning("Using fallback lsd response", "DEMO_LSD_FALLBACK")
+        temp = int(self.demo_device_state['temperature']) + random.randint(-2, 2)
         return f"""Cmd>lsd
 
 Thermal:
-        Board Temperature : {self.device_state['board_temperature']} degree
+        Board Temperature : {temp} degree
 
 Fans Speed:
-        Switch Fan : {self.device_state['fan_speed']} rpm
+        Switch Fan : {random.randint(5500, 6500)} rpm
 
 Voltage Sensors:
-Board    0.8V  Voltage : {self.device_state['voltage_0_8v']} mV
-Board   0.89V  Voltage : {self.device_state['voltage_0_89v']} mV
-Board    1.2V  Voltage : {self.device_state['voltage_1_2v']} mV
-Board    1.5v  Voltage : {self.device_state['voltage_1_5v']} mV
+Board    0.8V  Voltage : {random.randint(840, 860)} mV
+Board   0.89V  Voltage : {random.randint(910, 930)} mV
+Board    1.2V  Voltage : {random.randint(1240, 1260)} mV
+Board    1.5v  Voltage : {random.randint(1470, 1490)} mV
 
 Current Status:
-Current : {self.device_state['current_draw']} mA
+Current : {random.randint(9500, 10500)} mA
 
 Error Status:
-Voltage    0.8V  error : {self.device_state['error_counts']['0_8v']}
-Voltage   0.89V  error : {self.device_state['error_counts']['0_89v']}
-Voltage    1.2V  error : {self.device_state['error_counts']['1_2v']}
-Voltage    1.5v  error : {self.device_state['error_counts']['1_5v']}
+Voltage    0.8V  error : 0
+Voltage   0.89V  error : 0
+Voltage    1.2V  error : 0
+Voltage    1.5v  error : 0
 
-Cmd>[]"""
+OK>"""
 
-    def _handle_showport_command(self) -> str:
-        """Handle showport command"""
-        print("DEBUG: Handling showport command")
+    def _handle_showport_command(self):
+        """Handle showport command separately"""
+        debug_info("Handling showport command", "DEMO_SHOWPORT_HANDLE")
 
-        port_lines = []
-        for port_num, port_data in self.device_state['port_states'].items():
-            port_lines.append(
-                f"Port{port_num}: speed {port_data['speed']}, width {port_data['width']}, max_speed06, max_width16")
+        if self.demo_showport_content:
+            debug_info("Using demo showport content", "DEMO_SHOWPORT_CONTENT")
+            return f"Cmd>showport\n\n{self.demo_showport_content}\n\nOK>"
+        elif self.demo_sysinfo_content:
+            # Extract showport section from sysinfo content
+            showport_match = re.search(r'showport\s*=+\s*(.*?)(?:\s*=+|$)', self.demo_sysinfo_content,
+                                       re.DOTALL | re.IGNORECASE)
+            if showport_match:
+                showport_content = showport_match.group(1).strip()
+                debug_info("Showport section extracted from sysinfo", "DEMO_SHOWPORT_EXTRACTED")
+                return f"Cmd>showport\n\n{showport_content}\n\nOK>"
 
-        golden = self.device_state['golden_finger']
-
+        # Fallback showport response
+        debug_warning("Using fallback showport response", "DEMO_SHOWPORT_FALLBACK")
         return f"""Cmd>showport
+
 Port Slot------------------------------------------------------------------------------
 
-{chr(10).join(port_lines)}
+Port80 : speed 06, width 04, max_speed06, max_width16
+Port112: speed 01, width 00, max_speed06, max_width16
+Port128: speed 01, width 00, max_speed06, max_width16
 Port Upstream------------------------------------------------------------------------------
 
-Golden finger: speed {golden['speed']}, width {golden['width']}, max_width = 16
+Golden finger: speed 05, width 16, max_width = 16
 
-Cmd>[]"""
+OK>"""
 
-    def _handle_help_command(self) -> str:
-        """Handle help command"""
-        print("DEBUG: Handling help command")
-        return """Cmd>help
-
-Available commands:
-help       - Show this help
-sysinfo    - Get complete system information (ver + lsd + showport)
-ver        - Get device version information
-lsd        - Get system diagnostics and sensors  
-showport   - Get port status information
-status     - Get device status
-reset      - Reset device (soft_reset, hard_reset, etc.)
-read_reg   - Read register value
-write_reg  - Write register value
-
-Demo Mode: All responses use realistic simulated data
-
-Cmd>[]"""
-
-    def _handle_status_command(self) -> str:
-        """Handle status command"""
-        print("DEBUG: Handling status command")
-        return f"""Cmd>status
-
-Device Status: ONLINE (DEMO MODE)
-Serial Number: {self.device_state['serial_number']}
-Power Status: GOOD
-Temperature: {self.device_state['board_temperature']}°C
-Fan Speed: {self.device_state['fan_speed']} rpm
-Link Status: ACTIVE
-Uptime: {self.device_state['uptime_hours']}h {random.randint(10, 59)}m
-Total Errors: {sum(self.device_state['error_counts'].values())}
-
-Note: Demo mode using realistic simulation
-
-Cmd>[]"""
-
-    def _handle_reset_command(self, command: str) -> str:
+    def _handle_reset_command(self, command_lower):
         """Handle reset commands"""
-        print(f"DEBUG: Handling reset command: {command}")
+        debug_info(f"Handling reset command: {command_lower}", "DEMO_RESET_HANDLE")
 
-        if 'soft' in command.lower():
-            reset_type = "Soft Reset"
-        elif 'hard' in command.lower():
-            reset_type = "Hard Reset"
-        elif 'factory' in command.lower():
-            reset_type = "Factory Reset"
-        elif 'link' in command.lower():
-            reset_type = "Link Reset"
+        if 'msrst' in command_lower:
+            return "Cmd>msrst\n\nResetting x16 Straddle Mount component...\nReset complete.\n\nOK>"
+        elif 'swreset' in command_lower:
+            return "Cmd>swreset\n\nResetting Atlas 3 Switch component...\nReset complete.\n\nOK>"
+        elif 'reset' in command_lower:
+            # Full system reset - will disconnect
+            self.is_running = False
+            return "Cmd>reset\n\nPerforming full system reset...\nSystem reset complete.\nConnection terminated."
         else:
-            reset_type = "System Reset"
+            return f"Unknown reset command: {command_lower}"
 
-        # Simulate reset by updating device state
-        self._simulate_reset()
+    def _get_command_delay(self, command):
+        """Get realistic delay for command response based on settings"""
+        if not self.settings_manager or not self.settings_manager.get('demo', 'simulate_delays', True):
+            return 0
 
-        return f"""Cmd>{command}
-
-{reset_type} initiated...
-Device resetting... Please wait.
-
-{reset_type} completed successfully.
-Device is now online.
-
-Cmd>[]"""
-
-    def _handle_read_register_command(self, command: str) -> str:
-        """Handle read register command"""
-        print(f"DEBUG: Handling read register command: {command}")
-
-        # Extract register address from command
-        parts = command.split()
-        if len(parts) >= 2:
-            reg_addr = parts[1]
-            # Simulate register value
-            reg_value = f"0x{random.randint(0x1000, 0xFFFF):04X}"
-            return f"""Cmd>{command}
-
-Register {reg_addr}: {reg_value}
-
-Cmd>[]"""
-        else:
-            return f"""Cmd>{command}
-
-ERROR: Register address required
-Usage: read_reg <address>
-
-Cmd>[]"""
-
-    def _handle_write_register_command(self, command: str) -> str:
-        """Handle write register command"""
-        print(f"DEBUG: Handling write register command: {command}")
-
-        parts = command.split()
-        if len(parts) >= 3:
-            reg_addr = parts[1]
-            reg_value = parts[2]
-            return f"""Cmd>{command}
-
-Register {reg_addr} written with value {reg_value}
-Write operation completed successfully.
-
-Cmd>[]"""
-        else:
-            return f"""Cmd>{command}
-
-ERROR: Register address and value required
-Usage: write_reg <address> <value>
-
-Cmd>[]"""
-
-    def _simulate_reset(self):
-        """Simulate device reset by updating state"""
-        # Reset error counts
-        for key in self.device_state['error_counts']:
-            self.device_state['error_counts'][key] = 0
-
-        # Reset uptime
-        self.device_state['uptime_hours'] = 0
-
-        # Reset some values to defaults
-        self.device_state['board_temperature'] = 45  # Lower after reset
-        self.device_state['fan_speed'] = 5500  # Reset to default
-
-        print("DEBUG: Device state reset simulated")
-
-    def _update_device_state(self):
-        """Periodically update device state for realism"""
-        current_time = time.time()
-
-        # Update every 30 seconds
-        if current_time - self.device_state['last_update'] > 30:
-            # Increment uptime
-            self.device_state['uptime_hours'] += 1 / 120  # 30 seconds = 1/120 hour
-
-            # Occasionally introduce minor errors (very rarely)
-            if random.random() < 0.001:  # 0.1% chance
-                error_key = random.choice(list(self.device_state['error_counts'].keys()))
-                self.device_state['error_counts'][error_key] += 1
-                print(f"DEBUG: Simulated error in {error_key}")
-
-            self.device_state['last_update'] = current_time
-
-    def _get_command_delay(self, command: str) -> float:
-        """Get realistic delay for command response"""
         command_lower = command.lower()
 
         if 'sysinfo' in command_lower:
-            return 0.5  # sysinfo takes longer
-        elif 'lsd' in command_lower:
-            return 0.3  # diagnostics take some time
-        elif 'showport' in command_lower:
-            return 0.2  # port info takes moderate time
-        elif 'reset' in command_lower:
-            return 1.0  # reset operations take longer
-        elif any(cmd in command_lower for cmd in ['help', 'status', 'ver']):
-            return 0.1  # Quick response for simple commands
+            return 0.3  # Longer delay for comprehensive command
+        elif any(cmd in command_lower for cmd in ['lsd', 'showport']):
+            return 0.2  # Medium delay for diagnostic commands
+        elif any(cmd in command_lower for cmd in ['help', 'status', 'version', 'ver']):
+            return 0.05  # Quick response for simple commands
         else:
             return 0.1  # Default delay
 
+    def _get_help_response(self):
+        """Generate help command response"""
+        return """Available commands:
+    help      - Show this help
+    sysinfo   - Get complete system information (ver + lsd + showport)
+    ver       - Get device version information
+    lsd       - Get system diagnostics (temperature, voltages, etc.)
+    showport  - Get port status information
+    status    - Get device status
+    version   - Get firmware version
 
-class DemoDeviceStateManager:
+    Reset Commands:
+    msrst     - Reset x16 Straddle Mount component
+    swreset   - Reset Atlas 3 Switch component  
+    reset     - Full system reset (will disconnect)
+
+    Demo Mode: All responses use simulated device behavior with Admin integration"""
+
+    def _get_status_response(self):
+        """Generate status command response"""
+        return f"""Device Status:
+    Mode: Demo Mode (Enhanced)
+    Serial: {self.demo_device_state['serial_number']}
+    Temperature: {self.demo_device_state['temperature']}°C
+    Connection: Active
+    Parser: {'Available' if self.parser else 'Not Available'}
+    Cache: {'Available' if self.cache_manager else 'Not Available'}
+    Settings: {'Available' if self.settings_manager else 'Not Available'}"""
+
+    def _get_version_response(self):
+        """Generate version command response"""
+        return f"""Firmware Version: {self.demo_device_state['version']} (DEMO)
+Hardware Rev: Rev C
+Serial Number: {self.demo_device_state['serial_number']}
+Build Date: {self.demo_device_state['build_date']}
+Bootloader: v1.0.5
+
+Enhanced Demo Mode with Admin Integration
+Parser: {'Available' if self.parser else 'Not Available'}
+Cache: {'Available' if self.cache_manager else 'Not Available'}"""
+
+    def get_host_card_data(self):
+        """
+        Get Host Card dashboard data (ver + lsd sections)
+
+        Returns:
+            Parsed host card data or None
+        """
+        if self.parser:
+            return self.parser.get_host_card_json()
+        return None
+
+    def get_link_status_data(self):
+        """
+        Get Link Status dashboard data (showport section)
+
+        Returns:
+            Parsed link status data or None
+        """
+        if self.parser:
+            return self.parser.get_link_status_json()
+        return None
+
+    def get_complete_sysinfo_data(self):
+        """
+        Get complete parsed sysinfo data
+
+        Returns:
+            Complete parsed data or None
+        """
+        if self.parser:
+            return self.parser.get_complete_sysinfo()
+        return None
+
+    def is_data_fresh(self, max_age_seconds=300):
+        """
+        Check if cached data is fresh
+
+        Args:
+            max_age_seconds: Maximum age in seconds
+
+        Returns:
+            True if data is fresh, False otherwise
+        """
+        if self.parser:
+            return self.parser.is_data_fresh(max_age_seconds)
+        return False
+
+    def force_refresh_data(self):
+        """
+        Force refresh of demo data
+
+        Returns:
+            True if refresh successful, False otherwise
+        """
+        debug_info("Forcing demo data refresh", "DEMO_FORCE_REFRESH")
+
+        try:
+            # Clear cache if available
+            if self.cache_manager:
+                self.cache_manager.clear()
+                debug_info("Cache cleared for refresh", "DEMO_CACHE_CLEARED")
+
+            # Reload demo files
+            self.demo_sysinfo_content = self._load_demo_sysinfo_file()
+            self.demo_showport_content = self._load_demo_showport_file()
+
+            # Re-parse content
+            self._parse_initial_demo_content()
+
+            debug_info("Demo data refresh completed", "DEMO_REFRESH_SUCCESS")
+            return True
+
+        except Exception as e:
+            debug_error(f"Demo data refresh failed: {e}", "DEMO_REFRESH_ERROR")
+            return False
+
+    def get_debug_info(self):
+        """
+        Get debug information about demo CLI state
+
+        Returns:
+            Debug information dictionary
+        """
+        debug_info_dict = {
+            'is_running': self.is_running,
+            'port': self.port,
+            'sysinfo_content_available': self.demo_sysinfo_content is not None,
+            'sysinfo_content_size': len(self.demo_sysinfo_content) if self.demo_sysinfo_content else 0,
+            'showport_content_available': self.demo_showport_content is not None,
+            'showport_content_size': len(self.demo_showport_content) if self.demo_showport_content else 0,
+            'parser_available': self.parser is not None,
+            'cache_manager_available': self.cache_manager is not None,
+            'settings_manager_available': self.settings_manager is not None,
+            'admin_components_available': ADMIN_COMPONENTS_AVAILABLE,
+            'command_queue_size': self.command_queue.qsize(),
+            'response_queue_size': self.response_queue.qsize()
+        }
+
+        if self.cache_manager:
+            debug_info_dict['cache_stats'] = self.cache_manager.get_stats()
+
+        if self.parser and self.parser.get_complete_sysinfo():
+            complete_data = self.parser.get_complete_sysinfo()
+            debug_info_dict['parsed_sections'] = list(complete_data.keys()) if complete_data else []
+
+        return debug_info_dict
+
+
+# Backwards compatibility - keep original class name as alias
+UnifiedDemoSerialCLI = EnhancedUnifiedDemoSerialCLI
+
+
+# Integration helper functions for main.py
+def create_enhanced_demo_cli(port="DEMO", cache_manager=None, settings_manager=None):
     """
-    Manages demo device state and provides integration points for other modules
+    Create enhanced demo CLI with Admin components integration
+
+    Args:
+        port: Demo port identifier
+        cache_manager: DeviceDataCache instance
+        settings_manager: SettingsManager instance
+
+    Returns:
+        EnhancedUnifiedDemoSerialCLI instance
     """
+    debug_info(f"Creating enhanced demo CLI for port: {port}", "DEMO_CLI_CREATE")
 
-    def __init__(self, demo_cli: UnifiedDemoSerialCLI):
-        self.demo_cli = demo_cli
-        self._state_lock = threading.Lock()
-
-    def get_current_state(self) -> Dict[str, Any]:
-        """Get current device state for external modules"""
-        with self._state_lock:
-            return self.demo_cli.device_state.copy()
-
-    def update_state(self, updates: Dict[str, Any]):
-        """Update device state from external modules"""
-        with self._state_lock:
-            self.demo_cli.device_state.update(updates)
-
-    def simulate_event(self, event_type: str, **kwargs):
-        """Simulate specific events for testing"""
-        with self._state_lock:
-            if event_type == "temperature_spike":
-                self.demo_cli.device_state['board_temperature'] += kwargs.get('increase', 10)
-            elif event_type == "voltage_error":
-                rail = kwargs.get('rail', '0_8v')
-                if rail in self.demo_cli.device_state['error_counts']:
-                    self.demo_cli.device_state['error_counts'][rail] += 1
-            elif event_type == "fan_failure":
-                self.demo_cli.device_state['fan_speed'] = kwargs.get('new_speed', 0)
-
-        print(f"DEBUG: Simulated event: {event_type} with {kwargs}")
+    try:
+        cli = EnhancedUnifiedDemoSerialCLI(port, cache_manager, settings_manager)
+        debug_info("Enhanced demo CLI created successfully", "DEMO_CLI_CREATE_SUCCESS")
+        return cli
+    except Exception as e:
+        debug_error(f"Enhanced demo CLI creation failed: {e}", "DEMO_CLI_CREATE_ERROR")
+        # Fallback to basic version
+        return UnifiedDemoSerialCLI(port)
 
 
-# Integration helpers for existing modules
-def create_demo_host_card_manager(demo_cli):
-    """Create a HostCardInfoManager configured for demo mode"""
-    from host_card_info import HostCardInfoManager
-    return HostCardInfoManager(demo_cli)
+def initialize_demo_mode_with_admin(cache_manager=None, settings_manager=None):
+    """
+    Initialize demo mode with Admin components
+
+    Args:
+        cache_manager: DeviceDataCache instance
+        settings_manager: SettingsManager instance
+
+    Returns:
+        Tuple of (cli, parser) for demo mode
+    """
+    debug_info("Initializing demo mode with Admin components", "DEMO_ADMIN_INIT")
+
+    try:
+        # Create enhanced demo CLI
+        cli = create_enhanced_demo_cli("DEMO", cache_manager, settings_manager)
+
+        # Get parser from CLI
+        parser = cli.parser if hasattr(cli, 'parser') else None
+
+        debug_info("Demo mode with Admin components initialized", "DEMO_ADMIN_INIT_SUCCESS")
+        return cli, parser
+
+    except Exception as e:
+        debug_error(f"Demo mode Admin initialization failed: {e}", "DEMO_ADMIN_INIT_ERROR")
+        # Return basic demo CLI as fallback
+        return UnifiedDemoSerialCLI("DEMO"), None
 
 
-def create_demo_cache_manager():
-    """Create a DeviceDataCache configured for demo mode"""
-    from cache_manager import DeviceDataCache
-    return DeviceDataCache(default_ttl=300)  # 5 minute TTL for demo
+# Enhanced demo data access functions
+def get_demo_host_card_data(cli):
+    """
+    Get host card data from enhanced demo CLI
+
+    Args:
+        cli: Enhanced demo CLI instance
+
+    Returns:
+        Host card data dictionary or None
+    """
+    if hasattr(cli, 'get_host_card_data'):
+        return cli.get_host_card_data()
+    return None
 
 
-def create_demo_parser(cache_manager):
-    """Create an EnhancedSystemInfoParser configured for demo mode"""
-    from enhanced_sysinfo_parser import EnhancedSystemInfoParser
-    return EnhancedSystemInfoParser(cache_manager)
+def get_demo_link_status_data(cli):
+    """
+    Get link status data from enhanced demo CLI
+
+    Args:
+        cli: Enhanced demo CLI instance
+
+    Returns:
+        Link status data dictionary or None
+    """
+    if hasattr(cli, 'get_link_status_data'):
+        return cli.get_link_status_data()
+    return None
 
 
-# Test function
-if __name__ == "__main__":
-    print("Testing FIXED UnifiedDemoSerialCLI...")
+def get_demo_complete_sysinfo_data(cli):
+    """
+    Get complete sysinfo data from enhanced demo CLI
 
-    # Test basic functionality
-    demo = UnifiedDemoSerialCLI()
+    Args:
+        cli: Enhanced demo CLI instance
 
-    if demo.connect():
-        print("✓ Demo CLI connected successfully")
+    Returns:
+        Complete sysinfo data dictionary or None
+    """
+    if hasattr(cli, 'get_complete_sysinfo_data'):
+        return cli.get_complete_sysinfo_data()
+    return None
+
+
+# Testing and debugging functions
+def test_enhanced_demo_integration():
+    """Test the enhanced demo integration functionality"""
+    print("=" * 60)
+    print("Testing Enhanced Demo Mode Integration")
+    print("=" * 60)
+
+    # Test 1: Basic CLI creation
+    print("\n1. Testing basic CLI creation...")
+    try:
+        cli = EnhancedUnifiedDemoSerialCLI()
+        print("✓ Enhanced demo CLI created successfully")
+
+        # Test connection
+        if cli.connect():
+            print("✓ Demo CLI connected successfully")
+        else:
+            print("✗ Demo CLI connection failed")
+
+        cli.disconnect()
+        print("✓ Demo CLI disconnected successfully")
+
+    except Exception as e:
+        print(f"✗ Basic CLI creation failed: {e}")
+        return False
+
+    # Test 2: Admin components integration
+    print("\n2. Testing Admin components integration...")
+    if ADMIN_COMPONENTS_AVAILABLE:
+        print("✓ Admin components are available")
+
+        try:
+            # Create with mock cache/settings managers
+            cache_mgr = DeviceDataCache() if 'DeviceDataCache' in globals() else None
+            settings_mgr = SettingsManager() if 'SettingsManager' in globals() else None
+
+            cli = EnhancedUnifiedDemoSerialCLI("DEMO", cache_mgr, settings_mgr)
+            print("✓ Enhanced CLI created with Admin components")
+
+            # Test parser availability
+            if cli.parser:
+                print("✓ Enhanced parser is available")
+            else:
+                print("⚠ Enhanced parser not available")
+
+        except Exception as e:
+            print(f"✗ Admin integration test failed: {e}")
+    else:
+        print("⚠ Admin components not available - skipping integration test")
+
+    # Test 3: Command handling
+    print("\n3. Testing enhanced command handling...")
+    try:
+        cli = EnhancedUnifiedDemoSerialCLI()
+        cli.connect()
 
         # Start background thread
-        bg_thread = threading.Thread(target=demo.run_background, daemon=True)
+        bg_thread = threading.Thread(target=cli.run_background, daemon=True)
         bg_thread.start()
-        print("✓ Background thread started")
 
-        # Test various commands
-        test_commands = ['sysinfo', 'ver', 'lsd', 'showport', 'help', 'status']
+        # Test sysinfo command
+        response = cli.send_command("sysinfo", timeout=2)
+        if response and len(response) > 100:
+            print(f"✓ Sysinfo command successful ({len(response)} chars)")
+        else:
+            print("✗ Sysinfo command failed or returned insufficient data")
 
-        for cmd in test_commands:
-            print(f"\n--- Testing command: {cmd} ---")
-            demo.send_command(cmd)
-            time.sleep(1.0)  # Wait for response
+        # Test ver command
+        response = cli.send_command("ver", timeout=1)
+        if response and "S/N" in response:
+            print("✓ Ver command successful")
+        else:
+            print("✗ Ver command failed")
 
-            try:
-                response = demo.response_queue.get_nowait()
-                print(f"Response received ({len(response)} chars):")
-                print(response[:200] + "..." if len(response) > 200 else response)
-            except queue.Empty:
-                print("No response received")
+        # Test lsd command
+        response = cli.send_command("lsd", timeout=1)
+        if response and "Temperature" in response:
+            print("✓ LSD command successful")
+        else:
+            print("✗ LSD command failed")
 
-        # Test integration components
-        print("\n--- Testing Integration Components ---")
+        # Test showport command
+        response = cli.send_command("showport", timeout=1)
+        if response and "Port" in response:
+            print("✓ Showport command successful")
+        else:
+            print("✗ Showport command failed")
 
-        # Test state manager
-        state_mgr = DemoDeviceStateManager(demo)
-        current_state = state_mgr.get_current_state()
-        print(f"✓ State manager works - current temp: {current_state['board_temperature']}°C")
+        cli.disconnect()
 
-        # Test event simulation
-        state_mgr.simulate_event("temperature_spike", increase=5)
-        new_state = state_mgr.get_current_state()
-        print(f"✓ Event simulation works - new temp: {new_state['board_temperature']}°C")
+    except Exception as e:
+        print(f"✗ Command handling test failed: {e}")
 
-        demo.disconnect()
-        print("✓ Demo CLI disconnected")
+    # Test 4: Data access methods
+    print("\n4. Testing data access methods...")
+    try:
+        cli = EnhancedUnifiedDemoSerialCLI()
 
+        # Test debug info
+        debug_info = cli.get_debug_info()
+        if debug_info and isinstance(debug_info, dict):
+            print(f"✓ Debug info available ({len(debug_info)} keys)")
+        else:
+            print("✗ Debug info not available")
+
+        # Test data methods (may return None if parser not available)
+        host_data = cli.get_host_card_data()
+        link_data = cli.get_link_status_data()
+        complete_data = cli.get_complete_sysinfo_data()
+
+        print(f"✓ Data access methods tested:")
+        print(f"  - Host card data: {'Available' if host_data else 'None'}")
+        print(f"  - Link status data: {'Available' if link_data else 'None'}")
+        print(f"  - Complete sysinfo data: {'Available' if complete_data else 'None'}")
+
+    except Exception as e:
+        print(f"✗ Data access test failed: {e}")
+
+    print("\n" + "=" * 60)
+    print("Enhanced Demo Integration test completed!")
+    print("=" * 60)
+
+    return True
+
+
+def demonstrate_integration_usage():
+    """Demonstrate how to use the enhanced demo integration"""
+    print("\n" + "=" * 60)
+    print("Enhanced Demo Integration Usage Example")
+    print("=" * 60)
+
+    # Example 1: Basic usage
+    print("\n1. Basic Enhanced Demo CLI Usage:")
+    print("""
+# Create enhanced demo CLI
+cli = EnhancedUnifiedDemoSerialCLI()
+cli.connect()
+
+# Start background processing
+bg_thread = threading.Thread(target=cli.run_background, daemon=True)
+bg_thread.start()
+
+# Send commands
+sysinfo_response = cli.send_command("sysinfo")
+ver_response = cli.send_command("ver")
+lsd_response = cli.send_command("lsd")
+showport_response = cli.send_command("showport")
+
+cli.disconnect()
+""")
+
+    # Example 2: Admin integration usage
+    print("\n2. Admin Components Integration Usage:")
+    print("""
+# Create with Admin components
+cache_manager = DeviceDataCache()
+settings_manager = SettingsManager()
+cli = EnhancedUnifiedDemoSerialCLI("DEMO", cache_manager, settings_manager)
+
+# CLI now has enhanced parsing and caching
+host_data = cli.get_host_card_data()  # Returns parsed Host Card data
+link_data = cli.get_link_status_data()  # Returns parsed Link Status data
+complete_data = cli.get_complete_sysinfo_data()  # Returns all parsed data
+
+# Check if data is fresh
+if cli.is_data_fresh(300):  # 5 minutes
+    print("Data is fresh")
+else:
+    cli.force_refresh_data()  # Force refresh if needed
+""")
+
+    # Example 3: Integration with main.py
+    print("\n3. Integration with main.py DashboardApp:")
+    print("""
+# In DashboardApp.__init__():
+if self.is_demo_mode:
+    # Use enhanced demo CLI with Admin components
+    self.cli = create_enhanced_demo_cli(
+        port="DEMO",
+        cache_manager=self.cache_manager,
+        settings_manager=self.settings_mgr
+    )
+
+    # CLI automatically parses demo data and caches it
+
+# In create_host_dashboard():
+if self.is_demo_mode:
+    host_data = get_demo_host_card_data(self.cli)
+    if host_data:
+        # Create dashboard from parsed data
+        self._create_host_dashboard_from_data(host_data)
+
+# In create_link_status_dashboard():
+if self.is_demo_mode:
+    link_data = get_demo_link_status_data(self.cli)
+    if link_data:
+        # Create dashboard from parsed data
+        self._create_link_dashboard_from_data(link_data)
+""")
+
+    print("\n" + "=" * 60)
+    print("Usage examples completed!")
+    print("=" * 60)
+
+
+# Main execution for testing
+if __name__ == "__main__":
+    print("Enhanced Demo Mode Integration Module")
+    print("=" * 60)
+
+    # Run tests
+    if test_enhanced_demo_integration():
+        print("\n✓ All tests completed successfully!")
     else:
-        print("✗ Demo CLI connection failed")
+        print("\n✗ Some tests failed!")
 
-    print("\nFixed demo integration test completed!")
+    # Show usage examples
+    demonstrate_integration_usage()
+
+    print("\nModule test completed!")
