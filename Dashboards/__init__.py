@@ -6,6 +6,7 @@ Dashboard module for CalypsoPy - Contains dashboard components and UI elements
 
 This module provides:
 - Host card information dashboard and management
+- Link status dashboard with showport parsing and UI
 - Demo mode integration for testing and training
 - Dashboard UI components and utilities
 
@@ -13,7 +14,7 @@ Author: Serial Cables Development Team
 """
 
 # Version info
-__version__ = "1.3.5"
+__version__ = "1.4.0"
 __author__ = "Serial Cables Development Team"
 
 # Import main dashboard classes for easy access
@@ -36,6 +37,26 @@ except ImportError as e:
     HostCardDashboardUI = None
 
 try:
+    from .link_status_dashboard import (
+        LinkStatusInfo,
+        PortInfo,
+        LinkStatusParser,
+        LinkStatusManager,
+        LinkStatusDashboardUI,
+        get_demo_showport_response
+    )
+
+    print("DEBUG: Link Status Dashboard components imported successfully")
+except ImportError as e:
+    print(f"WARNING: Could not import Link Status Dashboard: {e}")
+    LinkStatusInfo = None
+    PortInfo = None
+    LinkStatusParser = None
+    LinkStatusManager = None
+    LinkStatusDashboardUI = None
+    get_demo_showport_response = None
+
+try:
     from .demo_mode_integration import UnifiedDemoSerialCLI
 
     print("DEBUG: Demo Mode Integration imported successfully")
@@ -53,6 +74,14 @@ __all__ = [
     'get_demo_ver_response',
     'get_demo_lsd_response',
 
+    # Link Status Components
+    'LinkStatusInfo',
+    'PortInfo',
+    'LinkStatusParser',
+    'LinkStatusManager',
+    'LinkStatusDashboardUI',
+    'get_demo_showport_response',
+
     # Demo Mode
     'UnifiedDemoSerialCLI'
 ]
@@ -65,6 +94,7 @@ def get_dashboard_info():
         'author': __author__,
         'components': [
             'Host Card Information Dashboard',
+            'Link Status Dashboard',
             'Demo Mode Integration',
             'Dashboard UI Components'
         ],
@@ -87,5 +117,27 @@ def check_dashboard_dependencies():
         return True
 
 
+def create_link_status_dashboard(app):
+    """Convenience function to create Link Status Dashboard UI"""
+    if LinkStatusDashboardUI is not None:
+        return LinkStatusDashboardUI(app)
+    else:
+        raise ImportError("LinkStatusDashboardUI not available")
+
+
+def create_host_card_dashboard(app):
+    """Convenience function to create Host Card Dashboard UI"""
+    if HostCardDashboardUI is not None:
+        return HostCardDashboardUI(app)
+    else:
+        raise ImportError("HostCardDashboardUI not available")
+
+
 # Initialize dashboard module
 print(f"DEBUG: Dashboard module initialized (version {__version__})")
+
+# Check if all components loaded successfully
+if check_dashboard_dependencies():
+    print("DEBUG: All dashboard components ready for use")
+else:
+    print("WARNING: Some dashboard components are missing - check imports")
