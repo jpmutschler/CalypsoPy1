@@ -857,56 +857,94 @@ class DashboardApp:
     """
 
     def __init__(self, root, port, settings_manager):
-        """
-        Initialize the dashboard application
-
-        Args:
-            root (tk.Toplevel): Main dashboard window
-            port (str): Port identifier or "DEMO" for demo mode
-            settings_manager (SettingsManager): Application settings manager
-        """
         self.root = root
         self.port = port
         self.settings_mgr = settings_manager
         self.is_demo_mode = (port == "DEMO")
 
-        print(f"DEBUG: Initializing DashboardApp for {port}")
-
-        # Initialize core components
-        self._init_cache_manager()
-        self._init_cli()
-        self._init_admin_components()
-        self._init_dashboard_components()  # FIXED: Consistent initialization
-
-        # Application state
+        # Initialize UI references to None first (IMPORTANT!)
+        self.sidebar = None
+        self.content_frame = None
+        self.scrollable_frame = None
+        self.tile_frames = {}
         self.current_dashboard = "host"
-        self.log_data = []
+
+        # Initialize cache manager first
+        cache_dir = self.settings_mgr.get('cache', 'cache_directory', '')
+        cache_ttl = self.settings_mgr.get('cache', 'default_ttl_seconds', 300)
+        self.cache_manager = DeviceDataCache(cache_dir or None, cache_ttl)
+
+        # Initialize CLI based on mode
+        if self.is_demo_mode:
+            from Dashboards.demo_mode_integration import UnifiedDemoSerialCLI
+            self.cli = UnifiedDemoSerialCLI(port)  # Use the unified version
+            print("DEBUG: Using UnifiedDemoSerialCLI for demo mode")
+        else:
+            self.cli = SerialCLI(port, cache_manager=self.cache_manager)
+            print("DEBUG: Using SerialCLI for real device")
+
+        # Initialize parser with cache manager
+        self.sysinfo_parser = EnhancedSystemInfoParser(self.cache_manager)
+
+        # PRELOAD DEMO DATA (if in demo mode)
+        if self.is_demo_mode:
+            print("DEBUG: Demo mode detected - preloading demo data")
+            try:
+                demo_content = getattr(self.cli, 'demo_sysinfo_content', None)
+                if demo_content:
+                    parsed_data = self.sysinfo_parser.parse_unified_sysinfo(demo_content, "demo")
+                    print(f"DEBUG: Demo data preloaded and cached")
+                else:
+                    print("DEBUG: No demo content available for preloading")
+            except Exception as e:
+                print(f"ERROR: Failed to preload demo data: {e}")
+
+        # Initialize the advanced response handler
+        self.init_advanced_response_handler()
+
+        # Initialize dashboard components
+        self.host_card_manager = HostCardInfoManager(self.cli)
+        self.host_card_ui = HostCardDashboardUI(self)
+
+        # Initialize Link Status components
+        self.link_status_ui = LinkStatusDashboardUI(self)
+
+        # Initialize Port Status components
+        self.port_status_manager = PortStatusManager(self.cli)
+        self.port_status_ui = PortStatusDashboardUI(self)
+
+        # Initialize Resets Dashboard components
+        self.resets_dashboard = ResetsDashboard(self)
+
+        # Initialize Firmware Dashboard
+        self.firmware_dashboard = FirmwareDashboard(self)
+
+        # Demo device state for port status (if demo mode)
         self.demo_device_state = {'current_mode': 0}
 
-        # Background task control
-        self.background_tasks_enabled = True
-        self.sysinfo_requested = False
+        # Rest of initialization...
+        self.log_data = []
 
         # Auto-refresh setup
         self.auto_refresh_enabled = self.settings_mgr.get('refresh', 'enabled', False)
         self.auto_refresh_interval = self.settings_mgr.get('refresh', 'interval_seconds', 30)
         self.auto_refresh_timer = None
 
-        # Set up the dashboard interface
-        self.setup_window()
-        self.create_layout()
+        # Background task control
+        self.background_tasks_enabled = True
+        self.sysinfo_requested = False
+        self.showport_requested = False
 
-        # Connect and start operations
+        # NOW CREATE THE UI (after all attributes are initialized)
+        self.setup_window()
+        self.create_layout()  # This creates self.sidebar
         self.connect_device()
         self.start_background_threads()
 
         if self.auto_refresh_enabled:
             self.start_auto_refresh()
 
-        # Configure window closing behavior
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
-
-        print("DEBUG: DashboardApp initialization complete")
 
     def _init_cache_manager(self):
         """Initialize cache manager"""
@@ -1036,17 +1074,23 @@ class DashboardApp:
         self.create_content_area()
 
     def create_sidebar(self):
-        """Create the sidebar with dashboard tiles - FIXED VERSION"""
+        """Create the sidebar with dashboard tiles - SAFE VERSION"""
+        # Safety check - make sure sidebar exists
+        if not hasattr(self, 'sidebar') or self.sidebar is None:
+            print("ERROR: create_sidebar called but sidebar not initialized")
+            return
+
         # Header - simplified without settings gear
         header_frame = ttk.Frame(self.sidebar, style='Sidebar.TFrame')
         header_frame.pack(fill='x', padx=10, pady=10)
 
+        # Use style instead of direct color setting for better compatibility
         header_label = ttk.Label(header_frame, text="📊 Dashboards",
-                                 style='Sidebar.TLabel',
+                                 style='Dashboard.TLabel',
                                  font=('Arial', 12, 'bold'))
         header_label.pack()
 
-        # Dashboard tiles with proper formatting
+        # Dashboard tiles
         self.dashboards = [
             ("host", "💻", "Host Card Information"),
             ("link", "🔗", "Link Status"),
@@ -1059,7 +1103,10 @@ class DashboardApp:
             ("help", "❓", "Help")
         ]
 
-        self.tile_frames = {}
+        # Initialize tile_frames if not already done
+        if not hasattr(self, 'tile_frames'):
+            self.tile_frames = {}
+
         for dashboard_id, icon, title in self.dashboards:
             self.create_dashboard_tile(dashboard_id, icon, title)
 
@@ -1077,25 +1124,23 @@ class DashboardApp:
 
         self.connection_label = ttk.Label(status_frame,
                                           text=status_text,
-                                          style='Sidebar.TLabel',
+                                          style='Info.TLabel',
                                           font=('Arial', 9, 'bold'))
         self.connection_label.pack()
 
-        # Apply the status color (this might require a custom style)
+        # Try to set color (may not work with all themes)
         try:
             self.connection_label.configure(foreground=status_color)
         except:
-            pass  # Fallback if style configuration fails
+            pass  # Ignore color setting errors
 
         # *** ADD DEMO MODE INFO ***
         if self.is_demo_mode:
             demo_info_label = ttk.Label(status_frame,
                                         text="Training Environment",
-                                        style='Sidebar.TLabel',
+                                        style='Info.TLabel',
                                         font=('Arial', 8))
             demo_info_label.pack()
-
-
 
     def create_content_area(self):
         """Create the main content display area"""
@@ -1209,33 +1254,36 @@ class DashboardApp:
     # =====================================================================
 
     def switch_dashboard(self, dashboard_id):
-        """Switch to a different dashboard with proper highlighting"""
+        """Switch to a different dashboard - SAFE VERSION"""
+        if dashboard_id == getattr(self, 'current_dashboard', None):
+            return
+
         print(f"DEBUG: Switching to {dashboard_id} dashboard")
 
-        # Update highlighting - reset all tiles
-        for tile_id, tile_button in self.tile_frames.items():
-            if tile_id == dashboard_id:
-                # Highlight selected tile
-                tile_button.configure(bg='#404040')
-            else:
-                # Reset other tiles
-                tile_button.configure(bg='#2d2d2d')
+        # Update tile appearances safely
+        if hasattr(self, 'current_dashboard') and hasattr(self, 'tile_frames'):
+            self.set_tile_active(self.current_dashboard, False)
+            self.set_tile_active(dashboard_id, True)
 
-        # Update current dashboard
         self.current_dashboard = dashboard_id
 
         # Send appropriate command when switching to specific dashboards
         if dashboard_id == "link":
             print("DEBUG: Switching to link dashboard - will send showport command")
-            # The create_link_dashboard method will handle sending the command
         elif dashboard_id == "host":
             # Warm cache if needed before updating content
-            cache_warmed = self.warm_cache_if_needed()
-            if cache_warmed:
-                self.update_cache_status("Loading fresh data...")
+            try:
+                cache_warmed = self.warm_cache_if_needed()
+                if cache_warmed:
+                    self.update_cache_status("Loading fresh data...")
+            except:
+                pass  # Ignore cache warming errors
 
         # Update content area
-        self.update_content_area()
+        try:
+            self.update_content_area()
+        except Exception as e:
+            print(f"ERROR: Failed to update content area: {e}")
 
     def update_content_area(self):
         """Update content area based on current dashboard"""
@@ -1282,69 +1330,80 @@ class DashboardApp:
             self.show_dashboard_error(self.current_dashboard, e)
 
     def create_dashboard_tile(self, dashboard_id, icon, title):
-        """Create a dashboard tile with proper styling"""
-        # Main tile frame with proper styling
-        tile_frame = ttk.Frame(self.sidebar, style='Sidebar.TFrame', relief='solid', borderwidth=1)
-        tile_frame.pack(fill='x', padx=10, pady=5)
+        """Create an individual dashboard tile - SAFE VERSION"""
+        # Safety check
+        if not hasattr(self, 'sidebar') or self.sidebar is None:
+            print(f"ERROR: Cannot create tile for {dashboard_id} - sidebar not initialized")
+            return
 
-        # Make tile clickable
-        tile_button = tk.Button(tile_frame,
-                                text=f"{icon}\n{title}",
-                                font=('Arial', 10, 'bold'),
-                                bg='#2d2d2d',
-                                fg='#ffffff',
-                                activebackground='#404040',
-                                activeforeground='#ffffff',
-                                relief='flat',
-                                borderwidth=0,
-                                cursor='hand2',
-                                command=lambda: self.switch_dashboard(dashboard_id))
+        tile_frame = ttk.Frame(self.sidebar, style='Content.TFrame', cursor='hand2')
+        tile_frame.pack(fill='x', padx=10, pady=2)
 
-        # Configure button to fill the frame
-        tile_button.pack(fill='both', expand=True, padx=2, pady=2)
+        # Tile content
+        content_frame = ttk.Frame(tile_frame, style='Content.TFrame')
+        content_frame.pack(fill='both', expand=True, padx=15, pady=10)
 
-        # Store reference for highlighting
-        self.tile_frames[dashboard_id] = tile_button
+        icon_label = ttk.Label(content_frame, text=icon, style='Dashboard.TLabel',
+                               font=('Arial', 16))
+        icon_label.pack()
 
-        # Highlight current dashboard
-        if dashboard_id == self.current_dashboard:
-            tile_button.configure(bg='#404040')
+        title_label = ttk.Label(content_frame, text=title, style='Info.TLabel',
+                                font=('Arial', 8))
+        title_label.pack()
 
+        # Store references
+        if not hasattr(self, 'tile_frames'):
+            self.tile_frames = {}
 
+        self.tile_frames[dashboard_id] = {
+            'frame': tile_frame,
+            'content': content_frame,
+            'icon': icon_label,
+            'title': title_label
+        }
+
+        # Bind click events
+        for widget in [tile_frame, content_frame, icon_label, title_label]:
+            widget.bind('<Button-1>', lambda e, d=dashboard_id: self.switch_dashboard(d))
+
+        # Set initial active state
+        if hasattr(self, 'current_dashboard') and dashboard_id == self.current_dashboard:
+            self.set_tile_active(dashboard_id, True)
+
+    def set_tile_active(self, dashboard_id, active):
+        """Set tile active/inactive appearance - SAFE VERSION"""
+        if not hasattr(self, 'tile_frames') or dashboard_id not in self.tile_frames:
+            print(f"WARNING: Cannot set tile active for {dashboard_id} - tile not found")
+            return
+
+        tile = self.tile_frames[dashboard_id]
+
+        # Simple color change approach that works better with ttk
+        try:
+            if active:
+                # Active styling
+                tile['frame'].configure(style='ActiveTile.TFrame')
+                tile['content'].configure(style='ActiveTile.TFrame')
+                tile['icon'].configure(style='ActiveTile.TLabel')
+                tile['title'].configure(style='ActiveTile.TLabel')
+            else:
+                # Inactive styling
+                tile['frame'].configure(style='Content.TFrame')
+                tile['content'].configure(style='Content.TFrame')
+                tile['icon'].configure(style='Dashboard.TLabel')
+                tile['title'].configure(style='Info.TLabel')
+        except Exception as e:
+            print(f"WARNING: Could not set tile styling: {e}")
+            # Fallback - continue without styling changes
 
     def create_host_dashboard(self):
-        """FIXED: Create host card information dashboard"""
-        print("DEBUG: Creating host dashboard...")
+        """Create host card information dashboard - DEMO MODE COMPATIBLE"""
+        print("DEBUG: create_host_dashboard called")
 
-        if self.is_demo_mode:
-            # For demo mode, try to use data directly from CLI
-            print("DEBUG: Demo mode - loading data directly")
-
-            try:
-                demo_content = getattr(self.cli, 'demo_sysinfo_content', None)
-
-                if demo_content and len(demo_content) > 100:
-                    print(f"DEBUG: Using demo content directly ({len(demo_content)} chars)")
-
-                    # Parse immediately using the enhanced parser
-                    parsed_data = self.sysinfo_parser.parse_unified_sysinfo(demo_content, "demo")
-                    print("DEBUG: Demo data parsed successfully")
-
-                    # Update the dashboard
-                    self.host_card_ui.create_host_dashboard()
-                    return
-
-                else:
-                    print("DEBUG: No demo content, loading fallback")
-
-            except Exception as e:
-                print(f"ERROR: Demo dashboard failed: {e}")
-                import traceback
-                traceback.print_exc()
-
-        # For real device or fallback, use the UI method
         try:
+            # Always call the UI method - it will handle demo vs real device internally
             self.host_card_ui.create_host_dashboard()
+
         except Exception as e:
             print(f"ERROR: Failed to create host dashboard: {e}")
             import traceback
