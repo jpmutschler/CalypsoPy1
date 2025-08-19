@@ -1074,20 +1074,16 @@ class DashboardApp:
         self.create_content_area()
 
     def create_sidebar(self):
-        """Create the sidebar with dashboard tiles - FIXED STYLING"""
-        print("DEBUG: Creating sidebar")
+        """Create the sidebar with dashboard tiles"""
+        print("DEBUG: Starting sidebar creation...")
 
-        # Header - fix the styling issue with ttk.Label
+        # Header - simplified without settings gear
         header_frame = ttk.Frame(self.sidebar, style='Sidebar.TFrame')
         header_frame.pack(fill='x', padx=10, pady=10)
 
-        # Use tk.Label instead of ttk.Label for better color control
-        header_label = tk.Label(header_frame,
-                                text="📊 Dashboards",
-                                bg='#2d2d2d',
-                                fg='#ffffff',
-                                font=('Arial', 12, 'bold'))
-        header_label.pack()
+        ttk.Label(header_frame, text="📊 Dashboards",
+                  background='#2d2d2d', foreground='#ffffff',
+                  font=('Arial', 12, 'bold')).pack()
 
         # Dashboard tiles (existing code stays the same)
         self.dashboards = [
@@ -1102,9 +1098,39 @@ class DashboardApp:
             ("help", "❓", "Help")
         ]
 
+        # CRITICAL FIX: Initialize tile_frames dictionary first
         self.tile_frames = {}
+        print("DEBUG: tile_frames dictionary initialized")
+
+        # Create all tiles first without setting active state
         for dashboard_id, icon, title in self.dashboards:
-            self.create_dashboard_tile(dashboard_id, icon, title)
+            print(f"DEBUG: Creating tile for {dashboard_id}")
+            try:
+                self.create_dashboard_tile(dashboard_id, icon, title)
+                print(f"DEBUG: Successfully created tile for {dashboard_id}")
+            except Exception as e:
+                print(f"ERROR: Failed to create tile for {dashboard_id}: {e}")
+
+        # CRITICAL FIX: Set active state AFTER all tiles are created
+        print("DEBUG: All tiles created, now setting active states...")
+        if hasattr(self, 'current_dashboard') and self.current_dashboard:
+            if self.current_dashboard in self.tile_frames:
+                try:
+                    self.set_tile_active(self.current_dashboard, True)
+                    print(f"DEBUG: Set {self.current_dashboard} tile as active")
+                except Exception as e:
+                    print(f"ERROR: Failed to set active tile for {self.current_dashboard}: {e}")
+            else:
+                print(f"WARNING: current_dashboard '{self.current_dashboard}' not found in tile_frames")
+        else:
+            # Set default to host if no current_dashboard is set
+            self.current_dashboard = "host"
+            if "host" in self.tile_frames:
+                try:
+                    self.set_tile_active("host", True)
+                    print("DEBUG: Set default host tile as active")
+                except Exception as e:
+                    print(f"ERROR: Failed to set default active tile: {e}")
 
         # *** CONNECTION STATUS WITH DEMO MODE INDICATOR ***
         status_frame = ttk.Frame(self.sidebar, style='Sidebar.TFrame')
@@ -1118,32 +1144,31 @@ class DashboardApp:
             status_text = f"🔌 {self.port}"
             status_color = '#00ff00'  # Green for real connection
 
-        # Use tk.Label instead of ttk.Label for color control
-        self.connection_label = tk.Label(status_frame,
-                                         text=status_text,
-                                         bg='#2d2d2d',
-                                         fg=status_color,
-                                         font=('Arial', 9, 'bold'))
+        self.connection_label = ttk.Label(status_frame,
+                                          text=status_text,
+                                          background='#2d2d2d',
+                                          foreground=status_color,
+                                          font=('Arial', 9, 'bold'))
         self.connection_label.pack()
 
         # *** ADD DEMO MODE INFO ***
         if self.is_demo_mode:
-            demo_info_label = tk.Label(status_frame,
-                                       text="Training Environment",
-                                       bg='#2d2d2d',
-                                       fg='#cccccc',
-                                       font=('Arial', 8))
+            demo_info_label = ttk.Label(status_frame,
+                                        text="Training Environment",
+                                        background='#2d2d2d',
+                                        foreground='#cccccc',
+                                        font=('Arial', 8))
             demo_info_label.pack()
 
-            # Add settings access hint
-            hint_label = tk.Label(status_frame,
-                                  text="Settings: ⚙️ (top right)",
-                                  bg='#2d2d2d',
-                                  fg='#888888',
-                                  font=('Arial', 7))
-            hint_label.pack(pady=(5, 0))
+        # Add settings access hint
+        hint_label = ttk.Label(status_frame,
+                               text="Settings: ⚙️ (top right)",
+                               background='#2d2d2d',
+                               foreground='#888888',
+                               font=('Arial', 7))
+        hint_label.pack(pady=(5, 0))
 
-        print("DEBUG: Sidebar creation completed")
+        print("DEBUG: Sidebar creation completed successfully")
 
     def create_content_area(self):
         """Create the main content display area"""
@@ -1333,71 +1358,88 @@ class DashboardApp:
             self.show_dashboard_error(self.current_dashboard, e)
 
     def create_dashboard_tile(self, dashboard_id, icon, title):
-        """Create an individual dashboard tile - SAFE VERSION"""
-        # Safety check
+        """Create an individual dashboard tile"""
+        print(f"DEBUG: create_dashboard_tile called for {dashboard_id}")
+
+        # Ensure sidebar exists
         if not hasattr(self, 'sidebar') or self.sidebar is None:
             print(f"ERROR: Cannot create tile for {dashboard_id} - sidebar not initialized")
             return
 
-        tile_frame = ttk.Frame(self.sidebar, style='Content.TFrame', cursor='hand2')
-        tile_frame.pack(fill='x', padx=10, pady=2)
-
-        # Tile content
-        content_frame = ttk.Frame(tile_frame, style='Content.TFrame')
-        content_frame.pack(fill='both', expand=True, padx=15, pady=10)
-
-        icon_label = ttk.Label(content_frame, text=icon, style='Dashboard.TLabel',
-                               font=('Arial', 16))
-        icon_label.pack()
-
-        title_label = ttk.Label(content_frame, text=title, style='Info.TLabel',
-                                font=('Arial', 8))
-        title_label.pack()
-
-        # Store references
+        # Ensure tile_frames exists
         if not hasattr(self, 'tile_frames'):
             self.tile_frames = {}
+            print("DEBUG: tile_frames dictionary created in create_dashboard_tile")
 
-        self.tile_frames[dashboard_id] = {
-            'frame': tile_frame,
-            'content': content_frame,
-            'icon': icon_label,
-            'title': title_label
-        }
+        try:
+            tile_frame = ttk.Frame(self.sidebar, style='Tile.TFrame', cursor='hand2')
+            tile_frame.pack(fill='x', padx=10, pady=2)
 
-        # Bind click events
-        for widget in [tile_frame, content_frame, icon_label, title_label]:
-            widget.bind('<Button-1>', lambda e, d=dashboard_id: self.switch_dashboard(d))
+            # Tile content
+            content_frame = ttk.Frame(tile_frame, style='Tile.TFrame')
+            content_frame.pack(fill='both', expand=True, padx=15, pady=10)
 
-        # Set initial active state
-        if hasattr(self, 'current_dashboard') and dashboard_id == self.current_dashboard:
-            self.set_tile_active(dashboard_id, True)
+            icon_label = ttk.Label(content_frame, text=icon, style='Tile.TLabel',
+                                   font=('Arial', 16))
+            icon_label.pack()
+
+            title_label = ttk.Label(content_frame, text=title, style='Tile.TLabel',
+                                    font=('Arial', 8))
+            title_label.pack()
+
+            # Store references
+            self.tile_frames[dashboard_id] = {
+                'frame': tile_frame,
+                'content': content_frame,
+                'icon': icon_label,
+                'title': title_label
+            }
+
+            # Bind click events
+            for widget in [tile_frame, content_frame, icon_label, title_label]:
+                widget.bind('<Button-1>', lambda e, d=dashboard_id: self.switch_dashboard(d))
+
+            print(f"DEBUG: Successfully created and stored tile for {dashboard_id}")
+
+            # DO NOT set initial active state here - it will be done after all tiles are created
+
+        except Exception as e:
+            print(f"ERROR: Exception creating tile for {dashboard_id}: {e}")
+            import traceback
+            traceback.print_exc()
 
     def set_tile_active(self, dashboard_id, active):
-        """Set tile active/inactive appearance - SAFE VERSION"""
-        if not hasattr(self, 'tile_frames') or dashboard_id not in self.tile_frames:
-            print(f"WARNING: Cannot set tile active for {dashboard_id} - tile not found")
+        """Set tile active/inactive appearance"""
+        print(f"DEBUG: set_tile_active called for {dashboard_id}, active={active}")
+
+        # Safety checks
+        if not hasattr(self, 'tile_frames'):
+            print(f"ERROR: Cannot set tile active for {dashboard_id} - tile_frames not initialized")
             return
 
-        tile = self.tile_frames[dashboard_id]
+        if dashboard_id not in self.tile_frames:
+            print(f"ERROR: Cannot set tile active for {dashboard_id} - not found in tile_frames")
+            print(f"DEBUG: Available tiles: {list(self.tile_frames.keys())}")
+            return
 
-        # Simple color change approach that works better with ttk
         try:
-            if active:
-                # Active styling
-                tile['frame'].configure(style='ActiveTile.TFrame')
-                tile['content'].configure(style='ActiveTile.TFrame')
-                tile['icon'].configure(style='ActiveTile.TLabel')
-                tile['title'].configure(style='ActiveTile.TLabel')
-            else:
-                # Inactive styling
-                tile['frame'].configure(style='Content.TFrame')
-                tile['content'].configure(style='Content.TFrame')
-                tile['icon'].configure(style='Dashboard.TLabel')
-                tile['title'].configure(style='Info.TLabel')
+            tile = self.tile_frames[dashboard_id]
+            style_prefix = 'ActiveTile' if active else 'Tile'
+
+            for widget_name in ['frame', 'content']:
+                if widget_name in tile:
+                    tile[widget_name].configure(style=f'{style_prefix}.TFrame')
+
+            for widget_name in ['icon', 'title']:
+                if widget_name in tile:
+                    tile[widget_name].configure(style=f'{style_prefix}.TLabel')
+
+            print(f"DEBUG: Successfully set {dashboard_id} tile active={active}")
+
         except Exception as e:
-            print(f"WARNING: Could not set tile styling: {e}")
-            # Fallback - continue without styling changes
+            print(f"ERROR: Exception setting tile active for {dashboard_id}: {e}")
+            import traceback
+            traceback.print_exc()
 
     def create_host_dashboard(self):
         """Create host card information dashboard - DEMO MODE COMPATIBLE"""
