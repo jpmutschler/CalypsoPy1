@@ -227,7 +227,7 @@ class PortStatusDashboardUI:
 
         # Section header
         header_frame = ttk.Frame(section_frame, style='Content.TFrame')
-        header_frame.pack(fill='x', padx=30, pady=(20, 15))
+        header_frame.pack(fill='x', padx=10, pady=(20, 15))
 
         header_label = ttk.Label(header_frame, text="🔌 Current Port Mode",
                                  style='Dashboard.TLabel', font=('Arial', 14, 'bold'))
@@ -235,7 +235,7 @@ class PortStatusDashboardUI:
 
         # Section content - centered and enlarged
         content_frame = ttk.Frame(section_frame, style='Content.TFrame')
-        content_frame.pack(fill='both', expand=True, padx=30, pady=(0, 20))
+        content_frame.pack(fill='both', expand=True, padx=10, pady=(0, 20))
 
         # Center the content with larger spacing
         center_frame = ttk.Frame(content_frame, style='Content.TFrame')
@@ -250,7 +250,7 @@ class PortStatusDashboardUI:
     def create_centered_data_row(self, parent, field_name, value):
         """Create a centered data row with field name and value"""
         row_frame = ttk.Frame(parent, style='Content.TFrame')
-        row_frame.pack(pady=8, padx=650)
+        row_frame.pack(pady=8, padx=10)
 
         # Create a frame to hold both labels and center them
         data_frame = ttk.Frame(row_frame, style='Content.TFrame')

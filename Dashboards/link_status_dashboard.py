@@ -618,7 +618,7 @@ class LinkStatusDashboardUI:
                     # Load and resize image for high-res displays
                     pil_image = Image.open(path)
                     # Resize to reasonable size (larger for high-res)
-                    pil_image = pil_image.resize((600, 400), Image.Resampling.LANCZOS)
+                    pil_image = pil_image.resize((850, 600), Image.Resampling.LANCZOS)
                     self.hc_image = ImageTk.PhotoImage(pil_image)
                     debug_info(f"Loaded HCFront.png from {path}", "LINK_UI")
                     return
