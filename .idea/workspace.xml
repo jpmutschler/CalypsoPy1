@@ -4,8 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="788c075a-584d-4f65-912f-d1e30ca41428" name="Changes" comment="Version bump">
-      <change beforePath="$PROJECT_DIR$/Images/Untitled-1.png" beforeDir="false" />
+    <list default="true" id="788c075a-584d-4f65-912f-d1e30ca41428" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,36 +46,37 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.debug_config.executor": "Run",
-    "Python.debug_file_structure_check.executor": "Run",
-    "Python.demo_mode_integration.executor": "Run",
-    "Python.host_card_info.executor": "Run",
-    "Python.link_status_dashboard.executor": "Run",
-    "Python.main.executor": "Run",
-    "Python.port_status_dashboard.executor": "Run",
-    "Python.resets_dashboard.executor": "Run",
-    "Python.settings_ui.executor": "Run",
-    "Python.test_link_status.executor": "Run",
-    "Python.test_step2.executor": "Run",
-    "Python.test_step3.executor": "Run",
-    "Python.test_version_script.executor": "Run",
-    "Python.version_bump.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "C:/Users/josh/PycharmProjects/CalypsoPy/assets",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.debug_config.executor&quot;: &quot;Run&quot;,
+    &quot;Python.debug_file_structure_check.executor&quot;: &quot;Run&quot;,
+    &quot;Python.demo_mode_integration.executor&quot;: &quot;Run&quot;,
+    &quot;Python.host_card_info.executor&quot;: &quot;Run&quot;,
+    &quot;Python.link_status_dashboard.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.port_status_dashboard.executor&quot;: &quot;Run&quot;,
+    &quot;Python.resets_dashboard.executor&quot;: &quot;Run&quot;,
+    &quot;Python.settings_ui.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_link_status.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_step2.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_step3.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_version_script.executor&quot;: &quot;Run&quot;,
+    &quot;Python.version_bump.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/josh/PycharmProjects/CalypsoPy/assets&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\josh\PycharmProjects\CalypsoPy\assets" />
@@ -133,15 +135,9 @@
       <updated>1754689470994</updated>
       <workItem from="1754689482253" duration="75159000" />
       <workItem from="1755106413475" duration="120000" />
-      <workItem from="1755106580546" duration="67964000" />
-    </task>
-    <task id="LOCAL-00005" summary="Code fixes, parsing engine and cache manager implemented">
-      <option name="closed" value="true" />
-      <created>1754934056910</created>
-      <option name="number" value="00005" />
-      <option name="presentableId" value="LOCAL-00005" />
-      <option name="project" value="LOCAL" />
-      <updated>1754934056910</updated>
+      <workItem from="1755106580546" duration="70666000" />
+      <workItem from="1755727037311" duration="5969000" />
+      <workItem from="1755902339063" duration="1919000" />
     </task>
     <task id="LOCAL-00006" summary="Code fixes, parsing engine and cache manager implemented">
       <option name="closed" value="true" />
@@ -527,7 +523,15 @@
       <option name="project" value="LOCAL" />
       <updated>1755723241033</updated>
     </task>
-    <option name="localTasksCounter" value="54" />
+    <task id="LOCAL-00054" summary="Version bump">
+      <option name="closed" value="true" />
+      <created>1755723739033</created>
+      <option name="number" value="00054" />
+      <option name="presentableId" value="LOCAL-00054" />
+      <option name="project" value="LOCAL" />
+      <updated>1755723739033</updated>
+    </task>
+    <option name="localTasksCounter" value="55" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -584,7 +588,7 @@
     <SUITE FILE_PATH="coverage/CalypsoPy$host_card_info.coverage" NAME="host_card_info Coverage Results" MODIFIED="1754763199598" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$test_step2.coverage" NAME="test_step2 Coverage Results" MODIFIED="1754766140226" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$demo_mode_integration.coverage" NAME="demo_mode_integration Coverage Results" MODIFIED="1754775976264" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/CalypsoPy$main.coverage" NAME="main Coverage Results" MODIFIED="1755656041618" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/CalypsoPy$main.coverage" NAME="main Coverage Results" MODIFIED="1755897813597" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$test_version_script.coverage" NAME="test_version_script Coverage Results" MODIFIED="1755214515854" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$port_status_dashboard.coverage" NAME="port_status_dashboard Coverage Results" MODIFIED="1755021474107" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/CalypsoPy$debug_config.coverage" NAME="debug_config Coverage Results" MODIFIED="1755552851587" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Admin" />

@@ -12,14 +12,13 @@ CalypsoPy Dependencies:
 - Pillow (PIL) - for dashboard image display
 - Standard library modules: threading, queue, json, os, re, datetime
 
-CLEANED VERSION: Link Status methods moved to dedicated dashboard module
 """
 
 # Application Information
 APP_NAME = "CalypsoPy"
 APP_VERSION = "1.5.1"  # Updated version to reflect refactoring
 APP_BUILD = "20250820-001"  # Updated build
-APP_DESCRIPTION = "Serial Cables Atlas 3 Serial UI for CLI Interface"
+APP_DESCRIPTION = "Serial Cables Atlas 3 Host Card Serial UI for CLI Interface"
 APP_AUTHOR = "Serial Cables, LLC"
 APP_COPYRIGHT = "© 2025"
 
