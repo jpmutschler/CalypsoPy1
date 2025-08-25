@@ -120,6 +120,7 @@ from Dashboards.port_status_dashboard import (
 )
 from Dashboards.firmware_dashboard import FirmwareDashboard
 from Dashboards.resets_dashboard import ResetsDashboard
+from Dashboards.advanced_dashboard import AdvancedDashboard
 
 # =====================================================================
 # OPTIONAL IMPORTS - PIL for image support
@@ -918,6 +919,9 @@ class DashboardApp:
         self.firmware_dashboard = FirmwareDashboard(self)
         print("DEBUG: Firmware dashboard initialized")
 
+        # Initialize Advanced Dashboard components
+        self.advanced_dashboard = AdvancedDashboard(self)
+
         # Demo device state for port status (if demo mode)
         self.demo_device_state = {'current_mode': 0}
 
@@ -1671,6 +1675,29 @@ class DashboardApp:
         except Exception as e:
             print(f"ERROR: Error creating firmware dashboard: {e}")
             raise
+
+    def create_advanced_dashboard(self):
+        """Create advanced dashboard with clock and FLIT mode controls"""
+        try:
+            self.advanced_dashboard.create_advanced_dashboard(self.scrollable_frame)
+        except Exception as e:
+            print(f"ERROR: Failed to create advanced dashboard: {e}")
+            import traceback
+            traceback.print_exc()
+
+            # Show error message in the dashboard
+            error_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+            error_frame.pack(fill='both', expand=True, padx=20, pady=20)
+
+            ttk.Label(error_frame,
+                      text="❌ Error Loading Advanced Dashboard",
+                      style='Dashboard.TLabel',
+                      font=('Arial', 16, 'bold')).pack(pady=(0, 10))
+
+            ttk.Label(error_frame,
+                      text=f"Error: {str(e)}",
+                      style='Info.TLabel',
+                      font=('Arial', 10)).pack()
 
     def create_placeholder_dashboard(self):
         """Create placeholder for unimplemented dashboards"""

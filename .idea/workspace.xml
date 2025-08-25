@@ -4,8 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="788c075a-584d-4f65-912f-d1e30ca41428" name="Changes" comment="">
+    <list default="true" id="788c075a-584d-4f65-912f-d1e30ca41428" name="Changes" comment="Commands added">
+      <change afterPath="$PROJECT_DIR$/Dashboards/advanced_dashboard.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboards/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboards/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dashboards/demo_mode_integration.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dashboards/demo_mode_integration.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -137,23 +140,7 @@
       <workItem from="1755106413475" duration="120000" />
       <workItem from="1755106580546" duration="70666000" />
       <workItem from="1755727037311" duration="5969000" />
-      <workItem from="1755902339063" duration="1919000" />
-    </task>
-    <task id="LOCAL-00006" summary="Code fixes, parsing engine and cache manager implemented">
-      <option name="closed" value="true" />
-      <created>1754935986668</created>
-      <option name="number" value="00006" />
-      <option name="presentableId" value="LOCAL-00006" />
-      <option name="project" value="LOCAL" />
-      <updated>1754935986668</updated>
-    </task>
-    <task id="LOCAL-00007" summary="New styling and parsing method for Port Status data">
-      <option name="closed" value="true" />
-      <created>1754938347599</created>
-      <option name="number" value="00007" />
-      <option name="presentableId" value="LOCAL-00007" />
-      <option name="project" value="LOCAL" />
-      <updated>1754938347599</updated>
+      <workItem from="1755902339063" duration="5431000" />
     </task>
     <task id="LOCAL-00008" summary="Code Updates">
       <option name="closed" value="true" />
@@ -531,7 +518,23 @@
       <option name="project" value="LOCAL" />
       <updated>1755723739033</updated>
     </task>
-    <option name="localTasksCounter" value="55" />
+    <task id="LOCAL-00055" summary="Minor Fixes">
+      <option name="closed" value="true" />
+      <created>1756133087520</created>
+      <option name="number" value="00055" />
+      <option name="presentableId" value="LOCAL-00055" />
+      <option name="project" value="LOCAL" />
+      <updated>1756133087520</updated>
+    </task>
+    <task id="LOCAL-00056" summary="Commands added">
+      <option name="closed" value="true" />
+      <created>1756157444809</created>
+      <option name="number" value="00056" />
+      <option name="presentableId" value="LOCAL-00056" />
+      <option name="project" value="LOCAL" />
+      <updated>1756157444809</updated>
+    </task>
+    <option name="localTasksCounter" value="57" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -555,8 +558,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Debug Resets" />
-    <MESSAGE value="Fixed Reset Dashboard Resets" />
     <MESSAGE value="Routine Changes" />
     <MESSAGE value="Updated file structure, Added custom debug mode" />
     <MESSAGE value="Readme added" />
@@ -580,7 +581,9 @@
     <MESSAGE value="Layout changes" />
     <MESSAGE value="Layout Fixed" />
     <MESSAGE value="Version bump" />
-    <option name="LAST_COMMIT_MESSAGE" value="Version bump" />
+    <MESSAGE value="Minor Fixes" />
+    <MESSAGE value="Commands added" />
+    <option name="LAST_COMMIT_MESSAGE" value="Commands added" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/CalypsoPy$debug_file_structure_check.coverage" NAME="debug_file_structure_check Coverage Results" MODIFIED="1755614470129" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
