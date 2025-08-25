@@ -1,0 +1,22 @@
+Cmd>fmode
+
+Port 32 enable flitmode.
+
+Port 80 disable flitmode.
+
+Port 112 enable flitmode.
+
+Port 128 enable flitmode.
+
+
+
+
+Cmd>fmode 32 en
+
+Write enable Flitmode page success.
+Set enable Flitmode success.
+
+
+Cmd> fmode 80 dis
+Wriote disable Flitmode page success
+Set enable Flitmode success.

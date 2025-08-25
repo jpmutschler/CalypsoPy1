@@ -1,0 +1,15 @@
+Cmd> clock
+MCIO Left clock disable
+MCIO Right clock enable.
+Straddle clock enable
+
+
+Cmd>clock l d
+Set MCIO Left clock disable success.
+
+Cmd> clock srise5
+Set SRIS Clock mode enable 0.5% success
+
+
+Cmd>clock srisd
+Set SRIS Clock mode disable success
