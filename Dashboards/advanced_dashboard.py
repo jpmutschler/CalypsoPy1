@@ -3,21 +3,20 @@
 advanced_dashboard.py
 
 Advanced Dashboard module for CalypsoPy application.
-Provides advanced system administration, debugging, and diagnostic tools.
-Works in both real device and demo modes.
+Provides direct command interface for device control and configuration.
+Includes support for clock, fmode, and other device-specific commands.
 """
 
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
 from datetime import datetime
-import json
 import time
-from typing import Dict, Any, Optional
+from typing import Dict, List, Optional
 
 
 class AdvancedDashboard:
     """
-    Advanced Dashboard for system administration and debugging
+    Advanced Dashboard for device command execution and control
     """
 
     def __init__(self, parent_app):
@@ -34,14 +33,182 @@ class AdvancedDashboard:
         # Command history
         self.command_history = []
         self.history_index = -1
+        self.max_history = 50
 
-        # Status tracking
-        self.last_command_time = None
+        # Session tracking
+        self.session_start = time.time()
         self.command_count = 0
+
+        # Command output widget (will be created later)
+        self.command_output = None
+        self.command_entry = None
+
+        # Demo responses for various commands
+        self.demo_responses = self._init_demo_responses()
+
+    def _init_demo_responses(self) -> Dict[str, str]:
+        """Initialize demo mode responses for various commands"""
+        return {
+            # Clock commands
+            'clock': """Cmd>clock
+MCIO Left clock disable.
+MCIO Right clock enable.
+Straddle clock enable.
+Cmd>""",
+
+            'clock l d': """Cmd>clock l d
+Set MCIO Left clock disable success.
+Cmd>""",
+
+            'clock l e': """Cmd>clock l e
+Set MCIO Left clock enable success.
+Cmd>""",
+
+            'clock r d': """Cmd>clock r d
+Set MCIO Right clock disable success.
+Cmd>""",
+
+            'clock r e': """Cmd>clock r e
+Set MCIO Right clock enable success.
+Cmd>""",
+
+            'clock srise5': """Cmd>clock srise5
+Set SRIS Clock mode enable 0.5% success.
+Cmd>""",
+
+            'clock srise2': """Cmd>clock srise2
+Set SRIS Clock mode enable 0.25% success.
+Cmd>""",
+
+            'clock srisd': """Cmd>clock srisd
+Set SRIS Clock mode disable success.
+Cmd>""",
+
+            # Fmode commands
+            'fmode': """Cmd>fmode
+
+Port 32 enable flitmode.
+Port 80 disable flitmode.
+Port 112 enable flitmode.
+Port 128 enable flitmode.
+Cmd>""",
+
+            'fmode 32 en': """Cmd>fmode 32 en
+
+Write enable Flitmode page success.
+Set enable Flitmode success.
+Cmd>""",
+
+            'fmode 32 dis': """Cmd>fmode 32 dis
+
+Write disable Flitmode page success.
+Set disable Flitmode success.
+Cmd>""",
+
+            'fmode 80 en': """Cmd>fmode 80 en
+
+Write enable Flitmode page success.
+Set enable Flitmode success.
+Cmd>""",
+
+            'fmode 80 dis': """Cmd>fmode 80 dis
+
+Write disable Flitmode page success.
+Set disable Flitmode success.
+Cmd>""",
+
+            'fmode 112 en': """Cmd>fmode 112 en
+
+Write enable Flitmode page success.
+Set enable Flitmode success.
+Cmd>""",
+
+            'fmode 112 dis': """Cmd>fmode 112 dis
+
+Write disable Flitmode page success.
+Set disable Flitmode success.
+Cmd>""",
+
+            'fmode 128 en': """Cmd>fmode 128 en
+
+Write enable Flitmode page success.
+Set enable Flitmode success.
+Cmd>""",
+
+            'fmode 128 dis': """Cmd>fmode 128 dis
+
+Write disable Flitmode page success.
+Set disable Flitmode success.
+Cmd>""",
+
+            # Other common commands
+            'help': """Available Commands:
+=================
+System Commands:
+  help              - Show this help message
+  ver               - Display version information
+  sysinfo           - Display complete system information
+  lsd               - Display system diagnostics
+  showport          - Display port status
+  showmode          - Display current mode
+
+Clock Commands:
+  clock             - Display clock status
+  clock [l|r] [e|d] - Enable/disable left/right MCIO clock
+  clock srise5      - Set SRIS clock spread to 0.5%
+  clock srise2      - Set SRIS clock spread to 0.25%
+  clock srisd       - Disable SRIS clock spread
+
+Flit Mode Commands:
+  fmode             - Display flit mode status
+  fmode [port] [en|dis] - Enable/disable flit mode for port
+    Ports: 32, 80, 112, 128
+
+Reset Commands:
+  reset             - System reset
+  msrst             - Module specific reset
+  swreset           - Software reset
+
+Port Commands:
+  setmode [0-7]     - Set operating mode
+
+Cmd>""",
+
+            'ver': """Cmd>ver
+=====================================
+ver
+=====================================
+S/N: DEMO12345678
+Company: SerialCables,Inc
+Model: Gen6-Atlas3-x16HT-BG6-144
+Version: 1.0.0
+Build: Aug 19 2025 12:00:00
+SBR Version: 0 34 160 28
+Cmd>""",
+
+            'showport': """Cmd>showport
+
+Port Slot------------------------------------------------------------------------------
+Port32 : speed 06, width 16, max_speed06, max_width16
+Port80 : speed 06, width 04, max_speed06, max_width16
+Port112: speed 01, width 00, max_speed06, max_width16
+Port128: speed 05, width 16, max_speed06, max_width16
+
+Port Upstream--------------------------------------------------------------------------
+Golden finger: speed 05, width 16, max_width = 16
+
+Cmd>""",
+
+            'showmode': """Cmd>showmode
+
+SBR mode: 0
+
+Cmd>""",
+        }
 
     def create_advanced_dashboard(self, scrollable_frame):
         """
-        Create the complete advanced dashboard
+        Create the advanced dashboard for command execution
 
         Args:
             scrollable_frame: Parent frame to contain the dashboard content
@@ -49,642 +216,405 @@ class AdvancedDashboard:
         print("DEBUG: Creating advanced dashboard content")
 
         try:
-            # Clear existing content first
+            # Clear existing content
             for widget in scrollable_frame.winfo_children():
                 widget.destroy()
 
-            # Demo mode indicator
+            # Main container
+            main_frame = ttk.Frame(scrollable_frame, style='Content.TFrame')
+            main_frame.pack(fill='both', expand=True, padx=20, pady=20)
+
+            # Title
+            title_frame = ttk.Frame(main_frame, style='Content.TFrame')
+            title_frame.pack(fill='x', pady=(0, 20))
+
+            ttk.Label(title_frame, text="🖥️ Advanced Command Interface",
+                      style='Dashboard.TLabel',
+                      font=('Arial', 18, 'bold')).pack(side='left')
+
             if self.is_demo_mode:
-                self._create_demo_mode_banner(scrollable_frame)
+                ttk.Label(title_frame, text="[DEMO MODE]",
+                          style='Info.TLabel',
+                          foreground='#ff9500').pack(side='left', padx=(20, 0))
 
-            # System Status Section
-            self._create_system_status_section(scrollable_frame)
-
-            # Command Interface Section
-            self._create_command_interface_section(scrollable_frame)
-
-            # Cache Management Section
-            self._create_cache_management_section(scrollable_frame)
-
-            # Response Handler Section
-            self._create_response_handler_section(scrollable_frame)
-
-            # Debug Controls Section
-            self._create_debug_controls_section(scrollable_frame)
-
-            # System Information Section
-            self._create_system_info_section(scrollable_frame)
+            # Create sections
+            self._create_quick_commands_section(main_frame)
+            self._create_command_terminal_section(main_frame)
+            self._create_command_reference_section(main_frame)
 
             print("DEBUG: Advanced dashboard created successfully")
 
         except Exception as e:
             print(f"ERROR: Failed to create advanced dashboard: {e}")
-            self._create_error_fallback(scrollable_frame, str(e))
+            import traceback
+            traceback.print_exc()
+            self._create_error_display(scrollable_frame, str(e))
 
-    def _create_demo_mode_banner(self, parent):
-        """Create demo mode banner"""
-        banner_frame = ttk.Frame(parent, style='Content.TFrame')
-        banner_frame.pack(fill='x', pady=(0, 20))
+    def _create_quick_commands_section(self, parent):
+        """Create quick command buttons section"""
+        # Quick commands frame
+        quick_frame = ttk.LabelFrame(parent, text="Quick Commands",
+                                     style='Content.TFrame')
+        quick_frame.pack(fill='x', pady=(0, 15))
 
-        # Demo mode banner
-        demo_banner = ttk.Frame(banner_frame, style='Content.TFrame', relief='solid', borderwidth=2)
-        demo_banner.pack(fill='x')
+        # Button container
+        button_container = ttk.Frame(quick_frame, style='Content.TFrame')
+        button_container.pack(padx=10, pady=10)
 
-        banner_content = ttk.Frame(demo_banner, style='Content.TFrame')
-        banner_content.pack(fill='x', padx=15, pady=10)
+        # Row 1: System commands
+        row1 = ttk.Frame(button_container, style='Content.TFrame')
+        row1.pack(fill='x', pady=2)
 
-        ttk.Label(banner_content, text="🎭 DEMO MODE - Advanced Dashboard",
-                  style='Dashboard.TLabel', foreground='#ff9500',
-                  font=('Arial', 14, 'bold')).pack(anchor='w')
+        ttk.Button(row1, text="📋 Help", width=15,
+                   command=lambda: self._execute_command("help")).pack(side='left', padx=2)
+        ttk.Button(row1, text="📊 System Info", width=15,
+                   command=lambda: self._execute_command("sysinfo")).pack(side='left', padx=2)
+        ttk.Button(row1, text="🔍 Version", width=15,
+                   command=lambda: self._execute_command("ver")).pack(side='left', padx=2)
+        ttk.Button(row1, text="🔌 Show Ports", width=15,
+                   command=lambda: self._execute_command("showport")).pack(side='left', padx=2)
+        ttk.Button(row1, text="⚙️ Show Mode", width=15,
+                   command=lambda: self._execute_command("showmode")).pack(side='left', padx=2)
 
-        ttk.Label(banner_content, text="All advanced features available with simulated data • No hardware required",
-                  style='Info.TLabel', foreground='#cccccc').pack(anchor='w', pady=(5, 0))
+        # Row 2: Clock commands
+        row2 = ttk.Frame(button_container, style='Content.TFrame')
+        row2.pack(fill='x', pady=2)
 
-    def _create_system_status_section(self, parent):
-        """Create system status section"""
-        status_frame = ttk.Frame(parent, style='Content.TFrame', relief='solid', borderwidth=1)
-        status_frame.pack(fill='x', pady=10)
+        ttk.Label(row2, text="Clock:", style='Info.TLabel').pack(side='left', padx=(0, 10))
+        ttk.Button(row2, text="Status", width=10,
+                   command=lambda: self._execute_command("clock")).pack(side='left', padx=2)
+        ttk.Button(row2, text="Left Enable", width=12,
+                   command=lambda: self._execute_command("clock l e")).pack(side='left', padx=2)
+        ttk.Button(row2, text="Left Disable", width=12,
+                   command=lambda: self._execute_command("clock l d")).pack(side='left', padx=2)
+        ttk.Button(row2, text="SRIS 0.5%", width=12,
+                   command=lambda: self._execute_command("clock srise5")).pack(side='left', padx=2)
+        ttk.Button(row2, text="SRIS Disable", width=12,
+                   command=lambda: self._execute_command("clock srisd")).pack(side='left', padx=2)
 
-        # Header
-        header_frame = ttk.Frame(status_frame, style='Content.TFrame')
-        header_frame.pack(fill='x', padx=15, pady=(15, 10))
+        # Row 3: Fmode commands
+        row3 = ttk.Frame(button_container, style='Content.TFrame')
+        row3.pack(fill='x', pady=2)
 
-        ttk.Label(header_frame, text="📊 System Status", style='Dashboard.TLabel').pack(side='left')
-        ttk.Button(header_frame, text="🔄", width=3,
-                   command=self._refresh_system_status).pack(side='right')
+        ttk.Label(row3, text="Flit Mode:", style='Info.TLabel').pack(side='left', padx=(0, 10))
+        ttk.Button(row3, text="Status", width=10,
+                   command=lambda: self._execute_command("fmode")).pack(side='left', padx=2)
 
-        # Content
-        content_frame = ttk.Frame(status_frame, style='Content.TFrame')
-        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
+        # Port selection for fmode
+        self.fmode_port_var = tk.StringVar(value="32")
+        port_combo = ttk.Combobox(row3, textvariable=self.fmode_port_var,
+                                  values=["32", "80", "112", "128"],
+                                  width=8, state='readonly')
+        port_combo.pack(side='left', padx=2)
 
-        # Status grid
-        self.status_vars = {}
-        status_items = [
-            ("Connection Status", "🟢 Connected" if not self.is_demo_mode else "🟠 Demo Mode"),
-            ("Port", self.app.port),
-            ("Commands Sent", "0"),
-            ("Cache Entries", str(self._get_cache_stats()['valid_entries']) if hasattr(self.app,
-                                                                                       'cache_manager') and self.app.cache_manager else "0"),
-            ("Last Activity", "Session start"),
-            ("Debug Mode", "Enabled" if self._is_debug_enabled() else "Disabled")
-        ]
+        ttk.Button(row3, text="Enable", width=10,
+                   command=lambda: self._execute_command(f"fmode {self.fmode_port_var.get()} en")).pack(side='left',
+                                                                                                        padx=2)
+        ttk.Button(row3, text="Disable", width=10,
+                   command=lambda: self._execute_command(f"fmode {self.fmode_port_var.get()} dis")).pack(side='left',
+                                                                                                         padx=2)
 
-        for i, (label, value) in enumerate(status_items):
-            row_frame = ttk.Frame(content_frame, style='Content.TFrame')
-            row_frame.pack(fill='x', pady=2)
+    def _create_command_terminal_section(self, parent):
+        """Create command terminal section"""
+        # Terminal frame
+        terminal_frame = ttk.LabelFrame(parent, text="Command Terminal",
+                                        style='Content.TFrame')
+        terminal_frame.pack(fill='both', expand=True, pady=(0, 15))
 
-            ttk.Label(row_frame, text=f"{label}:", style='Info.TLabel',
-                      font=('Arial', 10, 'bold')).pack(side='left')
+        # Output text area
+        output_container = ttk.Frame(terminal_frame, style='Content.TFrame')
+        output_container.pack(fill='both', expand=True, padx=10, pady=(10, 5))
 
-            var = tk.StringVar(value=value)
-            self.status_vars[label.lower().replace(' ', '_')] = var
-            ttk.Label(row_frame, textvariable=var, style='Info.TLabel').pack(side='right')
+        # Create text widget with scrollbar
+        self.command_output = scrolledtext.ScrolledText(
+            output_container,
+            wrap='word',
+            height=20,
+            bg='#1a1a1a',
+            fg='#00ff00',
+            font=('Consolas', 10),
+            insertbackground='#00ff00'
+        )
+        self.command_output.pack(fill='both', expand=True)
 
-    def _create_command_interface_section(self, parent):
-        """Create command interface section"""
-        cmd_frame = ttk.Frame(parent, style='Content.TFrame', relief='solid', borderwidth=1)
-        cmd_frame.pack(fill='x', pady=10)
+        # Configure tags for different text styles
+        self.command_output.tag_config('command', foreground='#ffff00')
+        self.command_output.tag_config('response', foreground='#00ff00')
+        self.command_output.tag_config('error', foreground='#ff0000')
+        self.command_output.tag_config('info', foreground='#00ffff')
 
-        # Header
-        header_frame = ttk.Frame(cmd_frame, style='Content.TFrame')
-        header_frame.pack(fill='x', padx=15, pady=(15, 10))
+        # Welcome message
+        welcome_msg = "=" * 60 + "\n"
+        welcome_msg += "Advanced Command Terminal Ready\n"
+        if self.is_demo_mode:
+            welcome_msg += "🎭 DEMO MODE - Simulated responses enabled\n"
+        else:
+            welcome_msg += "🔌 Connected to device on port " + self.app.port + "\n"
+        welcome_msg += "Type 'help' for available commands\n"
+        welcome_msg += "=" * 60 + "\n\n"
 
-        ttk.Label(header_frame, text="🔧 Direct Command Interface", style='Dashboard.TLabel').pack(side='left')
+        self.command_output.insert('end', welcome_msg, 'info')
 
-        # Command input
-        input_frame = ttk.Frame(cmd_frame, style='Content.TFrame')
-        input_frame.pack(fill='x', padx=15, pady=10)
+        # Command input area
+        input_frame = ttk.Frame(terminal_frame, style='Content.TFrame')
+        input_frame.pack(fill='x', padx=10, pady=(0, 10))
+
+        ttk.Label(input_frame, text="Cmd>", style='Info.TLabel',
+                  font=('Consolas', 10, 'bold')).pack(side='left', padx=(0, 5))
 
         self.command_entry = ttk.Entry(input_frame, font=('Consolas', 10))
-        self.command_entry.pack(side='left', fill='x', expand=True)
-        self.command_entry.bind('<Return>', self._send_command)
-        self.command_entry.bind('<Up>', self._history_up)
-        self.command_entry.bind('<Down>', self._history_down)
+        self.command_entry.pack(side='left', fill='x', expand=True, padx=(0, 10))
 
-        ttk.Button(input_frame, text="Send", command=self._send_command).pack(side='right', padx=(10, 0))
+        # Bind events
+        self.command_entry.bind('<Return>', lambda e: self._on_command_enter())
+        self.command_entry.bind('<Up>', lambda e: self._navigate_history(-1))
+        self.command_entry.bind('<Down>', lambda e: self._navigate_history(1))
 
-        # Quick commands
-        quick_frame = ttk.Frame(cmd_frame, style='Content.TFrame')
-        quick_frame.pack(fill='x', padx=15)
+        # Send button
+        ttk.Button(input_frame, text="Send", width=10,
+                   command=self._on_command_enter).pack(side='left', padx=2)
 
-        ttk.Label(quick_frame, text="Quick Commands:", style='Info.TLabel',
-                  font=('Arial', 9, 'bold')).pack(side='left')
+        # Clear button
+        ttk.Button(input_frame, text="Clear", width=10,
+                   command=self._clear_terminal).pack(side='left', padx=2)
 
-        quick_commands = ['help', 'status', 'ver', 'sysinfo', 'showport']
-        for cmd in quick_commands:
-            ttk.Button(quick_frame, text=cmd, width=8,
-                       command=lambda c=cmd: self._quick_command(c)).pack(side='left', padx=2)
+        # Focus on entry
+        self.command_entry.focus_set()
 
-        # Command output
-        output_frame = ttk.Frame(cmd_frame, style='Content.TFrame')
-        output_frame.pack(fill='both', expand=True, padx=15, pady=(10, 15))
+    def _create_command_reference_section(self, parent):
+        """Create command reference section"""
+        # Reference frame
+        ref_frame = ttk.LabelFrame(parent, text="Command Reference",
+                                   style='Content.TFrame')
+        ref_frame.pack(fill='x')
 
-        ttk.Label(output_frame, text="Command Output:", style='Info.TLabel',
-                  font=('Arial', 9, 'bold')).pack(anchor='w')
+        ref_container = ttk.Frame(ref_frame, style='Content.TFrame')
+        ref_container.pack(padx=10, pady=10)
 
-        self.command_output = scrolledtext.ScrolledText(output_frame, height=8, wrap='word',
-                                                        bg='#1a1a1a', fg='#00ff00',
-                                                        font=('Consolas', 9))
-        self.command_output.pack(fill='both', expand=True, pady=(5, 0))
+        # Create columns
+        col1 = ttk.Frame(ref_container, style='Content.TFrame')
+        col1.pack(side='left', padx=(0, 20))
 
-        # Initial welcome message
-        welcome_msg = "Advanced Command Interface Ready\n"
-        if self.is_demo_mode:
-            welcome_msg += "Demo Mode: All commands return simulated responses\n"
-        welcome_msg += "Type 'help' for available commands or use Quick Commands above\n"
-        welcome_msg += "Use ↑/↓ arrows for command history\n" + "=" * 50 + "\n"
+        col2 = ttk.Frame(ref_container, style='Content.TFrame')
+        col2.pack(side='left', padx=(0, 20))
 
-        self.command_output.insert('end', welcome_msg)
+        col3 = ttk.Frame(ref_container, style='Content.TFrame')
+        col3.pack(side='left')
 
-    def _create_cache_management_section(self, parent):
-        """Create cache management section"""
-        cache_frame = ttk.Frame(parent, style='Content.TFrame', relief='solid', borderwidth=1)
-        cache_frame.pack(fill='x', pady=10)
+        # Column 1: Clock commands
+        ttk.Label(col1, text="Clock Commands:", style='Info.TLabel',
+                  font=('Arial', 10, 'bold')).pack(anchor='w', pady=(0, 5))
 
-        # Header
-        header_frame = ttk.Frame(cache_frame, style='Content.TFrame')
-        header_frame.pack(fill='x', padx=15, pady=(15, 10))
-
-        ttk.Label(header_frame, text="💾 Cache Management", style='Dashboard.TLabel').pack(side='left')
-
-        # Content
-        content_frame = ttk.Frame(cache_frame, style='Content.TFrame')
-        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
-
-        # Cache stats
-        stats = self._get_cache_stats()
-        cache_info = [
-            f"Cache entries: {stats['valid_entries']}",
-            f"Cache size: {stats.get('cache_file_size', 0)} bytes",
-            f"Hit ratio: {stats.get('hit_ratio', 0.0):.1%}" if 'hit_ratio' in stats else "Hit ratio: N/A"
+        clock_cmds = [
+            "clock          - Show clock status",
+            "clock l d      - Disable left MCIO clock",
+            "clock l e      - Enable left MCIO clock",
+            "clock r d      - Disable right MCIO clock",
+            "clock r e      - Enable right MCIO clock",
+            "clock srise5   - Set 0.5% spread",
+            "clock srise2   - Set 0.25% spread",
+            "clock srisd    - Disable spread"
         ]
 
-        for info in cache_info:
-            ttk.Label(content_frame, text=info, style='Info.TLabel').pack(anchor='w', pady=2)
+        for cmd in clock_cmds:
+            ttk.Label(col1, text=cmd, style='Info.TLabel',
+                      font=('Consolas', 9)).pack(anchor='w')
 
-        # Cache controls
-        button_frame = ttk.Frame(content_frame, style='Content.TFrame')
-        button_frame.pack(fill='x', pady=10)
+        # Column 2: Fmode commands
+        ttk.Label(col2, text="Flit Mode Commands:", style='Info.TLabel',
+                  font=('Arial', 10, 'bold')).pack(anchor='w', pady=(0, 5))
 
-        ttk.Button(button_frame, text="View Cache Contents",
-                   command=self._view_cache_contents).pack(side='left', padx=(0, 10))
-        ttk.Button(button_frame, text="Clear Cache",
-                   command=self._clear_cache).pack(side='left', padx=(0, 10))
-        ttk.Button(button_frame, text="Cache Settings",
-                   command=self._open_cache_settings).pack(side='left')
-
-    def _create_response_handler_section(self, parent):
-        """Create response handler debug section"""
-        handler_frame = ttk.Frame(parent, style='Content.TFrame', relief='solid', borderwidth=1)
-        handler_frame.pack(fill='x', pady=10)
-
-        # Header
-        header_frame = ttk.Frame(handler_frame, style='Content.TFrame')
-        header_frame.pack(fill='x', padx=15, pady=(15, 10))
-
-        ttk.Label(header_frame, text="🔧 Advanced Response Handler", style='Dashboard.TLabel').pack(side='left')
-
-        # Content
-        content_frame = ttk.Frame(handler_frame, style='Content.TFrame')
-        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
-
-        # Handler status
-        self.handler_status_text = tk.Text(content_frame, height=6, wrap='word',
-                                           state='disabled', bg='#f8f8f8',
-                                           font=('Consolas', 9))
-        self.handler_status_text.pack(fill='x', pady=(0, 10))
-
-        # Control buttons
-        button_frame = ttk.Frame(content_frame, style='Content.TFrame')
-        button_frame.pack(fill='x')
-
-        ttk.Button(button_frame, text="Refresh Status",
-                   command=self._refresh_handler_status).pack(side='left', padx=(0, 10))
-        ttk.Button(button_frame, text="Clear Buffers",
-                   command=self._clear_handler_buffers).pack(side='left')
-
-        # Initialize handler status
-        self._refresh_handler_status()
-
-    def _create_debug_controls_section(self, parent):
-        """Create debug controls section"""
-        debug_frame = ttk.Frame(parent, style='Content.TFrame', relief='solid', borderwidth=1)
-        debug_frame.pack(fill='x', pady=10)
-
-        # Header
-        header_frame = ttk.Frame(debug_frame, style='Content.TFrame')
-        header_frame.pack(fill='x', padx=15, pady=(15, 10))
-
-        ttk.Label(header_frame, text="🐛 Debug Controls", style='Dashboard.TLabel').pack(side='left')
-
-        # Content
-        content_frame = ttk.Frame(debug_frame, style='Content.TFrame')
-        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
-
-        # Debug status
-        debug_enabled = self._is_debug_enabled()
-        status_text = "🟢 Enabled" if debug_enabled else "🔴 Disabled"
-        ttk.Label(content_frame, text=f"Debug Status: {status_text}",
-                  style='Info.TLabel', font=('Arial', 10, 'bold')).pack(anchor='w', pady=5)
-
-        # Debug controls
-        button_frame = ttk.Frame(content_frame, style='Content.TFrame')
-        button_frame.pack(fill='x', pady=5)
-
-        ttk.Button(button_frame, text="Toggle Debug",
-                   command=self._toggle_debug).pack(side='left', padx=(0, 10))
-        ttk.Button(button_frame, text="View Debug Log",
-                   command=self._view_debug_log).pack(side='left', padx=(0, 10))
-        ttk.Button(button_frame, text="Export Logs",
-                   command=self._export_logs).pack(side='left')
-
-    def _create_system_info_section(self, parent):
-        """Create system information section"""
-        info_frame = ttk.Frame(parent, style='Content.TFrame', relief='solid', borderwidth=1)
-        info_frame.pack(fill='x', pady=10)
-
-        # Header
-        header_frame = ttk.Frame(info_frame, style='Content.TFrame')
-        header_frame.pack(fill='x', padx=15, pady=(15, 10))
-
-        ttk.Label(header_frame, text="ℹ️ System Information", style='Dashboard.TLabel').pack(side='left')
-
-        # Content
-        content_frame = ttk.Frame(info_frame, style='Content.TFrame')
-        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
-
-        # Application info
-        app_info = [
-            f"CalypsoPy Version: {getattr(self.app, 'version', '1.3.4')}",
-            f"Python Version: {self._get_python_version()}",
-            f"Operating System: {self._get_os_info()}",
-            f"Session Duration: {self._get_session_duration()}",
-            f"Memory Usage: {self._get_memory_usage()}"
+        fmode_cmds = [
+            "fmode              - Show flit mode status",
+            "fmode [port] en    - Enable flit mode",
+            "fmode [port] dis   - Disable flit mode",
+            "",
+            "Available ports:",
+            "  32, 80, 112, 128",
+            "",
+            "Example: fmode 32 en"
         ]
 
-        for info in app_info:
-            ttk.Label(content_frame, text=info, style='Info.TLabel').pack(anchor='w', pady=2)
+        for cmd in fmode_cmds:
+            ttk.Label(col2, text=cmd, style='Info.TLabel',
+                      font=('Consolas', 9)).pack(anchor='w')
 
-    def _create_error_fallback(self, parent, error_msg):
-        """Create error fallback content"""
-        error_frame = ttk.Frame(parent, style='Content.TFrame')
-        error_frame.pack(fill='both', expand=True, padx=20, pady=20)
+        # Column 3: General commands
+        ttk.Label(col3, text="General Commands:", style='Info.TLabel',
+                  font=('Arial', 10, 'bold')).pack(anchor='w', pady=(0, 5))
 
-        ttk.Label(error_frame, text="⚠️ Advanced Dashboard Error",
-                  style='Dashboard.TLabel', foreground='#ff0000').pack(anchor='w')
-        ttk.Label(error_frame, text=f"Error: {error_msg}",
-                  style='Info.TLabel').pack(anchor='w', pady=10)
-        ttk.Label(error_frame, text="Some advanced features may not be available.",
-                  style='Info.TLabel').pack(anchor='w')
+        general_cmds = [
+            "help       - Show all commands",
+            "ver        - Version information",
+            "sysinfo    - System information",
+            "lsd        - System diagnostics",
+            "showport   - Port status",
+            "showmode   - Current mode",
+            "setmode N  - Set mode (0-7)",
+            "reset      - System reset"
+        ]
 
-    # Command Interface Methods
-    def _send_command(self, event=None):
-        """Send command from entry field"""
-        command = self.command_entry.get().strip()
-        if not command:
+        for cmd in general_cmds:
+            ttk.Label(col3, text=cmd, style='Info.TLabel',
+                      font=('Consolas', 9)).pack(anchor='w')
+
+    def _execute_command(self, command: str):
+        """Execute a command and display the response"""
+        if not command.strip():
             return
 
-        self.command_entry.delete(0, tk.END)
-        self.command_history.append(command)
+        # Add to history
+        if command not in self.command_history:
+            self.command_history.append(command)
+            if len(self.command_history) > self.max_history:
+                self.command_history.pop(0)
         self.history_index = len(self.command_history)
 
-        # Display command
+        # Display command in terminal
         timestamp = datetime.now().strftime('%H:%M:%S')
-        self.command_output.insert('end', f"[{timestamp}] > {command}\n")
+        self.command_output.insert('end', f"[{timestamp}] Cmd> {command}\n", 'command')
 
+        # Get response
         try:
             if self.is_demo_mode:
                 response = self._get_demo_response(command)
             else:
                 response = self._send_real_command(command)
 
-            self.command_output.insert('end', f"{response}\n{'=' * 50}\n")
-            self.command_count += 1
-            self.last_command_time = datetime.now()
-
-            # Update status
-            if 'commands_sent' in self.status_vars:
-                self.status_vars['commands_sent'].set(str(self.command_count))
-            if 'last_activity' in self.status_vars:
-                self.status_vars['last_activity'].set(timestamp)
+            # Display response
+            if response:
+                self.command_output.insert('end', response + "\n", 'response')
+            else:
+                self.command_output.insert('end', "No response received\n", 'error')
 
         except Exception as e:
-            self.command_output.insert('end', f"ERROR: {e}\n{'=' * 50}\n")
+            error_msg = f"Error executing command: {str(e)}\n"
+            self.command_output.insert('end', error_msg, 'error')
+            print(f"ERROR: {error_msg}")
 
+        # Auto-scroll to bottom
         self.command_output.see('end')
 
-    def _quick_command(self, command):
-        """Execute quick command"""
-        self.command_entry.delete(0, tk.END)
-        self.command_entry.insert(0, command)
-        self._send_command()
+        # Update command count
+        self.command_count += 1
 
-    def _history_up(self, event):
-        """Navigate command history up"""
-        if self.command_history and self.history_index > 0:
-            self.history_index -= 1
+        # Clear entry
+        if self.command_entry:
             self.command_entry.delete(0, tk.END)
-            self.command_entry.insert(0, self.command_history[self.history_index])
 
-    def _history_down(self, event):
-        """Navigate command history down"""
-        if self.command_history and self.history_index < len(self.command_history) - 1:
-            self.history_index += 1
-            self.command_entry.delete(0, tk.END)
-            self.command_entry.insert(0, self.command_history[self.history_index])
+    def _get_demo_response(self, command: str) -> str:
+        """Get demo response for a command"""
+        cmd_lower = command.lower().strip()
 
-    def _get_demo_response(self, command):
-        """Generate demo response for command"""
-        command = command.lower()
+        # Check for exact match first
+        if cmd_lower in self.demo_responses:
+            return self.demo_responses[cmd_lower]
 
-        demo_responses = {
-            'help': """Available Commands:
-- help          Show available commands
-- status        Get device status
-- ver           Get detailed version info
-- sysinfo       Get complete system information
-- showport      Check port status
-- reset         Reset device
-- lsd           Get system diagnostics""",
-            'status': "Device Status: Online | Demo Mode Active | All Systems Operational",
-            'ver': "Firmware Version: 1.2.3 Build 456\nHardware Version: Gen6 PCIe Atlas 3\nBootloader: v2.1.0\nDemo Mode: Active",
-            'sysinfo': """System Information (Demo Data):
-Device: Gen6 PCIe Atlas 3 Host Card
-Serial Number: DEMO-12345
-Temperature: 45.2°C
-Power Status: Normal
-Ports: 4x Active
-Link Status: All Links Up
-Cache: 2.1MB Used""",
-            'showport': """Port Status (Demo Data):
-Port 1: UP   | Speed: 10Gbps | Link Quality: Excellent
-Port 2: UP   | Speed: 10Gbps | Link Quality: Good  
-Port 3: UP   | Speed: 5Gbps  | Link Quality: Fair
-Port 4: DOWN | Speed: N/A    | Link Quality: N/A""",
-            'reset': "Demo Mode: Reset command acknowledged (no actual reset performed)",
-            'lsd': "Link Status Diagnostics: All systems nominal (Demo Data)"
-        }
+        # Check for partial matches
+        for demo_cmd, response in self.demo_responses.items():
+            if demo_cmd in cmd_lower or cmd_lower in demo_cmd:
+                return response
 
-        return demo_responses.get(command, f"Demo response for '{command}' - Command executed successfully")
+        # Default response for unknown commands
+        return f"Cmd>{command}\nCommand executed (Demo Mode)\nCmd>"
 
-    def _send_real_command(self, command):
+    def _send_real_command(self, command: str) -> str:
         """Send real command to device"""
         if hasattr(self.app, 'cli') and self.app.cli:
             try:
                 response = self.app.cli.send_command(command)
-                return response if response else "No response received"
+                return response if response else "No response from device"
             except Exception as e:
-                return f"Command failed: {e}"
+                return f"Communication error: {str(e)}"
         else:
             return "No device connection available"
 
-    # Cache Management Methods
-    def _get_cache_stats(self):
-        """Get cache statistics"""
-        if hasattr(self.app, 'cache_manager') and self.app.cache_manager:
-            return self.app.cache_manager.get_stats()
-        else:
-            return {'valid_entries': 0, 'cache_file_size': 0}
+    def _on_command_enter(self):
+        """Handle command entry"""
+        command = self.command_entry.get().strip()
+        if command:
+            self._execute_command(command)
 
-    def _view_cache_contents(self):
-        """View cache contents in popup window"""
-        cache_window = tk.Toplevel(self.app.root)
-        cache_window.title("Cache Contents")
-        cache_window.geometry("600x400")
+    def _navigate_history(self, direction: int):
+        """Navigate command history"""
+        if not self.command_history:
+            return
 
-        # Create text widget with scrollbar
-        text_frame = ttk.Frame(cache_window)
-        text_frame.pack(fill='both', expand=True, padx=10, pady=10)
-
-        cache_text = scrolledtext.ScrolledText(text_frame, wrap='word', font=('Consolas', 9))
-        cache_text.pack(fill='both', expand=True)
-
-        try:
-            if hasattr(self.app, 'cache_manager') and self.app.cache_manager:
-                cache_data = self.app.cache_manager.get_all_entries()
-                if cache_data:
-                    formatted_cache = json.dumps(cache_data, indent=2, default=str)
-                    cache_text.insert('1.0', formatted_cache)
-                else:
-                    cache_text.insert('1.0', "Cache is empty")
+        if direction < 0:  # Up arrow
+            if self.history_index > 0:
+                self.history_index -= 1
+        else:  # Down arrow
+            if self.history_index < len(self.command_history) - 1:
+                self.history_index += 1
             else:
-                cache_text.insert('1.0', "No cache manager available")
-        except Exception as e:
-            cache_text.insert('1.0', f"Error reading cache: {e}")
+                # At the end of history, clear entry
+                self.command_entry.delete(0, tk.END)
+                self.history_index = len(self.command_history)
+                return
 
-        cache_text.config(state='disabled')
+        # Set entry to history command
+        if 0 <= self.history_index < len(self.command_history):
+            self.command_entry.delete(0, tk.END)
+            self.command_entry.insert(0, self.command_history[self.history_index])
 
-    def _clear_cache(self):
-        """Clear cache with confirmation"""
-        if messagebox.askyesno("Clear Cache", "Are you sure you want to clear the cache?"):
-            try:
-                if hasattr(self.app, 'cache_manager') and self.app.cache_manager:
-                    self.app.cache_manager.clear()
-                    messagebox.showinfo("Success", "Cache cleared successfully")
-                    self._refresh_system_status()
-                else:
-                    messagebox.showwarning("Warning", "No cache manager available")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to clear cache: {e}")
+    def _clear_terminal(self):
+        """Clear the terminal output"""
+        self.command_output.delete('1.0', tk.END)
 
-    def _open_cache_settings(self):
-        """Open cache settings dialog"""
-        if hasattr(self.app, 'open_settings'):
-            self.app.open_settings()
-        else:
-            messagebox.showinfo("Settings", "Settings dialog not available")
+        # Re-add welcome message
+        welcome_msg = "Terminal cleared\n"
+        welcome_msg += "Type 'help' for available commands\n\n"
+        self.command_output.insert('end', welcome_msg, 'info')
 
-    # Response Handler Methods
-    def _refresh_handler_status(self):
-        """Refresh response handler status"""
-        self.handler_status_text.config(state='normal')
-        self.handler_status_text.delete('1.0', 'end')
+    def _create_error_display(self, parent, error_msg: str):
+        """Create error display when dashboard fails to load"""
+        # Clear existing content
+        for widget in parent.winfo_children():
+            widget.destroy()
 
-        try:
-            if hasattr(self.app, 'response_handler') and self.app.response_handler:
-                status = self.app.response_handler.get_status()
-                status_text = f"""Response Handler Status:
-Active Buffers: {status.get('active_buffers', 0)}
-Total Commands: {status.get('total_commands', 0)}
-Successful Responses: {status.get('successful_responses', 0)}
-Timeouts: {status.get('timeouts', 0)}
-Handler State: {'Active' if status.get('active_buffers', 0) > 0 else 'Idle'}"""
-            else:
-                status_text = "Response Handler: Not initialized or not available"
+        error_frame = ttk.Frame(parent, style='Content.TFrame')
+        error_frame.pack(fill='both', expand=True, padx=20, pady=20)
 
-            self.handler_status_text.insert('1.0', status_text)
-        except Exception as e:
-            self.handler_status_text.insert('1.0', f"Error getting status: {e}")
+        ttk.Label(error_frame, text="⚠️ Dashboard Error",
+                  style='Dashboard.TLabel',
+                  foreground='#ff0000').pack(pady=(0, 10))
 
-        self.handler_status_text.config(state='disabled')
+        ttk.Label(error_frame, text=f"Error: {error_msg}",
+                  style='Info.TLabel').pack(pady=(0, 20))
 
-    def _clear_handler_buffers(self):
-        """Clear response handler buffers"""
-        try:
-            if hasattr(self.app, 'response_handler') and self.app.response_handler:
-                self.app.response_handler.clear_all_buffers()
-                messagebox.showinfo("Success", "Response handler buffers cleared")
-                self._refresh_handler_status()
-            else:
-                messagebox.showwarning("Warning", "Response handler not available")
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to clear buffers: {e}")
-
-    # Debug Control Methods
-    def _is_debug_enabled(self):
-        """Check if debug is enabled"""
-        try:
-            from Admin.debug_config import is_debug_enabled
-            return is_debug_enabled()
-        except ImportError:
-            return False
-
-    def _toggle_debug(self):
-        """Toggle debug mode"""
-        try:
-            from Admin.debug_config import toggle_debug
-            new_state = toggle_debug()
-            state_text = "enabled" if new_state else "disabled"
-            messagebox.showinfo("Debug Mode", f"Debug mode {state_text}")
-            self._refresh_system_status()
-        except ImportError:
-            messagebox.showerror("Error", "Debug config not available")
-
-    def _view_debug_log(self):
-        """View debug log in popup window"""
-        log_window = tk.Toplevel(self.app.root)
-        log_window.title("Debug Log")
-        log_window.geometry("800x600")
-
-        # Create text widget with scrollbar
-        text_frame = ttk.Frame(log_window)
-        text_frame.pack(fill='both', expand=True, padx=10, pady=10)
-
-        log_text = scrolledtext.ScrolledText(text_frame, wrap='word', font=('Consolas', 9))
-        log_text.pack(fill='both', expand=True)
-
-        # Show recent log entries
-        if hasattr(self.app, 'log_data'):
-            log_entries = self.app.log_data[-100:]  # Last 100 entries
-            log_text.insert('1.0', '\n'.join(log_entries))
-        else:
-            log_text.insert('1.0', "No log data available")
-
-        log_text.config(state='disabled')
-
-    def _export_logs(self):
-        """Export logs to file"""
-        try:
-            from tkinter import filedialog
-
-            filename = filedialog.asksaveasfilename(
-                defaultextension=".txt",
-                filetypes=[("Text files", "*.txt"), ("All files", "*.*")],
-                title="Export Logs"
-            )
-
-            if filename:
-                with open(filename, 'w') as f:
-                    f.write(f"CalypsoPy Debug Log Export\n")
-                    f.write(f"Exported: {datetime.now()}\n")
-                    f.write(f"Session: {'Demo Mode' if self.is_demo_mode else 'Real Device'}\n")
-                    f.write("=" * 50 + "\n\n")
-
-                    if hasattr(self.app, 'log_data'):
-                        for entry in self.app.log_data:
-                            f.write(f"{entry}\n")
-
-                messagebox.showinfo("Success", f"Logs exported to {filename}")
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to export logs: {e}")
-
-    # System Information Methods
-    def _get_python_version(self):
-        """Get Python version"""
-        import sys
-        return f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
-
-    def _get_os_info(self):
-        """Get OS information"""
-        import platform
-        return f"{platform.system()} {platform.release()}"
-
-    def _get_session_duration(self):
-        """Get session duration"""
-        if hasattr(self.app, 'session_start_time'):
-            duration = time.time() - self.app.session_start_time
-            hours, remainder = divmod(int(duration), 3600)
-            minutes, seconds = divmod(remainder, 60)
-            return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
-        return "Unknown"
-
-    def _get_memory_usage(self):
-        """Get memory usage"""
-        try:
-            import psutil
-            process = psutil.Process()
-            memory_info = process.memory_info()
-            return f"{memory_info.rss / 1024 / 1024:.1f} MB"
-        except ImportError:
-            return "Unknown (psutil not available)"
-
-    # Status Update Methods
-    def _refresh_system_status(self):
-        """Refresh system status display"""
-        try:
-            # Update connection status
-            if 'connection_status' in self.status_vars:
-                status = "🟠 Demo Mode" if self.is_demo_mode else "🟢 Connected"
-                self.status_vars['connection_status'].set(status)
-
-            # Update cache entries
-            if 'cache_entries' in self.status_vars:
-                cache_stats = self._get_cache_stats()
-                self.status_vars['cache_entries'].set(str(cache_stats['valid_entries']))
-
-            # Update debug mode
-            if 'debug_mode' in self.status_vars:
-                debug_status = "Enabled" if self._is_debug_enabled() else "Disabled"
-                self.status_vars['debug_mode'].set(debug_status)
-
-            # Update last activity
-            if 'last_activity' in self.status_vars and self.last_command_time:
-                last_activity = self.last_command_time.strftime('%H:%M:%S')
-                self.status_vars['last_activity'].set(last_activity)
-
-        except Exception as e:
-            print(f"ERROR: Failed to refresh system status: {e}")
-
-    def update_command_count(self, count):
-        """Update command count from external source"""
-        self.command_count = count
-        if 'commands_sent' in self.status_vars:
-            self.status_vars['commands_sent'].set(str(count))
+        ttk.Label(error_frame, text="Please check the console for details",
+                  style='Info.TLabel').pack()
 
 
-# Standalone test functionality
+# Module test
 if __name__ == "__main__":
     print("Advanced Dashboard Module Test")
-    print("This module should be imported by main.py")
-    print("File location: Dashboards/advanced_dashboard.py")
+    print("=" * 60)
 
-    # Basic test of the class
-    print("\nTesting class instantiation...")
+
+    # Test class instantiation
+    class MockApp:
+        def __init__(self):
+            self.is_demo_mode = True
+            self.port = "DEMO"
+            self.root = None
+            self.cli = None
+
+
     try:
-        # Mock parent app for testing
-        class MockApp:
-            def __init__(self):
-                self.is_demo_mode = True
-                self.port = "DEMO"
-                self.root = None
-                self.log_data = ["Test log entry 1", "Test log entry 2"]
+        app = MockApp()
+        dashboard = AdvancedDashboard(app)
+        print(f"✅ AdvancedDashboard created successfully")
+        print(f"   Demo Mode: {dashboard.is_demo_mode}")
+        print(f"   Demo responses loaded: {len(dashboard.demo_responses)}")
 
+        # Test demo response
+        test_cmd = "clock"
+        response = dashboard._get_demo_response(test_cmd)
+        print(f"\n✅ Demo response for '{test_cmd}':")
+        print(response[:100] + "..." if len(response) > 100 else response)
 
-        mock_app = MockApp()
-        dashboard = AdvancedDashboard(mock_app)
-        print(f"✅ AdvancedDashboard created: Demo Mode = {dashboard.is_demo_mode}")
-        print("✅ Module test completed successfully!")
-        print("Ready for import in main.py")
+        print("\n✅ Module test completed successfully!")
 
     except Exception as e:
         print(f"❌ Module test failed: {e}")

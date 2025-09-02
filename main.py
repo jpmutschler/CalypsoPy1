@@ -865,8 +865,9 @@ class DashboardApp:
         self.settings_mgr = settings_manager
         self.is_demo_mode = (port == "DEMO")
 
+        self.log_data = []
+
         # CRITICAL: Initialize all required attributes FIRST
-        self.log_data = []  # MISSING ATTRIBUTE FIX
         self.current_dashboard = "host"
         self.background_tasks_enabled = True  # MISSING ATTRIBUTE FIX
         self.sysinfo_requested = False
