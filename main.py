@@ -958,12 +958,6 @@ class DashboardApp:
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         print("DEBUG: DashboardApp initialization complete")
 
-        # Temporary debug check - add this at the end of DashboardApp.__init__
-        print(
-            f"DEBUG: Advanced Dashboard available: {hasattr(self, 'advanced_dashboard') and self.advanced_dashboard is not None}")
-        if hasattr(self, 'advanced_dashboard') and self.advanced_dashboard:
-            print(f"DEBUG: Advanced Dashboard demo mode: {self.advanced_dashboard.is_demo_mode}")
-
     def _init_cache_manager(self):
         """Initialize cache manager"""
         try:
@@ -1713,62 +1707,26 @@ class DashboardApp:
         for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
 
-        # Show error/fallback message
-        fallback_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
-        fallback_frame.pack(fill='both', expand=True, padx=20, pady=20)
+        # Show Coming Soon message
+        coming_soon_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+        coming_soon_frame.pack(fill='both', expand=True)
 
-        ttk.Label(fallback_frame, text="⚠️ Advanced Dashboard Module Not Available",
-                  style='Dashboard.TLabel', foreground='#ff9500').pack(anchor='w', pady=(0, 10))
+        # Center the content
+        center_frame = ttk.Frame(coming_soon_frame, style='Content.TFrame')
+        center_frame.pack(expand=True)
 
-        ttk.Label(fallback_frame, text="Using basic fallback interface",
-                  style='Info.TLabel').pack(anchor='w', pady=(0, 20))
+        ttk.Label(center_frame, text="Advanced Dashboard",
+                  style='Dashboard.TLabel',
+                  font=('Arial', 24, 'bold')).pack(pady=(0, 20))
 
-        # Keep the existing basic implementation as fallback
-        def advanced_content(frame):
-            # Advanced settings
-            settings = [
-                ("Debug Mode", "Disabled"),
-                ("Logging Level", "Info"),
-                ("Buffer Size", "4096 bytes"),
-                ("Timeout", "5000 ms"),
-                ("Retry Count", "3")
-            ]
+        ttk.Label(center_frame, text="⚠️ Coming Soon",
+                  style='Info.TLabel',
+                  font=('Arial', 16)).pack()
 
-            for setting, value in settings:
-                row_frame = ttk.Frame(frame, style='Content.TFrame')
-                row_frame.pack(fill='x', pady=2)
-                ttk.Label(row_frame, text=f"{setting}:", style='Info.TLabel',
-                          font=('Arial', 10, 'bold')).pack(side='left')
-                ttk.Label(row_frame, text=value, style='Info.TLabel').pack(side='right')
-
-        self.create_info_card(self.scrollable_frame, "Advanced Settings (Fallback)", advanced_content)
-
-        # Command interface
-        cmd_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
-        cmd_frame.pack(fill='x', pady=20)
-
-        ttk.Label(cmd_frame, text="🔧 Direct Command Interface", style='Dashboard.TLabel').pack(anchor='w')
-
-        input_frame = ttk.Frame(cmd_frame, style='Content.TFrame')
-        input_frame.pack(fill='x', pady=10)
-
-        self.command_entry = ttk.Entry(input_frame, font=('Consolas', 10))
-        self.command_entry.pack(side='left', fill='x', expand=True)
-
-        ttk.Button(input_frame, text="Send",
-                   command=self.send_direct_command).pack(side='right', padx=(10, 0))
-
-        self.command_entry.bind('<Return>', lambda e: self.send_direct_command())
-
-        # Add demo mode notice
         if self.is_demo_mode:
-            demo_notice_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
-            demo_notice_frame.pack(fill='x', pady=20)
-
-            ttk.Label(demo_notice_frame, text="🎭 Demo Mode: Basic Advanced Dashboard Available",
-                      style='Dashboard.TLabel', foreground='#ff9500').pack(anchor='w')
-            ttk.Label(demo_notice_frame, text="Install advanced_dashboard.py for full functionality",
-                      style='Info.TLabel').pack(anchor='w', pady=(5, 0))
+            ttk.Label(center_frame, text="Advanced Dashboard module not found",
+                      style='Info.TLabel',
+                      font=('Arial', 10)).pack(pady=(10, 0))
 
     def create_placeholder_dashboard(self):
         """Create placeholder for unimplemented dashboards"""
