@@ -7,7 +7,7 @@ Dashboard module for CalypsoPy - Contains dashboard components and UI elements
 This module provides:
 - Host card information dashboard and management
 - Demo mode integration for testing and training
-- Advanced dashboard for system administration
+- Advanced dashboard for system administration  # ADDED
 - Dashboard UI components and utilities
 
 Author: Serial Cables Development Team
@@ -44,7 +44,7 @@ except ImportError as e:
     print(f"WARNING: Could not import Demo Mode Integration: {e}")
     UnifiedDemoSerialCLI = None
 
-# NEW: Import Advanced Dashboard
+# ADDED: Import Advanced Dashboard
 try:
     from .advanced_dashboard import AdvancedDashboard
 
@@ -79,7 +79,7 @@ def get_dashboard_info():
         'components': [
             'Host Card Information Dashboard',
             'Demo Mode Integration',
-            'Advanced Dashboard',
+            'Advanced Dashboard',  # ADDED
             'Dashboard UI Components'
         ],
         'available_classes': [cls for cls in __all__ if globals().get(cls) is not None]

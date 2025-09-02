@@ -120,7 +120,7 @@ from Dashboards.port_status_dashboard import (
 )
 from Dashboards.firmware_dashboard import FirmwareDashboard
 from Dashboards.resets_dashboard import ResetsDashboard
-from Dashboards.advanced_dashboard import AdvancedDashboard
+from Dashboards import AdvancedDashboard
 
 # =====================================================================
 # OPTIONAL IMPORTS - PIL for image support
@@ -920,7 +920,12 @@ class DashboardApp:
         print("DEBUG: Firmware dashboard initialized")
 
         # Initialize Advanced Dashboard components
-        self.advanced_dashboard = AdvancedDashboard(self)
+        try:
+            self.advanced_dashboard = AdvancedDashboard(self)
+            print("DEBUG: Advanced Dashboard initialized successfully")
+        except Exception as e:
+            print(f"WARNING: Failed to initialize Advanced Dashboard: {e}")
+            self.advanced_dashboard = None
 
         # Demo device state for port status (if demo mode)
         self.demo_device_state = {'current_mode': 0}
@@ -952,6 +957,12 @@ class DashboardApp:
 
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         print("DEBUG: DashboardApp initialization complete")
+
+        # Temporary debug check - add this at the end of DashboardApp.__init__
+        print(
+            f"DEBUG: Advanced Dashboard available: {hasattr(self, 'advanced_dashboard') and self.advanced_dashboard is not None}")
+        if hasattr(self, 'advanced_dashboard') and self.advanced_dashboard:
+            print(f"DEBUG: Advanced Dashboard demo mode: {self.advanced_dashboard.is_demo_mode}")
 
     def _init_cache_manager(self):
         """Initialize cache manager"""
@@ -1684,15 +1695,33 @@ class DashboardApp:
             if hasattr(self, 'advanced_dashboard') and self.advanced_dashboard:
                 # Use the modular Advanced Dashboard
                 self.advanced_dashboard.create_advanced_dashboard(self.scrollable_frame)
+                print("DEBUG: Advanced dashboard created successfully using module")
             else:
                 print("WARNING: AdvancedDashboard not initialized, using fallback")
                 self._create_fallback_advanced_dashboard()
         except Exception as e:
             print(f"ERROR: Failed to create advanced dashboard: {e}")
+            import traceback
+            traceback.print_exc()
             self._create_fallback_advanced_dashboard()
 
     def _create_fallback_advanced_dashboard(self):
         """Fallback advanced dashboard if module fails to load"""
+        print("DEBUG: Creating fallback advanced dashboard")
+
+        # Clear existing content first
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+
+        # Show error/fallback message
+        fallback_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
+        fallback_frame.pack(fill='both', expand=True, padx=20, pady=20)
+
+        ttk.Label(fallback_frame, text="⚠️ Advanced Dashboard Module Not Available",
+                  style='Dashboard.TLabel', foreground='#ff9500').pack(anchor='w', pady=(0, 10))
+
+        ttk.Label(fallback_frame, text="Using basic fallback interface",
+                  style='Info.TLabel').pack(anchor='w', pady=(0, 20))
 
         # Keep the existing basic implementation as fallback
         def advanced_content(frame):
@@ -1712,7 +1741,7 @@ class DashboardApp:
                           font=('Arial', 10, 'bold')).pack(side='left')
                 ttk.Label(row_frame, text=value, style='Info.TLabel').pack(side='right')
 
-        self.create_info_card(self.scrollable_frame, "Advanced Settings", advanced_content)
+        self.create_info_card(self.scrollable_frame, "Advanced Settings (Fallback)", advanced_content)
 
         # Command interface
         cmd_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
@@ -1731,41 +1760,14 @@ class DashboardApp:
 
         self.command_entry.bind('<Return>', lambda e: self.send_direct_command())
 
-        # Cache management section
-        cache_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame', relief='solid', borderwidth=1)
-        cache_frame.pack(fill='x', pady=20)
-
-        header_frame = ttk.Frame(cache_frame, style='Content.TFrame')
-        header_frame.pack(fill='x', padx=15, pady=(15, 10))
-
-        ttk.Label(header_frame, text="💾 Cache Management", style='Dashboard.TLabel').pack(anchor='w')
-
-        content_frame = ttk.Frame(cache_frame, style='Content.TFrame')
-        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
-
-        if self.cache_manager:
-            stats = self.cache_manager.get_stats()
-            ttk.Label(content_frame, text=f"Cache entries: {stats['valid_entries']}",
-                      style='Info.TLabel').pack(anchor='w', pady=2)
-            ttk.Label(content_frame, text=f"Cache size: {stats['cache_file_size']} bytes",
-                      style='Info.TLabel').pack(anchor='w', pady=2)
-
-        button_frame = ttk.Frame(content_frame, style='Content.TFrame')
-        button_frame.pack(fill='x', pady=10)
-
-        ttk.Button(button_frame, text="View Cache Contents",
-                   command=self.view_cache_contents).pack(side='left', padx=(0, 10))
-        ttk.Button(button_frame, text="Clear Cache",
-                   command=self.clear_cache).pack(side='left')
-
         # Add demo mode notice
         if self.is_demo_mode:
             demo_notice_frame = ttk.Frame(self.scrollable_frame, style='Content.TFrame')
             demo_notice_frame.pack(fill='x', pady=20)
 
-            ttk.Label(demo_notice_frame, text="🎭 Demo Mode: Advanced Dashboard Available",
+            ttk.Label(demo_notice_frame, text="🎭 Demo Mode: Basic Advanced Dashboard Available",
                       style='Dashboard.TLabel', foreground='#ff9500').pack(anchor='w')
-            ttk.Label(demo_notice_frame, text="All advanced features work with simulated data",
+            ttk.Label(demo_notice_frame, text="Install advanced_dashboard.py for full functionality",
                       style='Info.TLabel').pack(anchor='w', pady=(5, 0))
 
     def create_placeholder_dashboard(self):
