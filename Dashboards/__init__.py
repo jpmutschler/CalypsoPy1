@@ -6,8 +6,8 @@ Dashboard module for CalypsoPy - Contains dashboard components and UI elements
 
 This module provides:
 - Host card information dashboard and management
-- Advanced dashboard with clock and FLIT mode controls
 - Demo mode integration for testing and training
+- Advanced dashboard for system administration
 - Dashboard UI components and utilities
 
 Author: Serial Cables Development Team
@@ -44,19 +44,14 @@ except ImportError as e:
     print(f"WARNING: Could not import Demo Mode Integration: {e}")
     UnifiedDemoSerialCLI = None
 
+# NEW: Import Advanced Dashboard
 try:
-    from .advanced_dashboard import (
-        AdvancedDashboard,
-        integrate_advanced_dashboard,
-        extend_demo_mode_for_advanced
-    )
+    from .advanced_dashboard import AdvancedDashboard
 
-    print("DEBUG: Advanced Dashboard components imported successfully")
+    print("DEBUG: Advanced Dashboard imported successfully")
 except ImportError as e:
     print(f"WARNING: Could not import Advanced Dashboard: {e}")
     AdvancedDashboard = None
-    integrate_advanced_dashboard = None
-    extend_demo_mode_for_advanced = None
 
 # Module metadata
 __all__ = [
@@ -68,13 +63,11 @@ __all__ = [
     'get_demo_ver_response',
     'get_demo_lsd_response',
 
-    # Advanced Dashboard Components
-    'AdvancedDashboard',
-    'integrate_advanced_dashboard',
-    'extend_demo_mode_for_advanced',
-
     # Demo Mode
-    'UnifiedDemoSerialCLI'
+    'UnifiedDemoSerialCLI',
+
+    # Advanced Dashboard
+    'AdvancedDashboard'
 ]
 
 
@@ -85,8 +78,8 @@ def get_dashboard_info():
         'author': __author__,
         'components': [
             'Host Card Information Dashboard',
-            'Advanced Dashboard (Clock & FLIT Mode)',
             'Demo Mode Integration',
+            'Advanced Dashboard',
             'Dashboard UI Components'
         ],
         'available_classes': [cls for cls in __all__ if globals().get(cls) is not None]

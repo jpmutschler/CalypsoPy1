@@ -3,49 +3,21 @@
 advanced_dashboard.py
 
 Advanced Dashboard module for CalypsoPy application.
-Provides advanced functionality including clock management and FLIT mode control.
-
-This dashboard includes:
-- Clock command management with MCIO connector controls
-- FLIT mode configuration and management
-- SSC Spread percentage control with radio buttons
-- Integration with existing debug, parsing, and caching engines
-- Full integration with existing demo_mode_integration.py
-
-Author: Serial Cables Development Team
+Provides advanced system administration, debugging, and diagnostic tools.
+Works in both real device and demo modes.
 """
 
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, scrolledtext, messagebox
 from datetime import datetime
-from typing import Dict, Any, Optional, Callable
-import threading
+import json
 import time
-import os
-
-# Import existing admin modules
-try:
-    from Admin.debug_config import debug_print, debug_error, log_info, log_error
-    from Admin.cache_manager import CacheManager
-    from Admin.enhanced_sysinfo_parser import EnhancedSystemInfoParser
-    from Admin.advanced_response_handler import AdvancedResponseHandler
-
-    debug_available = True
-except ImportError as e:
-    print(f"WARNING: Could not import admin modules: {e}")
-    debug_available = False
+from typing import Dict, Any, Optional
 
 
 class AdvancedDashboard:
     """
-    Advanced Dashboard for clock and FLIT mode management
-
-    Features:
-    - Clock command management for MCIO connectors
-    - FLIT mode control for different ports
-    - SSC Spread percentage control with radio buttons
-    - Real-time status updates
-    - Full demo mode support using existing demo_mode_integration.py
+    Advanced Dashboard for system administration and debugging
     """
 
     def __init__(self, parent_app):
@@ -56,893 +28,666 @@ class AdvancedDashboard:
             parent_app: Reference to main dashboard application
         """
         self.app = parent_app
-        self.cache_manager = getattr(parent_app, 'cache_manager', None)
+        self.is_demo_mode = parent_app.is_demo_mode
+        print(f"DEBUG: AdvancedDashboard initialized (Demo Mode: {self.is_demo_mode})")
 
-        # Clock state tracking
-        self.clock_state = {
-            'left_mcio': False,  # Left MCIO Connectors
-            'right_mcio': False,  # Right MCIO Connectors
-            'straddle_mount': False  # Straddle Mount Connector
-        }
+        # Command history
+        self.command_history = []
+        self.history_index = -1
 
-        # FLIT Mode state tracking
-        self.flit_state = {
-            'port_32': False,  # Root Complex
-            'port_80': False,  # Straddle Mount
-            'port_112': False,  # Left MCIO Connectors
-            'port_128': False  # Right MCIO Connectors
-        }
-
-        # SSC Spread state tracking
-        self.ssc_spread_state = "srisd"  # Default to disabled
-
-        # State tracking for loading
-        self.clock_loading = True
-        self.flit_loading = True
-
-        # Load demo data files if in demo mode
-        self.demo_clock_content = None
-        self.demo_fmode_content = None
-        if getattr(parent_app, 'is_demo_mode', False):
-            self.load_demo_files()
-
-        if debug_available:
-            debug_print("AdvancedDashboard initialized successfully", 'advanced_dashboard')
-        else:
-            print("DEBUG: AdvancedDashboard initialized successfully")
-
-    def load_demo_files(self):
-        """Load demo files for clock and fmode commands"""
-        try:
-            self.demo_clock_content = self._load_demo_file("clock.txt")
-            self.demo_fmode_content = self._load_demo_file("fmode.txt")
-        except Exception as e:
-            if debug_available:
-                debug_error(f"Failed to load demo files: {e}", 'advanced_dashboard')
-            print(f"WARNING: Failed to load demo files: {e}")
-
-    def _load_demo_file(self, filename):
-        """Load a specific demo file from DemoData directory"""
-        demo_paths = [
-            f"DemoData/{filename}",
-            f"./DemoData/{filename}",
-            f"../DemoData/{filename}",
-            os.path.join(os.path.dirname(__file__), "DemoData", filename),
-            os.path.join(os.getcwd(), "DemoData", filename)
-        ]
-
-        for path in demo_paths:
-            if os.path.exists(path):
-                try:
-                    with open(path, 'r', encoding='utf-8') as f:
-                        content = f.read()
-                    print(f"DEBUG: Loaded {filename} from {path} ({len(content)} chars)")
-                    return content
-                except Exception as e:
-                    print(f"DEBUG: Error reading {path}: {e}")
-
-        print(f"DEBUG: {filename} not found, will use fallback data")
-        return None
+        # Status tracking
+        self.last_command_time = None
+        self.command_count = 0
 
     def create_advanced_dashboard(self, scrollable_frame):
         """
-        Create the complete advanced dashboard with clock and FLIT mode controls
+        Create the complete advanced dashboard
 
         Args:
             scrollable_frame: Parent frame to contain the dashboard content
         """
-        if debug_available:
-            debug_print("Creating advanced dashboard", 'advanced_dashboard')
+        print("DEBUG: Creating advanced dashboard content")
 
         try:
-            # Clear existing content
+            # Clear existing content first
             for widget in scrollable_frame.winfo_children():
                 widget.destroy()
 
-            # Create main container
-            main_container = ttk.Frame(scrollable_frame, style='Content.TFrame')
-            main_container.pack(fill='both', expand=True, padx=20, pady=20)
+            # Demo mode indicator
+            if self.is_demo_mode:
+                self._create_demo_mode_banner(scrollable_frame)
 
-            # Dashboard title
-            self.create_title_section(main_container)
+            # System Status Section
+            self._create_system_status_section(scrollable_frame)
 
-            # Clock Management Section
-            self.create_clock_section(main_container)
+            # Command Interface Section
+            self._create_command_interface_section(scrollable_frame)
 
-            # SSC Spread Section (new)
-            self.create_ssc_spread_section(main_container)
+            # Cache Management Section
+            self._create_cache_management_section(scrollable_frame)
 
-            # FLIT Mode Section
-            self.create_flit_section(main_container)
+            # Response Handler Section
+            self._create_response_handler_section(scrollable_frame)
 
-            # Control buttons section
-            self.create_control_section(main_container)
+            # Debug Controls Section
+            self._create_debug_controls_section(scrollable_frame)
 
-            # Initialize data loading
-            self.initialize_dashboard_data()
+            # System Information Section
+            self._create_system_info_section(scrollable_frame)
+
+            print("DEBUG: Advanced dashboard created successfully")
 
         except Exception as e:
-            error_msg = f"Failed to create advanced dashboard: {e}"
-            if debug_available:
-                debug_error(error_msg, 'advanced_dashboard')
-            print(f"ERROR: {error_msg}")
+            print(f"ERROR: Failed to create advanced dashboard: {e}")
+            self._create_error_fallback(scrollable_frame, str(e))
 
-            # Show error in dashboard
-            error_frame = ttk.Frame(scrollable_frame, style='Content.TFrame')
-            error_frame.pack(fill='both', expand=True, padx=20, pady=20)
+    def _create_demo_mode_banner(self, parent):
+        """Create demo mode banner"""
+        banner_frame = ttk.Frame(parent, style='Content.TFrame')
+        banner_frame.pack(fill='x', pady=(0, 20))
 
-            ttk.Label(error_frame, text="❌ Error Loading Advanced Dashboard",
-                      style='Dashboard.TLabel', font=('Arial', 16, 'bold')).pack(pady=(0, 10))
-            ttk.Label(error_frame, text=f"Error: {str(e)}",
-                      style='Info.TLabel', font=('Arial', 10)).pack()
+        # Demo mode banner
+        demo_banner = ttk.Frame(banner_frame, style='Content.TFrame', relief='solid', borderwidth=2)
+        demo_banner.pack(fill='x')
 
-    def create_title_section(self, parent):
-        """Create the dashboard title section"""
-        title_frame = ttk.Frame(parent, style='Content.TFrame')
-        title_frame.pack(fill='x', pady=(0, 20))
+        banner_content = ttk.Frame(demo_banner, style='Content.TFrame')
+        banner_content.pack(fill='x', padx=15, pady=10)
 
-        title_label = ttk.Label(title_frame, text="⚡ Advanced Dashboard",
-                                style='Dashboard.TLabel', font=('Arial', 20, 'bold'))
-        title_label.pack(side='left')
+        ttk.Label(banner_content, text="🎭 DEMO MODE - Advanced Dashboard",
+                  style='Dashboard.TLabel', foreground='#ff9500',
+                  font=('Arial', 14, 'bold')).pack(anchor='w')
 
-        # Status indicator
-        self.status_label = ttk.Label(title_frame, text="🔄 Loading...",
-                                      style='Info.TLabel', font=('Arial', 10))
-        self.status_label.pack(side='right')
+        ttk.Label(banner_content, text="All advanced features available with simulated data • No hardware required",
+                  style='Info.TLabel', foreground='#cccccc').pack(anchor='w', pady=(5, 0))
 
-    def create_clock_section(self, parent):
-        """Create the clock management section"""
-        # Clock section frame
-        clock_frame = ttk.LabelFrame(parent, text="🕒 Clock Management", padding=20)
-        clock_frame.pack(fill='x', pady=(0, 15))
+    def _create_system_status_section(self, parent):
+        """Create system status section"""
+        status_frame = ttk.Frame(parent, style='Content.TFrame', relief='solid', borderwidth=1)
+        status_frame.pack(fill='x', pady=10)
 
-        # Clock description
-        desc_label = ttk.Label(clock_frame,
-                               text="Control clock settings for MCIO connectors and straddle mount",
-                               style='Info.TLabel', font=('Arial', 10))
-        desc_label.pack(anchor='w', pady=(0, 10))
+        # Header
+        header_frame = ttk.Frame(status_frame, style='Content.TFrame')
+        header_frame.pack(fill='x', padx=15, pady=(15, 10))
 
-        # Clock controls container
-        controls_frame = ttk.Frame(clock_frame)
-        controls_frame.pack(fill='x')
+        ttk.Label(header_frame, text="📊 System Status", style='Dashboard.TLabel').pack(side='left')
+        ttk.Button(header_frame, text="🔄", width=3,
+                   command=self._refresh_system_status).pack(side='right')
 
-        # Left MCIO Connectors
-        self.create_clock_control(controls_frame, "Left MCIO Connectors", "left_mcio", 0)
+        # Content
+        content_frame = ttk.Frame(status_frame, style='Content.TFrame')
+        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
 
-        # Right MCIO Connectors
-        self.create_clock_control(controls_frame, "Right MCIO Connectors", "right_mcio", 1)
-
-        # Straddle Mount Connector
-        self.create_clock_control(controls_frame, "Straddle Mount Connector", "straddle_mount", 2)
-
-    def create_clock_control(self, parent, label_text, state_key, row):
-        """Create individual clock control switch"""
-        # Control frame
-        control_frame = ttk.Frame(parent)
-        control_frame.grid(row=row, column=0, sticky='ew', pady=5)
-        parent.grid_columnconfigure(0, weight=1)
-
-        # Label
-        label = ttk.Label(control_frame, text=label_text, font=('Arial', 11))
-        label.pack(side='left')
-
-        # Switch frame
-        switch_frame = ttk.Frame(control_frame)
-        switch_frame.pack(side='right')
-
-        # Status label
-        status_var = tk.StringVar(value="Loading...")
-        status_label = ttk.Label(switch_frame, textvariable=status_var,
-                                 font=('Arial', 10), foreground='gray')
-        status_label.pack(side='right', padx=(10, 0))
-
-        # Enable button
-        enable_btn = ttk.Button(switch_frame, text="Enable",
-                                command=lambda: self.toggle_clock(state_key, True))
-        enable_btn.pack(side='right', padx=(0, 5))
-
-        # Disable button
-        disable_btn = ttk.Button(switch_frame, text="Disable",
-                                 command=lambda: self.toggle_clock(state_key, False))
-        disable_btn.pack(side='right', padx=(0, 5))
-
-        # Store references for updates
-        setattr(self, f"clock_{state_key}_status", status_var)
-        setattr(self, f"clock_{state_key}_enable", enable_btn)
-        setattr(self, f"clock_{state_key}_disable", disable_btn)
-
-    def create_ssc_spread_section(self, parent):
-        """Create the SSC Spread control section"""
-        # SSC Spread section frame
-        ssc_frame = ttk.LabelFrame(parent, text="📡 SSC Spread Control", padding=20)
-        ssc_frame.pack(fill='x', pady=(0, 15))
-
-        # SSC Spread description
-        desc_label = ttk.Label(ssc_frame,
-                               text="Configure SSC (Spread Spectrum Clock) spread percentage",
-                               style='Info.TLabel', font=('Arial', 10))
-        desc_label.pack(anchor='w', pady=(0, 10))
-
-        # Radio button controls
-        controls_frame = ttk.Frame(ssc_frame)
-        controls_frame.pack(fill='x')
-
-        # Create radio button variable
-        self.ssc_spread_var = tk.StringVar(value=self.ssc_spread_state)
-
-        # Radio button options
-        radio_options = [
-            ("0.25%", "srise5", "Set SSC spread to 0.25%"),
-            ("0.5%", "srise2", "Set SSC spread to 0.5%"),
-            ("Disable", "srisd", "Disable SSC spread")
+        # Status grid
+        self.status_vars = {}
+        status_items = [
+            ("Connection Status", "🟢 Connected" if not self.is_demo_mode else "🟠 Demo Mode"),
+            ("Port", self.app.port),
+            ("Commands Sent", "0"),
+            ("Cache Entries", str(self._get_cache_stats()['valid_entries']) if hasattr(self.app,
+                                                                                       'cache_manager') and self.app.cache_manager else "0"),
+            ("Last Activity", "Session start"),
+            ("Debug Mode", "Enabled" if self._is_debug_enabled() else "Disabled")
         ]
 
-        for i, (text, value, tooltip) in enumerate(radio_options):
-            radio_frame = ttk.Frame(controls_frame)
-            radio_frame.grid(row=0, column=i, padx=20, sticky='w')
+        for i, (label, value) in enumerate(status_items):
+            row_frame = ttk.Frame(content_frame, style='Content.TFrame')
+            row_frame.pack(fill='x', pady=2)
 
-            radio_btn = ttk.Radiobutton(radio_frame, text=text, value=value,
-                                        variable=self.ssc_spread_var,
-                                        command=lambda v=value: self.set_ssc_spread(v))
-            radio_btn.pack(anchor='w')
+            ttk.Label(row_frame, text=f"{label}:", style='Info.TLabel',
+                      font=('Arial', 10, 'bold')).pack(side='left')
 
-            # Add tooltip-like label
-            tooltip_label = ttk.Label(radio_frame, text=tooltip,
-                                      style='Info.TLabel', font=('Arial', 9))
-            tooltip_label.pack(anchor='w', padx=(20, 0))
+            var = tk.StringVar(value=value)
+            self.status_vars[label.lower().replace(' ', '_')] = var
+            ttk.Label(row_frame, textvariable=var, style='Info.TLabel').pack(side='right')
 
-        # Configure grid weights
-        for i in range(3):
-            controls_frame.grid_columnconfigure(i, weight=1)
+    def _create_command_interface_section(self, parent):
+        """Create command interface section"""
+        cmd_frame = ttk.Frame(parent, style='Content.TFrame', relief='solid', borderwidth=1)
+        cmd_frame.pack(fill='x', pady=10)
 
-        # Current status display
-        status_frame = ttk.Frame(ssc_frame)
-        status_frame.pack(fill='x', pady=(10, 0))
+        # Header
+        header_frame = ttk.Frame(cmd_frame, style='Content.TFrame')
+        header_frame.pack(fill='x', padx=15, pady=(15, 10))
 
-        ttk.Label(status_frame, text="Current SSC Spread:",
-                  font=('Arial', 10, 'bold')).pack(side='left')
+        ttk.Label(header_frame, text="🔧 Direct Command Interface", style='Dashboard.TLabel').pack(side='left')
 
-        self.ssc_status_label = ttk.Label(status_frame, text="Loading...",
-                                          style='Info.TLabel', font=('Arial', 10))
-        self.ssc_status_label.pack(side='left', padx=(10, 0))
+        # Command input
+        input_frame = ttk.Frame(cmd_frame, style='Content.TFrame')
+        input_frame.pack(fill='x', padx=15, pady=10)
 
-    def create_flit_section(self, parent):
-        """Create the FLIT mode management section"""
-        # FLIT section frame
-        flit_frame = ttk.LabelFrame(parent, text="🚀 FLIT Mode Management", padding=20)
-        flit_frame.pack(fill='x', pady=(0, 15))
+        self.command_entry = ttk.Entry(input_frame, font=('Consolas', 10))
+        self.command_entry.pack(side='left', fill='x', expand=True)
+        self.command_entry.bind('<Return>', self._send_command)
+        self.command_entry.bind('<Up>', self._history_up)
+        self.command_entry.bind('<Down>', self._history_down)
 
-        # FLIT description
-        desc_label = ttk.Label(flit_frame,
-                               text="Configure FLIT Mode settings for different ports",
-                               style='Info.TLabel', font=('Arial', 10))
-        desc_label.pack(anchor='w', pady=(0, 10))
+        ttk.Button(input_frame, text="Send", command=self._send_command).pack(side='right', padx=(10, 0))
 
-        # FLIT controls container
-        controls_frame = ttk.Frame(flit_frame)
-        controls_frame.pack(fill='x')
+        # Quick commands
+        quick_frame = ttk.Frame(cmd_frame, style='Content.TFrame')
+        quick_frame.pack(fill='x', padx=15)
 
-        # Port controls
-        self.create_flit_control(controls_frame, "Port 32 - Root Complex", "port_32", 0)
-        self.create_flit_control(controls_frame, "Port 80 - Straddle Mount", "port_80", 1)
-        self.create_flit_control(controls_frame, "Port 112 - Left MCIO Connectors", "port_112", 2)
-        self.create_flit_control(controls_frame, "Port 128 - Right MCIO Connectors", "port_128", 3)
+        ttk.Label(quick_frame, text="Quick Commands:", style='Info.TLabel',
+                  font=('Arial', 9, 'bold')).pack(side='left')
 
-    def create_flit_control(self, parent, label_text, state_key, row):
-        """Create individual FLIT mode control switch"""
-        # Control frame
-        control_frame = ttk.Frame(parent)
-        control_frame.grid(row=row, column=0, sticky='ew', pady=5)
-        parent.grid_columnconfigure(0, weight=1)
+        quick_commands = ['help', 'status', 'ver', 'sysinfo', 'showport']
+        for cmd in quick_commands:
+            ttk.Button(quick_frame, text=cmd, width=8,
+                       command=lambda c=cmd: self._quick_command(c)).pack(side='left', padx=2)
 
-        # Label
-        label = ttk.Label(control_frame, text=label_text, font=('Arial', 11))
-        label.pack(side='left')
+        # Command output
+        output_frame = ttk.Frame(cmd_frame, style='Content.TFrame')
+        output_frame.pack(fill='both', expand=True, padx=15, pady=(10, 15))
 
-        # Switch frame
-        switch_frame = ttk.Frame(control_frame)
-        switch_frame.pack(side='right')
+        ttk.Label(output_frame, text="Command Output:", style='Info.TLabel',
+                  font=('Arial', 9, 'bold')).pack(anchor='w')
 
-        # Status label
-        status_var = tk.StringVar(value="Loading...")
-        status_label = ttk.Label(switch_frame, textvariable=status_var,
-                                 font=('Arial', 10), foreground='gray')
-        status_label.pack(side='right', padx=(10, 0))
+        self.command_output = scrolledtext.ScrolledText(output_frame, height=8, wrap='word',
+                                                        bg='#1a1a1a', fg='#00ff00',
+                                                        font=('Consolas', 9))
+        self.command_output.pack(fill='both', expand=True, pady=(5, 0))
 
-        # Enable button
-        enable_btn = ttk.Button(switch_frame, text="Enable",
-                                command=lambda: self.toggle_flit(state_key, True))
-        enable_btn.pack(side='right', padx=(0, 5))
+        # Initial welcome message
+        welcome_msg = "Advanced Command Interface Ready\n"
+        if self.is_demo_mode:
+            welcome_msg += "Demo Mode: All commands return simulated responses\n"
+        welcome_msg += "Type 'help' for available commands or use Quick Commands above\n"
+        welcome_msg += "Use ↑/↓ arrows for command history\n" + "=" * 50 + "\n"
 
-        # Disable button
-        disable_btn = ttk.Button(switch_frame, text="Disable",
-                                 command=lambda: self.toggle_flit(state_key, False))
-        disable_btn.pack(side='right', padx=(0, 5))
+        self.command_output.insert('end', welcome_msg)
 
-        # Store references for updates
-        setattr(self, f"flit_{state_key}_status", status_var)
-        setattr(self, f"flit_{state_key}_enable", enable_btn)
-        setattr(self, f"flit_{state_key}_disable", disable_btn)
+    def _create_cache_management_section(self, parent):
+        """Create cache management section"""
+        cache_frame = ttk.Frame(parent, style='Content.TFrame', relief='solid', borderwidth=1)
+        cache_frame.pack(fill='x', pady=10)
 
-    def create_control_section(self, parent):
-        """Create the main control buttons section"""
-        control_frame = ttk.Frame(parent, style='Content.TFrame')
-        control_frame.pack(fill='x', pady=15)
+        # Header
+        header_frame = ttk.Frame(cache_frame, style='Content.TFrame')
+        header_frame.pack(fill='x', padx=15, pady=(15, 10))
 
-        # Refresh button
-        refresh_btn = ttk.Button(control_frame, text="🔄 Refresh Status",
-                                 command=self.refresh_all_status)
-        refresh_btn.pack(side='left')
+        ttk.Label(header_frame, text="💾 Cache Management", style='Dashboard.TLabel').pack(side='left')
 
-        # Last update label
-        self.last_update_label = ttk.Label(control_frame, text="",
-                                           style='Info.TLabel', font=('Arial', 10))
-        self.last_update_label.pack(side='right')
+        # Content
+        content_frame = ttk.Frame(cache_frame, style='Content.TFrame')
+        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
 
-    def initialize_dashboard_data(self):
-        """Initialize dashboard by loading clock and FLIT mode data"""
-        if debug_available:
-            debug_print("Initializing advanced dashboard data", 'advanced_dashboard')
+        # Cache stats
+        stats = self._get_cache_stats()
+        cache_info = [
+            f"Cache entries: {stats['valid_entries']}",
+            f"Cache size: {stats.get('cache_file_size', 0)} bytes",
+            f"Hit ratio: {stats.get('hit_ratio', 0.0):.1%}" if 'hit_ratio' in stats else "Hit ratio: N/A"
+        ]
 
-        # Start loading in separate thread to avoid blocking UI
-        threading.Thread(target=self._load_initial_data, daemon=True).start()
+        for info in cache_info:
+            ttk.Label(content_frame, text=info, style='Info.TLabel').pack(anchor='w', pady=2)
 
-    def _load_initial_data(self):
-        """Load initial data in background thread"""
-        try:
-            # Load clock status first
-            self.query_clock_status()
+        # Cache controls
+        button_frame = ttk.Frame(content_frame, style='Content.TFrame')
+        button_frame.pack(fill='x', pady=10)
 
-            # Small delay to ensure clock command completes
-            time.sleep(0.5)
+        ttk.Button(button_frame, text="View Cache Contents",
+                   command=self._view_cache_contents).pack(side='left', padx=(0, 10))
+        ttk.Button(button_frame, text="Clear Cache",
+                   command=self._clear_cache).pack(side='left', padx=(0, 10))
+        ttk.Button(button_frame, text="Cache Settings",
+                   command=self._open_cache_settings).pack(side='left')
 
-            # Then load FLIT mode status
-            self.query_flit_status()
+    def _create_response_handler_section(self, parent):
+        """Create response handler debug section"""
+        handler_frame = ttk.Frame(parent, style='Content.TFrame', relief='solid', borderwidth=1)
+        handler_frame.pack(fill='x', pady=10)
 
-        except Exception as e:
-            error_msg = f"Failed to load initial data: {e}"
-            if debug_available:
-                debug_error(error_msg, 'advanced_dashboard')
-            print(f"ERROR: {error_msg}")
+        # Header
+        header_frame = ttk.Frame(handler_frame, style='Content.TFrame')
+        header_frame.pack(fill='x', padx=15, pady=(15, 10))
 
-    def query_clock_status(self):
-        """Query current clock settings using the 'clock' command"""
-        if debug_available:
-            debug_print("Querying clock status", 'advanced_dashboard')
+        ttk.Label(header_frame, text="🔧 Advanced Response Handler", style='Dashboard.TLabel').pack(side='left')
 
-        try:
-            if self.app.is_demo_mode:
-                # Use existing demo_mode_integration.py functionality
-                response = self._get_demo_clock_response()
-                self.parse_clock_response(response)
-            else:
-                # Real device command
-                self.send_command_with_callback("clock", self.parse_clock_response)
+        # Content
+        content_frame = ttk.Frame(handler_frame, style='Content.TFrame')
+        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
 
-        except Exception as e:
-            error_msg = f"Failed to query clock status: {e}"
-            if debug_available:
-                debug_error(error_msg, 'advanced_dashboard')
-            print(f"ERROR: {error_msg}")
+        # Handler status
+        self.handler_status_text = tk.Text(content_frame, height=6, wrap='word',
+                                           state='disabled', bg='#f8f8f8',
+                                           font=('Consolas', 9))
+        self.handler_status_text.pack(fill='x', pady=(0, 10))
 
-    def query_flit_status(self):
-        """Query current FLIT mode settings using the 'fmode' command"""
-        if debug_available:
-            debug_print("Querying FLIT mode status", 'advanced_dashboard')
+        # Control buttons
+        button_frame = ttk.Frame(content_frame, style='Content.TFrame')
+        button_frame.pack(fill='x')
 
-        try:
-            if self.app.is_demo_mode:
-                # Use existing demo_mode_integration.py functionality
-                response = self._get_demo_fmode_response()
-                self.parse_fmode_response(response)
-            else:
-                # Real device command
-                self.send_command_with_callback("fmode", self.parse_fmode_response)
+        ttk.Button(button_frame, text="Refresh Status",
+                   command=self._refresh_handler_status).pack(side='left', padx=(0, 10))
+        ttk.Button(button_frame, text="Clear Buffers",
+                   command=self._clear_handler_buffers).pack(side='left')
 
-        except Exception as e:
-            error_msg = f"Failed to query FLIT status: {e}"
-            if debug_available:
-                debug_error(error_msg, 'advanced_dashboard')
-            print(f"ERROR: {error_msg}")
+        # Initialize handler status
+        self._refresh_handler_status()
 
-    def parse_clock_response(self, response):
-        """Parse clock command response into 3 columns"""
-        if debug_available:
-            debug_print(f"Parsing clock response: {len(response) if response else 0} chars", 'advanced_dashboard')
+    def _create_debug_controls_section(self, parent):
+        """Create debug controls section"""
+        debug_frame = ttk.Frame(parent, style='Content.TFrame', relief='solid', borderwidth=1)
+        debug_frame.pack(fill='x', pady=10)
 
-        try:
-            if not response:
-                raise ValueError("Empty clock response")
+        # Header
+        header_frame = ttk.Frame(debug_frame, style='Content.TFrame')
+        header_frame.pack(fill='x', padx=15, pady=(15, 10))
 
-            # Parse the response for clock settings
-            # Expected format: Left MCIO: enabled/disabled, Right MCIO: enabled/disabled, Straddle: enabled/disabled
+        ttk.Label(header_frame, text="🐛 Debug Controls", style='Dashboard.TLabel').pack(side='left')
 
-            self.clock_state['left_mcio'] = 'left mcio' in response.lower() and 'enabled' in response.lower()
-            self.clock_state['right_mcio'] = 'right mcio' in response.lower() and 'enabled' in response.lower()
-            self.clock_state['straddle_mount'] = 'straddle' in response.lower() and 'enabled' in response.lower()
+        # Content
+        content_frame = ttk.Frame(debug_frame, style='Content.TFrame')
+        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
 
-            # Update UI on main thread
-            self.app.root.after(0, self.update_clock_ui)
+        # Debug status
+        debug_enabled = self._is_debug_enabled()
+        status_text = "🟢 Enabled" if debug_enabled else "🔴 Disabled"
+        ttk.Label(content_frame, text=f"Debug Status: {status_text}",
+                  style='Info.TLabel', font=('Arial', 10, 'bold')).pack(anchor='w', pady=5)
 
-        except Exception as e:
-            error_msg = f"Failed to parse clock response: {e}"
-            if debug_available:
-                debug_error(error_msg, 'advanced_dashboard')
-            print(f"ERROR: {error_msg}")
+        # Debug controls
+        button_frame = ttk.Frame(content_frame, style='Content.TFrame')
+        button_frame.pack(fill='x', pady=5)
 
-            # Update UI to show error
-            self.app.root.after(0, lambda: self.update_status("Clock parsing failed"))
+        ttk.Button(button_frame, text="Toggle Debug",
+                   command=self._toggle_debug).pack(side='left', padx=(0, 10))
+        ttk.Button(button_frame, text="View Debug Log",
+                   command=self._view_debug_log).pack(side='left', padx=(0, 10))
+        ttk.Button(button_frame, text="Export Logs",
+                   command=self._export_logs).pack(side='left')
 
-    def parse_fmode_response(self, response):
-        """Parse fmode command response into 4 columns"""
-        if debug_available:
-            debug_print(f"Parsing fmode response: {len(response) if response else 0} chars", 'advanced_dashboard')
+    def _create_system_info_section(self, parent):
+        """Create system information section"""
+        info_frame = ttk.Frame(parent, style='Content.TFrame', relief='solid', borderwidth=1)
+        info_frame.pack(fill='x', pady=10)
 
-        try:
-            if not response:
-                raise ValueError("Empty fmode response")
+        # Header
+        header_frame = ttk.Frame(info_frame, style='Content.TFrame')
+        header_frame.pack(fill='x', padx=15, pady=(15, 10))
 
-            # Parse the response for FLIT mode settings
-            # Expected format includes Port 32, Port 80, Port 112, Port 128 with enabled/disabled status
+        ttk.Label(header_frame, text="ℹ️ System Information", style='Dashboard.TLabel').pack(side='left')
 
-            self.flit_state['port_32'] = 'port 32' in response.lower() and 'enabled' in response.lower()
-            self.flit_state['port_80'] = 'port 80' in response.lower() and 'enabled' in response.lower()
-            self.flit_state['port_112'] = 'port 112' in response.lower() and 'enabled' in response.lower()
-            self.flit_state['port_128'] = 'port 128' in response.lower() and 'enabled' in response.lower()
+        # Content
+        content_frame = ttk.Frame(info_frame, style='Content.TFrame')
+        content_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
 
-            # Update UI on main thread
-            self.app.root.after(0, self.update_flit_ui)
+        # Application info
+        app_info = [
+            f"CalypsoPy Version: {getattr(self.app, 'version', '1.3.4')}",
+            f"Python Version: {self._get_python_version()}",
+            f"Operating System: {self._get_os_info()}",
+            f"Session Duration: {self._get_session_duration()}",
+            f"Memory Usage: {self._get_memory_usage()}"
+        ]
 
-        except Exception as e:
-            error_msg = f"Failed to parse fmode response: {e}"
-            if debug_available:
-                debug_error(error_msg, 'advanced_dashboard')
-            print(f"ERROR: {error_msg}")
+        for info in app_info:
+            ttk.Label(content_frame, text=info, style='Info.TLabel').pack(anchor='w', pady=2)
 
-            # Update UI to show error
-            self.app.root.after(0, lambda: self.update_status("FLIT parsing failed"))
+    def _create_error_fallback(self, parent, error_msg):
+        """Create error fallback content"""
+        error_frame = ttk.Frame(parent, style='Content.TFrame')
+        error_frame.pack(fill='both', expand=True, padx=20, pady=20)
 
-    def update_clock_ui(self):
-        """Update clock UI elements with current state"""
-        try:
-            # Update each clock control
-            for state_key, enabled in self.clock_state.items():
-                status_var = getattr(self, f"clock_{state_key}_status")
-                enable_btn = getattr(self, f"clock_{state_key}_enable")
-                disable_btn = getattr(self, f"clock_{state_key}_disable")
+        ttk.Label(error_frame, text="⚠️ Advanced Dashboard Error",
+                  style='Dashboard.TLabel', foreground='#ff0000').pack(anchor='w')
+        ttk.Label(error_frame, text=f"Error: {error_msg}",
+                  style='Info.TLabel').pack(anchor='w', pady=10)
+        ttk.Label(error_frame, text="Some advanced features may not be available.",
+                  style='Info.TLabel').pack(anchor='w')
 
-                if enabled:
-                    status_var.set("✅ Enabled")
-                    enable_btn.configure(state='disabled')
-                    disable_btn.configure(state='normal')
-                else:
-                    status_var.set("❌ Disabled")
-                    enable_btn.configure(state='normal')
-                    disable_btn.configure(state='disabled')
-
-            self.clock_loading = False
-            self.update_status("Clock status loaded")
-
-        except Exception as e:
-            if debug_available:
-                debug_error(f"Failed to update clock UI: {e}", 'advanced_dashboard')
-            print(f"ERROR: Failed to update clock UI: {e}")
-
-    def update_flit_ui(self):
-        """Update FLIT mode UI elements with current state"""
-        try:
-            # Update each FLIT control
-            for state_key, enabled in self.flit_state.items():
-                status_var = getattr(self, f"flit_{state_key}_status")
-                enable_btn = getattr(self, f"flit_{state_key}_enable")
-                disable_btn = getattr(self, f"flit_{state_key}_disable")
-
-                if enabled:
-                    status_var.set("✅ Enabled")
-                    enable_btn.configure(state='disabled')
-                    disable_btn.configure(state='normal')
-                else:
-                    status_var.set("❌ Disabled")
-                    enable_btn.configure(state='normal')
-                    disable_btn.configure(state='disabled')
-
-            self.flit_loading = False
-            self.update_status("FLIT status loaded")
-
-        except Exception as e:
-            if debug_available:
-                debug_error(f"Failed to update FLIT UI: {e}", 'advanced_dashboard')
-            print(f"ERROR: Failed to update FLIT UI: {e}")
-
-    def toggle_clock(self, connector, enable):
-        """Toggle clock for specified connector"""
-        connector_map = {
-            'left_mcio': 'l',
-            'right_mcio': 'r',
-            'straddle_mount': 's'
-        }
-
-        action = 'e' if enable else 'd'
-        connector_code = connector_map.get(connector)
-
-        if not connector_code:
-            messagebox.showerror("Error", f"Unknown connector: {connector}")
+    # Command Interface Methods
+    def _send_command(self, event=None):
+        """Send command from entry field"""
+        command = self.command_entry.get().strip()
+        if not command:
             return
 
-        command = f"clock {connector_code} {action}"
+        self.command_entry.delete(0, tk.END)
+        self.command_history.append(command)
+        self.history_index = len(self.command_history)
 
-        if debug_available:
-            debug_print(f"Sending clock command: {command}", 'advanced_dashboard')
+        # Display command
+        timestamp = datetime.now().strftime('%H:%M:%S')
+        self.command_output.insert('end', f"[{timestamp}] > {command}\n")
 
         try:
-            if self.app.is_demo_mode:
-                # Demo mode - simulate success
-                response = f"Clock {connector} {'enabled' if enable else 'disabled'}"
-                self.handle_clock_change_success(connector, enable)
+            if self.is_demo_mode:
+                response = self._get_demo_response(command)
             else:
-                # Real device
-                self.send_command_with_callback(command,
-                                                lambda resp: self.handle_clock_change_response(resp, connector, enable))
+                response = self._send_real_command(command)
+
+            self.command_output.insert('end', f"{response}\n{'=' * 50}\n")
+            self.command_count += 1
+            self.last_command_time = datetime.now()
+
+            # Update status
+            if 'commands_sent' in self.status_vars:
+                self.status_vars['commands_sent'].set(str(self.command_count))
+            if 'last_activity' in self.status_vars:
+                self.status_vars['last_activity'].set(timestamp)
 
         except Exception as e:
-            error_msg = f"Failed to toggle clock: {e}"
-            messagebox.showerror("Clock Error", error_msg)
-            if debug_available:
-                debug_error(error_msg, 'advanced_dashboard')
+            self.command_output.insert('end', f"ERROR: {e}\n{'=' * 50}\n")
 
-    def toggle_flit(self, port, enable):
-        """Toggle FLIT mode for specified port"""
-        port_map = {
-            'port_32': '32',
-            'port_80': '80',
-            'port_112': '112',
-            'port_128': '128'
+        self.command_output.see('end')
+
+    def _quick_command(self, command):
+        """Execute quick command"""
+        self.command_entry.delete(0, tk.END)
+        self.command_entry.insert(0, command)
+        self._send_command()
+
+    def _history_up(self, event):
+        """Navigate command history up"""
+        if self.command_history and self.history_index > 0:
+            self.history_index -= 1
+            self.command_entry.delete(0, tk.END)
+            self.command_entry.insert(0, self.command_history[self.history_index])
+
+    def _history_down(self, event):
+        """Navigate command history down"""
+        if self.command_history and self.history_index < len(self.command_history) - 1:
+            self.history_index += 1
+            self.command_entry.delete(0, tk.END)
+            self.command_entry.insert(0, self.command_history[self.history_index])
+
+    def _get_demo_response(self, command):
+        """Generate demo response for command"""
+        command = command.lower()
+
+        demo_responses = {
+            'help': """Available Commands:
+- help          Show available commands
+- status        Get device status
+- ver           Get detailed version info
+- sysinfo       Get complete system information
+- showport      Check port status
+- reset         Reset device
+- lsd           Get system diagnostics""",
+            'status': "Device Status: Online | Demo Mode Active | All Systems Operational",
+            'ver': "Firmware Version: 1.2.3 Build 456\nHardware Version: Gen6 PCIe Atlas 3\nBootloader: v2.1.0\nDemo Mode: Active",
+            'sysinfo': """System Information (Demo Data):
+Device: Gen6 PCIe Atlas 3 Host Card
+Serial Number: DEMO-12345
+Temperature: 45.2°C
+Power Status: Normal
+Ports: 4x Active
+Link Status: All Links Up
+Cache: 2.1MB Used""",
+            'showport': """Port Status (Demo Data):
+Port 1: UP   | Speed: 10Gbps | Link Quality: Excellent
+Port 2: UP   | Speed: 10Gbps | Link Quality: Good  
+Port 3: UP   | Speed: 5Gbps  | Link Quality: Fair
+Port 4: DOWN | Speed: N/A    | Link Quality: N/A""",
+            'reset': "Demo Mode: Reset command acknowledged (no actual reset performed)",
+            'lsd': "Link Status Diagnostics: All systems nominal (Demo Data)"
         }
 
-        action = 'en' if enable else 'dis'
-        port_code = port_map.get(port)
+        return demo_responses.get(command, f"Demo response for '{command}' - Command executed successfully")
 
-        if not port_code:
-            messagebox.showerror("Error", f"Unknown port: {port}")
-            return
-
-        command = f"fmode {port_code} {action}"
-
-        if debug_available:
-            debug_print(f"Sending FLIT command: {command}", 'advanced_dashboard')
-
-        try:
-            if self.app.is_demo_mode:
-                # Demo mode - simulate success
-                response = f"FLIT mode {port} {'enabled' if enable else 'disabled'}"
-                self.handle_flit_change_success(port, enable)
-            else:
-                # Real device
-                self.send_command_with_callback(command,
-                                                lambda resp: self.handle_flit_change_response(resp, port, enable))
-
-        except Exception as e:
-            error_msg = f"Failed to toggle FLIT: {e}"
-            messagebox.showerror("FLIT Error", error_msg)
-            if debug_available:
-                debug_error(error_msg, 'advanced_dashboard')
-
-    def handle_clock_change_response(self, response, connector, expected_enable):
-        """Handle response from clock change command"""
-        if response and ("ok" in response.lower() or "success" in response.lower()):
-            self.handle_clock_change_success(connector, expected_enable)
-            # Re-query clock status to get actual state
-            self.query_clock_status()
+    def _send_real_command(self, command):
+        """Send real command to device"""
+        if hasattr(self.app, 'cli') and self.app.cli:
+            try:
+                response = self.app.cli.send_command(command)
+                return response if response else "No response received"
+            except Exception as e:
+                return f"Command failed: {e}"
         else:
-            messagebox.showerror("Clock Error", f"Failed to change clock setting: {response}")
+            return "No device connection available"
 
-    def handle_flit_change_response(self, response, port, expected_enable):
-        """Handle response from FLIT mode change command"""
-        if response and ("ok" in response.lower() or "success" in response.lower()):
-            self.handle_flit_change_success(port, expected_enable)
-            # Re-query FLIT status to get actual state
-            self.query_flit_status()
+    # Cache Management Methods
+    def _get_cache_stats(self):
+        """Get cache statistics"""
+        if hasattr(self.app, 'cache_manager') and self.app.cache_manager:
+            return self.app.cache_manager.get_stats()
         else:
-            messagebox.showerror("FLIT Error", f"Failed to change FLIT setting: {response}")
+            return {'valid_entries': 0, 'cache_file_size': 0}
 
-    def handle_clock_change_success(self, connector, enabled):
-        """Handle successful clock change"""
-        self.clock_state[connector] = enabled
-        self.app.root.after(0, self.update_clock_ui)
+    def _view_cache_contents(self):
+        """View cache contents in popup window"""
+        cache_window = tk.Toplevel(self.app.root)
+        cache_window.title("Cache Contents")
+        cache_window.geometry("600x400")
 
-        action = "enabled" if enabled else "disabled"
-        connector_name = connector.replace('_', ' ').title()
-        self.update_status(f"Clock {connector_name}: {action}")
+        # Create text widget with scrollbar
+        text_frame = ttk.Frame(cache_window)
+        text_frame.pack(fill='both', expand=True, padx=10, pady=10)
 
-    def set_ssc_spread(self, spread_value):
-        """Set SSC spread percentage"""
-        if debug_available:
-            debug_print(f"Setting SSC spread to: {spread_value}", 'advanced_dashboard')
-
-        # Map spread values to descriptions
-        spread_descriptions = {
-            "srise5": "0.25%",
-            "srise2": "0.5%",
-            "srisd": "Disabled"
-        }
-
-        command = f"clock {spread_value}"
+        cache_text = scrolledtext.ScrolledText(text_frame, wrap='word', font=('Consolas', 9))
+        cache_text.pack(fill='both', expand=True)
 
         try:
-            if self.app.is_demo_mode:
-                # Demo mode - simulate success
-                self.ssc_spread_state = spread_value
-                description = spread_descriptions.get(spread_value, spread_value)
-                self.ssc_status_label.configure(text=f"✅ {description}")
-
-                # Show success message
-                messagebox.showinfo("SSC Spread Updated",
-                                    f"SSC Spread set to {description}")
-            else:
-                # Real device
-                self.send_command_with_callback(command,
-                                                lambda resp: self.handle_ssc_response(resp, spread_value))
-
-        except Exception as e:
-            error_msg = f"Failed to set SSC spread: {e}"
-            messagebox.showerror("SSC Spread Error", error_msg)
-            if debug_available:
-                debug_error(error_msg, 'advanced_dashboard')
-
-    def handle_ssc_response(self, response, expected_spread):
-        """Handle response from SSC spread command"""
-        spread_descriptions = {
-            "srise5": "0.25%",
-            "srise2": "0.5%",
-            "srisd": "Disabled"
-        }
-
-        if response and ("ok" in response.lower() or "success" in response.lower()):
-            self.ssc_spread_state = expected_spread
-            description = spread_descriptions.get(expected_spread, expected_spread)
-
-            # Update UI on main thread
-            self.app.root.after(0, lambda: self.ssc_status_label.configure(text=f"✅ {description}"))
-
-            # Show success message
-            messagebox.showinfo("SSC Spread Updated", f"SSC Spread set to {description}")
-
-            # Re-query clock status to get complete state
-            self.query_clock_status()
-        else:
-            messagebox.showerror("SSC Spread Error", f"Failed to set SSC spread: {response}")
-
-    def handle_flit_change_success(self, port, enabled):
-        """Handle successful FLIT change"""
-        self.flit_state[port] = enabled
-        self.app.root.after(0, self.update_flit_ui)
-
-        action = "enabled" if enabled else "disabled"
-        port_name = port.replace('_', ' ').title()
-        self.update_status(f"FLIT {port_name}: {action}")
-
-    def refresh_all_status(self):
-        """Refresh both clock and FLIT status"""
-        if debug_available:
-            debug_print("Refreshing all advanced dashboard status", 'advanced_dashboard')
-
-        self.update_status("🔄 Refreshing...")
-
-        # Reset loading states
-        self.clock_loading = True
-        self.flit_loading = True
-
-        # Start refresh in background
-        threading.Thread(target=self._refresh_background, daemon=True).start()
-
-    def _refresh_background(self):
-        """Background refresh operation"""
-        try:
-            # Query clock status
-            self.query_clock_status()
-
-            # Small delay
-            time.sleep(0.5)
-
-            # Query FLIT status
-            self.query_flit_status()
-
-            # Update timestamp
-            timestamp = datetime.now().strftime('%H:%M:%S')
-            self.app.root.after(0, lambda: self.last_update_label.configure(text=f"Last updated: {timestamp}"))
-
-        except Exception as e:
-            error_msg = f"Refresh failed: {e}"
-            self.app.root.after(0, lambda: self.update_status(error_msg))
-
-    def send_command_with_callback(self, command, callback):
-        """Send command to device with callback for response - integrated with existing CLI"""
-        try:
-            if self.app.is_demo_mode:
-                # Use existing demo CLI integration
-                if hasattr(self.app.cli, 'command_queue') and hasattr(self.app.cli, 'response_queue'):
-                    # Queue the command
-                    self.app.cli.command_queue.put(command)
-
-                    # Set up response handler
-                    def check_response():
-                        try:
-                            # Try to get response from queue
-                            response = self.app.cli.response_queue.get_nowait()
-                            callback(response)
-                        except:
-                            # If no response yet, try again
-                            self.app.root.after(100, check_response)
-
-                    # Start checking for response
-                    self.app.root.after(100, check_response)
+            if hasattr(self.app, 'cache_manager') and self.app.cache_manager:
+                cache_data = self.app.cache_manager.get_all_entries()
+                if cache_data:
+                    formatted_cache = json.dumps(cache_data, indent=2, default=str)
+                    cache_text.insert('1.0', formatted_cache)
                 else:
-                    # Fallback to direct demo response
-                    if 'clock' in command:
-                        callback(self._get_demo_clock_response())
-                    elif 'fmode' in command:
-                        callback(self._get_demo_fmode_response())
+                    cache_text.insert('1.0', "Cache is empty")
             else:
-                # Real device - use existing send_command method
-                if hasattr(self.app, 'send_command'):
-                    self.app.send_command(command)
+                cache_text.insert('1.0', "No cache manager available")
+        except Exception as e:
+            cache_text.insert('1.0', f"Error reading cache: {e}")
 
-                    # Set up response monitoring (simplified)
-                    def check_real_response():
-                        # This would integrate with the actual response handling system
-                        # For now, simulate success
-                        callback("OK")
+        cache_text.config(state='disabled')
 
-                    self.app.root.after(500, check_real_response)
+    def _clear_cache(self):
+        """Clear cache with confirmation"""
+        if messagebox.askyesno("Clear Cache", "Are you sure you want to clear the cache?"):
+            try:
+                if hasattr(self.app, 'cache_manager') and self.app.cache_manager:
+                    self.app.cache_manager.clear()
+                    messagebox.showinfo("Success", "Cache cleared successfully")
+                    self._refresh_system_status()
                 else:
-                    if debug_available:
-                        debug_error("No send_command method available", 'advanced_dashboard')
-                    callback("ERROR: Command interface not available")
+                    messagebox.showwarning("Warning", "No cache manager available")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to clear cache: {e}")
+
+    def _open_cache_settings(self):
+        """Open cache settings dialog"""
+        if hasattr(self.app, 'open_settings'):
+            self.app.open_settings()
+        else:
+            messagebox.showinfo("Settings", "Settings dialog not available")
+
+    # Response Handler Methods
+    def _refresh_handler_status(self):
+        """Refresh response handler status"""
+        self.handler_status_text.config(state='normal')
+        self.handler_status_text.delete('1.0', 'end')
+
+        try:
+            if hasattr(self.app, 'response_handler') and self.app.response_handler:
+                status = self.app.response_handler.get_status()
+                status_text = f"""Response Handler Status:
+Active Buffers: {status.get('active_buffers', 0)}
+Total Commands: {status.get('total_commands', 0)}
+Successful Responses: {status.get('successful_responses', 0)}
+Timeouts: {status.get('timeouts', 0)}
+Handler State: {'Active' if status.get('active_buffers', 0) > 0 else 'Idle'}"""
+            else:
+                status_text = "Response Handler: Not initialized or not available"
+
+            self.handler_status_text.insert('1.0', status_text)
+        except Exception as e:
+            self.handler_status_text.insert('1.0', f"Error getting status: {e}")
+
+        self.handler_status_text.config(state='disabled')
+
+    def _clear_handler_buffers(self):
+        """Clear response handler buffers"""
+        try:
+            if hasattr(self.app, 'response_handler') and self.app.response_handler:
+                self.app.response_handler.clear_all_buffers()
+                messagebox.showinfo("Success", "Response handler buffers cleared")
+                self._refresh_handler_status()
+            else:
+                messagebox.showwarning("Warning", "Response handler not available")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to clear buffers: {e}")
+
+    # Debug Control Methods
+    def _is_debug_enabled(self):
+        """Check if debug is enabled"""
+        try:
+            from Admin.debug_config import is_debug_enabled
+            return is_debug_enabled()
+        except ImportError:
+            return False
+
+    def _toggle_debug(self):
+        """Toggle debug mode"""
+        try:
+            from Admin.debug_config import toggle_debug
+            new_state = toggle_debug()
+            state_text = "enabled" if new_state else "disabled"
+            messagebox.showinfo("Debug Mode", f"Debug mode {state_text}")
+            self._refresh_system_status()
+        except ImportError:
+            messagebox.showerror("Error", "Debug config not available")
+
+    def _view_debug_log(self):
+        """View debug log in popup window"""
+        log_window = tk.Toplevel(self.app.root)
+        log_window.title("Debug Log")
+        log_window.geometry("800x600")
+
+        # Create text widget with scrollbar
+        text_frame = ttk.Frame(log_window)
+        text_frame.pack(fill='both', expand=True, padx=10, pady=10)
+
+        log_text = scrolledtext.ScrolledText(text_frame, wrap='word', font=('Consolas', 9))
+        log_text.pack(fill='both', expand=True)
+
+        # Show recent log entries
+        if hasattr(self.app, 'log_data'):
+            log_entries = self.app.log_data[-100:]  # Last 100 entries
+            log_text.insert('1.0', '\n'.join(log_entries))
+        else:
+            log_text.insert('1.0', "No log data available")
+
+        log_text.config(state='disabled')
+
+    def _export_logs(self):
+        """Export logs to file"""
+        try:
+            from tkinter import filedialog
+
+            filename = filedialog.asksaveasfilename(
+                defaultextension=".txt",
+                filetypes=[("Text files", "*.txt"), ("All files", "*.*")],
+                title="Export Logs"
+            )
+
+            if filename:
+                with open(filename, 'w') as f:
+                    f.write(f"CalypsoPy Debug Log Export\n")
+                    f.write(f"Exported: {datetime.now()}\n")
+                    f.write(f"Session: {'Demo Mode' if self.is_demo_mode else 'Real Device'}\n")
+                    f.write("=" * 50 + "\n\n")
+
+                    if hasattr(self.app, 'log_data'):
+                        for entry in self.app.log_data:
+                            f.write(f"{entry}\n")
+
+                messagebox.showinfo("Success", f"Logs exported to {filename}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to export logs: {e}")
+
+    # System Information Methods
+    def _get_python_version(self):
+        """Get Python version"""
+        import sys
+        return f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+
+    def _get_os_info(self):
+        """Get OS information"""
+        import platform
+        return f"{platform.system()} {platform.release()}"
+
+    def _get_session_duration(self):
+        """Get session duration"""
+        if hasattr(self.app, 'session_start_time'):
+            duration = time.time() - self.app.session_start_time
+            hours, remainder = divmod(int(duration), 3600)
+            minutes, seconds = divmod(remainder, 60)
+            return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+        return "Unknown"
+
+    def _get_memory_usage(self):
+        """Get memory usage"""
+        try:
+            import psutil
+            process = psutil.Process()
+            memory_info = process.memory_info()
+            return f"{memory_info.rss / 1024 / 1024:.1f} MB"
+        except ImportError:
+            return "Unknown (psutil not available)"
+
+    # Status Update Methods
+    def _refresh_system_status(self):
+        """Refresh system status display"""
+        try:
+            # Update connection status
+            if 'connection_status' in self.status_vars:
+                status = "🟠 Demo Mode" if self.is_demo_mode else "🟢 Connected"
+                self.status_vars['connection_status'].set(status)
+
+            # Update cache entries
+            if 'cache_entries' in self.status_vars:
+                cache_stats = self._get_cache_stats()
+                self.status_vars['cache_entries'].set(str(cache_stats['valid_entries']))
+
+            # Update debug mode
+            if 'debug_mode' in self.status_vars:
+                debug_status = "Enabled" if self._is_debug_enabled() else "Disabled"
+                self.status_vars['debug_mode'].set(debug_status)
+
+            # Update last activity
+            if 'last_activity' in self.status_vars and self.last_command_time:
+                last_activity = self.last_command_time.strftime('%H:%M:%S')
+                self.status_vars['last_activity'].set(last_activity)
 
         except Exception as e:
-            error_msg = f"Failed to send command {command}: {e}"
-            if debug_available:
-                debug_error(error_msg, 'advanced_dashboard')
-            callback(f"ERROR: {error_msg}")
+            print(f"ERROR: Failed to refresh system status: {e}")
 
-    def update_status(self, message):
-        """Update the status display"""
-        if hasattr(self, 'status_label'):
-            self.status_label.configure(text=message)
-
-    def _get_demo_clock_response(self):
-        """Generate demo clock command response using actual demo data or fallback"""
-        if self.demo_clock_content:
-            return self.demo_clock_content
-        else:
-            # Fallback demo response based on current state
-            left_status = "Enabled" if self.clock_state['left_mcio'] else "Disabled"
-            right_status = "Enabled" if self.clock_state['right_mcio'] else "Disabled"
-            straddle_status = "Enabled" if self.clock_state['straddle_mount'] else "Disabled"
-
-            spread_descriptions = {
-                "srise5": "0.25%",
-                "srise2": "0.5%",
-                "srisd": "Disabled"
-            }
-            ssc_status = spread_descriptions.get(self.ssc_spread_state, "Unknown")
-
-            return f"""Cmd>clock
-
-Clock Status:
-Left MCIO Connectors: {left_status}
-Right MCIO Connectors: {right_status}
-Straddle Mount Connector: {straddle_status}
-SSC Spread: {ssc_status}
-
-OK>"""
-
-    def _get_demo_fmode_response(self):
-        """Generate demo fmode command response using actual demo data or fallback"""
-        if self.demo_fmode_content:
-            return self.demo_fmode_content
-        else:
-            # Fallback demo response based on current state
-            port32_status = "Enabled" if self.flit_state['port_32'] else "Disabled"
-            port80_status = "Enabled" if self.flit_state['port_80'] else "Disabled"
-            port112_status = "Enabled" if self.flit_state['port_112'] else "Disabled"
-            port128_status = "Enabled" if self.flit_state['port_128'] else "Disabled"
-
-            return f"""Cmd>fmode
-
-FLIT Mode Status:
-Port 32 (Root Complex): {port32_status}
-Port 80 (Straddle Mount): {port80_status}
-Port 112 (Left MCIO Connectors): {port112_status}
-Port 128 (Right MCIO Connectors): {port128_status}
-
-OK>"""
+    def update_command_count(self, count):
+        """Update command count from external source"""
+        self.command_count = count
+        if 'commands_sent' in self.status_vars:
+            self.status_vars['commands_sent'].set(str(count))
 
 
-# Integration function for main.py
-def integrate_advanced_dashboard(main_app):
-    """
-    Integration function to add Advanced Dashboard to main application
+# Standalone test functionality
+if __name__ == "__main__":
+    print("Advanced Dashboard Module Test")
+    print("This module should be imported by main.py")
+    print("File location: Dashboards/advanced_dashboard.py")
 
-    Args:
-        main_app: Main application instance
-
-    Returns:
-        AdvancedDashboard: Configured dashboard instance
-    """
+    # Basic test of the class
+    print("\nTesting class instantiation...")
     try:
-        # Create dashboard instance
-        dashboard = AdvancedDashboard(main_app)
+        # Mock parent app for testing
+        class MockApp:
+            def __init__(self):
+                self.is_demo_mode = True
+                self.port = "DEMO"
+                self.root = None
+                self.log_data = ["Test log entry 1", "Test log entry 2"]
 
-        # Add to main app's dashboard registry if it exists
-        if hasattr(main_app, 'dashboard_registry'):
-            main_app.dashboard_registry['advanced'] = dashboard
 
-        if debug_available:
-            debug_print("Advanced dashboard integrated successfully", 'advanced_dashboard')
-
-        return dashboard
+        mock_app = MockApp()
+        dashboard = AdvancedDashboard(mock_app)
+        print(f"✅ AdvancedDashboard created: Demo Mode = {dashboard.is_demo_mode}")
+        print("✅ Module test completed successfully!")
+        print("Ready for import in main.py")
 
     except Exception as e:
-        error_msg = f"Failed to integrate advanced dashboard: {e}"
-        if debug_available:
-            debug_error(error_msg, 'advanced_dashboard')
-        print(f"ERROR: {error_msg}")
-        return None
+        print(f"❌ Module test failed: {e}")
+        import traceback
 
-
-# Demo mode extensions for existing demo integration
-def extend_demo_mode_for_advanced():
-    """
-    Extend the existing demo mode to support clock and fmode commands
-
-    This function can be called to add command handlers to the existing
-    UnifiedDemoSerialCLI class.
-    """
-
-    # Demo command responses
-    demo_responses = {
-        'clock': """Cmd>clock
-
-Clock Status:
-Left MCIO Connectors: Enabled
-Right MCIO Connectors: Disabled
-Straddle Mount Connector: Enabled
-
-OK>""",
-
-        'fmode': """Cmd>fmode
-
-FLIT Mode Status:
-Port 32 (Root Complex): Disabled  
-Port 80 (Straddle Mount): Enabled
-Port 112 (Left MCIO Connectors): Enabled
-Port 128 (Right MCIO Connectors): Disabled
-
-OK>"""
-    }
-
-    return demo_responses
-
-
-if __name__ == "__main__":
-    print("Advanced Dashboard Module")
-    print("========================")
-    print("This module provides advanced functionality for CalypsoPy:")
-    print("- Clock management for MCIO connectors")
-    print("- FLIT mode control for different ports")
-    print("- Integration with existing admin modules")
-    print("- Demo mode support")
-    print()
-    print("Usage:")
-    print("1. Place this file in the Dashboards/ directory")
-    print("2. Import and integrate with main application")
-    print("3. Add dashboard tile to main.py")
-    print("4. Update Dashboards/__init__.py")
-
-    # Test demo responses
-    print("\nTesting demo responses...")
-    responses = extend_demo_mode_for_advanced()
-    for cmd, response in responses.items():
-        print(f"\n{cmd.upper()} command response:")
-        print(response[:100] + "..." if len(response) > 100 else response)
+        traceback.print_exc()
